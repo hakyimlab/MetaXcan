@@ -1,0 +1,10 @@
+.idea
+*.pyc
+data*
+intermediate*
+results*
+forensics*
+TCheck*
+kk*
+Run*
+support_data*

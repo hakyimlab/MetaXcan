@@ -75,12 +75,14 @@ The example command parameters mean:
 Check [this](https://github.com/hakyimlab/MetaXcan/tree/master/working/software) if you want to learn more
 about more general or advanced usages of MetaXcan.
 
-You will find a short manuscript with the theory and rationale for the method at
+Check out the [Wiki](https://github.com/hakyimlab/MetaXcan/wiki)
+
+You will find the manuscript with the theory and rationale for the method at
 ```bash
-/working/manuscript
+/manuscript
 ```
 
 The code lies at
 ```bash
-/working/software
+/software
 ```

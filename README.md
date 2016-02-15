@@ -36,10 +36,7 @@ You can use precalculated databases, or generate new ones with tools in this rep
 ```bash
 $ git clone https://github.com/hakyimlab/MetaXcan
 ```
-> NOTE:
-> since the repo is still private I had to add username as follows
-> `$ git clone https://hakyim@github.com/hakyimlab/MetaXcan.git`
-> also had to run `$ unset SSH_ASKPASS` to avoid error on cri-syncmon.cri.uchicago.edu `(gnome-ssh-askpass:26651): Gtk-WARNING **: cannot open display: `
+
 
 2) Go to the software folder.
 ```bash

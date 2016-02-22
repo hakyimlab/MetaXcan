@@ -11,4 +11,5 @@ class StructuredExample(object):
                 print "Header and dtypes must be the same size: ", header, dtypes
                 sys.exit(1)
 
+
 #def GenerateStructuredExample(filename="__file_struct")

@@ -2,11 +2,12 @@
 
 __author__ = 'heroico'
 
+__version__ = 0.1
 from subprocess import call
 import logging
-import Logging
-import ZScoreCalculation
-import Formats
+import metax.Logging as Logging
+import metax.ZScoreCalculation as ZScoreCalculation
+import metax.Formats as Formats
 
 class MetaXcanProcess(object):
     def __init__(self, args):

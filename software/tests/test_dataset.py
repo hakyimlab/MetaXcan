@@ -48,6 +48,7 @@ class TestDataset(unittest.TestCase):
         ds1 = DataSetFileUtilities.loadFromFile(filename)
         self.assertEqual(filename, ds1.name)
         self.assertEqual(dataset, ds1.data)
+        os.remove(filename)
 
 
     def testDsfuHeader(self, filename="__test_file"):

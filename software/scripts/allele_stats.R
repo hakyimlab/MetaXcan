@@ -1,3 +1,4 @@
+#!/usr/bin/env Rscript
 
 df <- read.csv("./results/allele_stats.csv")
 df$wdb_ref_allele <- as.character(df$wdb_ref_allele)

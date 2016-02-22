@@ -3,8 +3,8 @@ __author__ = 'heroico'
 
 import Tkinter
 import ttk
-import MainScreen
-import Logging
+import metax.MainScreen as MainScreen
+import metax.Logging as Logging
 class UI(object):
     def __init__(self, root):
         self.controller = MainScreen.MainScreen(root, self)

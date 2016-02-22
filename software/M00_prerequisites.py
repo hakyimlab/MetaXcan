@@ -3,13 +3,13 @@ __author__ = 'heroico'
 import os
 import re
 import logging
-import Person
-import ThousandGenomesUtilities
-import PrediXcanFormatUtilities
-import Utilities
-import DataSet
-import Logging
-import Formats
+import metax.Person as Person
+import metax.ThousandGenomesUtilities as ThousandGenomesUtilities
+import metax.PrediXcanFormatUtilities as PrediXcanFormatUtilities
+import metax.Utilities as Utilities
+import metax.DataSet as DataSet
+import metax.Logging as Logging
+import metax.Formats as Formats
 
 
 class ProcessPrerequisites(object):

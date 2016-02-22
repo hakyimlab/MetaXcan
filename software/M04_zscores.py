@@ -5,17 +5,17 @@ import logging
 import os
 import re
 import scipy.stats as stats
-import KeyedDataSet
-import WeightDBUtilities
-import Logging
-import Utilities
-import DBLoaders
-import Person
-import Formats
-import MatrixUtilities
-import ZScoreCalculation
-import Normalization
-import MethodGuessing
+import metax.KeyedDataSet as KeyedDataSet
+import metax.WeightDBUtilities as WeightDBUtilities
+import metax.Logging as Logging
+import metax.Utilities as Utilities
+import metax.DBLoaders as DBLoaders
+import metax.Person as Person
+import metax.Formats as Formats
+import metax.MatrixUtilities as MatrixUtilities
+import metax.ZScoreCalculation as ZScoreCalculation
+import metax.Normalization as Normalization
+import metax.MethodGuessing as MethodGuessing
 
 
 class CalculateZScores(object):

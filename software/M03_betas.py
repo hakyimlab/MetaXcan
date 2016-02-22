@@ -4,12 +4,12 @@ __author__ = 'heroico'
 import logging
 import os
 import re
-import KeyedDataSet
-import WeightDBUtilities
-import GWASUtilities
-import MethodGuessing
-import Utilities
-import Logging
+import metax.KeyedDataSet as KeyedDataSet
+import metax.WeightDBUtilities as WeightDBUtilities
+import metax.GWASUtilities as GWASUtilities
+import metax.MethodGuessing as MethodGuessing
+import metax.Utilities as Utilities
+import metax.Logging as Logging
 
 class GetBetas(object):
     def __init__(self, args):

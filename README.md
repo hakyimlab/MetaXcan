@@ -78,7 +78,9 @@ MetaXcan supports a large amount of command line parameters. Check the documenta
 Check [this](https://github.com/hakyimlab/MetaXcan/tree/master/software) if you want to learn more
 about more general or advanced usages of MetaXcan.
 
-You will find a short manuscript with the theory and rationale for the method at
+Check out the [Wiki](https://github.com/hakyimlab/MetaXcan/wiki)
+
+You will find the manuscript with the theory and rationale for the method at
 ```bash
 /manuscript
 ```

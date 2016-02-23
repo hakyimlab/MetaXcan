@@ -144,7 +144,7 @@ It doesn't support all of the options these scripts do (that as a matter of fact
 but might be friendlier to non technical users.
 
 Here is a screenshot:
-![screen shot](/working/manuscript/plots/gui.png)
+![screen shot](/manuscript/plots/gui.png)
 
 ## The Rest
 

@@ -39,7 +39,7 @@ $ git clone https://github.com/hakyimlab/MetaXcan
 
 2) Go to the software folder.
 ```bash
-$ cd MetaXcan/working/software
+$ cd MetaXcan/software
 ```
 
 3) Download sample [data](https://s3.amazonaws.com/imlab-open/Data/MetaXcan/example/support_data.tar.gz):

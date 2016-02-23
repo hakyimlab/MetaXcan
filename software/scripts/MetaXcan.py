@@ -2,7 +2,8 @@
 
 __author__ = 'heroico'
 
-__version__ = 0.1
+import metax
+__version__ = metax.__version__
 from subprocess import call
 import logging
 import metax.Logging as Logging

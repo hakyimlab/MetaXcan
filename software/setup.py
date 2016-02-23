@@ -5,14 +5,14 @@ import setuptools
 import os
 
 # Use app's version
-import MetaXcan
+import metax
 
 # Use the readme as the long description baked into the application itself
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 setuptools.setup(name="MetaXcan",
-                 version=MetaXcan.__version__,
+                 version=metax.__version__,
                  author="Alvaro Barbeira, Eric Torstenson",
                  author_email='alvarobarbeira@gmail.com, eric.s.torstenson@vanderbilt.edu',
                  url="TBD",

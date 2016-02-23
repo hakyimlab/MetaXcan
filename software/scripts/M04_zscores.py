@@ -226,6 +226,17 @@ class CalculateZScores(object):
 
         return zscore_calculation, normalization
 
+def run(args):
+    "Wrapper for common behavior for execution. "
+    work = CalculateZScores(args)
+    if args.throw:
+        work.run()
+    else:
+        try:
+            work.run()
+        except Exception as e:
+            logging.info("Unexpected error: %s", str(e))
+
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description='Build betas from GWAS data.')
@@ -285,14 +296,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     Logging.configureLogging(int(args.verbosity))
-
-    work = CalculateZScores(args)
-    if args.throw:
-        work.run()
-    else:
-        try:
-            work.run()
-        except Exception as e:
-            logging.info("Unexpected error: %s", str(e))
+    run(args)
 
 

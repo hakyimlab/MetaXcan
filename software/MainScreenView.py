@@ -256,15 +256,15 @@ class MainScreenView(Frame):
         output_frame.pack(fill=X, expand=1, side=TOP)
         controller = self.controller()
 
-        label = Label(output_frame, text=TS("Covariance Folder"))
+        label = Label(output_frame, text=TS("Covariance File"))
         label.pack(side=LEFT)
 
-        self.covariance_folder_button = Button(output_frame, text=controller.covariance_folder,
-            command = controller.covarianceFolderButtonPressed,
+        self.covariance_file_button = Button(output_frame, text=controller.covariance_file,
+            command = controller.covarianceFileButtonPressed,
             style = "RHW.TButton",
         )
-        self.covariance_folder_button.pack(side=RIGHT)
-        self.addToDisabable(self.covariance_folder_button)
+        self.covariance_file_button.pack(side=RIGHT)
+        self.addToDisabable(self.covariance_file_button)
 
     def configureMode(self):
         text = TS("Run")

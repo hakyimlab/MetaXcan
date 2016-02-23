@@ -82,7 +82,7 @@ HG00101 GBR EUR male
 HG00102 GBR EUR female
 ...
 ```
-This is hardly ever necessary. You might use it occasionally to reduce file sizes
+This script is hardly ever necessary. You might use it occasionally to reduce file sizes
 used at the covariance script step (**M01_covariances_correlations.py**).
 
 ## M01_covariances_correlations.py
@@ -118,15 +118,20 @@ of your gwas pipeline (optionally using **M03_betas.py**).
 Its output is a CSV file that looks like:
 
 ```
-gene,zscore,n,VAR_g
-RNF14,-0.159143030501,8,0.0141051590851
-UBE2Q1,1.45200371079,9,0.00127679628242
-UBE2Q2,-2.99464406068,38,0.00748954755423
+gene,gene_name,zscore,pvalue,pred_perf_R2,VAR_g,n,covariance_n,model_n
+CRIM1,CRIM1,-4.19069760413,2.78098095601e-05,0.13320775358,0.0983344808163,37,37,37
+FEZ2,FEZ2,3.97075348924,7.16456810029e-05,0.261426523524,0.23453565545,24,24,24
+ABLIM2,ABLIM2,-3.65940334247,0.000252803173193,0.0219411680431,0.0183096836859,30,31,31
 ```
-Where:
-* gene: gene name
+Where each row is a gene's association result:
+* gene: a gene's id: some Tissue models provide Ensemble Id, some others (mainly DGN Whole Blood) provide [Genquant](http://www.gencodegenes.org/)'s gene name
+* gene_name: gene name extracted from Genquant
 * zscore: MetaXcan'as association result for the gene
+* pvalue: P-value of the aforementioned statistic.
+* pred_perf_R2: R2 of tissue model's correlation to gene's measured transcriptome
 * n: number of snps from GWAS that got used in MetaXcan analysis
+* covariance_n: number of snps in the covariance matrix
+* model_n: number of snps in the model
 * VAR_g: variance of the gene expression, calculated as *W' * G * W* 
 (where *W* is the vector of SNP weights in a gene's model,
 *W'* is its transpose, and *G* is the covariance matrix)

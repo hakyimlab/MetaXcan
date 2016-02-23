@@ -25,13 +25,10 @@ class ProcessWeightDB(object):
         self.weight_db = pathLeaf(args.weight_db)
         self.db_path = args.weight_db
         self.data_folder = args.input_folder
-        self.correlation_output_folder = args.correlation_output_folder
-        self.output_correlations = args.correlations
-        self.covariance_output_folder = args.covariance_output_folder
-        self.output_covariances = args.covariances
+        self.correlation_output = args.correlation_output
+        self.covariance_output = args.covariance_output
 
         self.input_format = args.input_format
-        self.output_format = args.output_format
 
         self.found_genes_for_covariance = {}
         self.found_genes_for_correlation = {}
@@ -40,56 +37,36 @@ class ProcessWeightDB(object):
         self.max_maf_filter = float(args.max_maf_filter) if args.max_maf_filter else None
 
     def run(self):
-        if not self.output_correlations and not self.output_covariances:
+        if not self.correlation_output and not self.covariance_output:
             return
 
         logging.info("Loading Weights")
         weight_db_logic = WeightDBUtilities.WeightDBEntryLogic(self.db_path)
 
-        if not os.path.exists(self.correlation_output_folder) and self.output_correlations:
-            os.makedirs(self.correlation_output_folder)
-
-        if not os.path.exists(self.covariance_output_folder) and self.output_covariances:
-            os.makedirs(self.covariance_output_folder)
-
-        if self.output_format == Formats.DatabaseFile:
-            self.buildDBS(weight_db_logic)
-        elif self.output_format == Formats.FlatFile:
-            self.buildFiles(weight_db_logic)
-        else:
-            logging.info("Wrong output format: %s", self.output_format)
-
-    def buildDBS(self, weight_db_logic):
-        names = Utilities.dosageNamesFromFolder(self.data_folder)
-        for name in names:
-            snps, snps_by_rsid = self.getSNPS(name, weight_db_logic)
-
-            if self.output_correlations:
-                self.buildCorrelationDBS(weight_db_logic, name, snps, snps_by_rsid)
-
-            if self.output_covariances:
-                self.buildCovarianceDBS(weight_db_logic, name, snps, snps_by_rsid)
-
-            gc.collect() #Python may have been saving numbers for reuse. Pretty please ask him to delete it. Files might be humongous.
+        self.buildFiles(weight_db_logic)
 
     def buildFiles(self, weight_db_logic):
-        do_correlations = self.output_correlations
-        if self.output_correlations:
-            correlation_path = self.correlationFilePath()
-            if os.path.exists(correlation_path):
-                logging.info("%s already exists, delete it if you want it figured out again", correlation_path)
+        do_correlations = self.correlation_output is not None
+        if do_correlations:
+            if os.path.exists(self.correlation_output):
+                logging.info("%s already exists, delete it if you want it figured out again", self.correlation_output)
                 do_correlations = False
             else:
-                self.writeFileHeader(correlation_path)
+                correlation_dir = os.path.dirname(self.correlation_output)
+                if not os.path.exists(correlation_dir):
+                    os.makedirs(correlation_dir)
+                self.writeFileHeader(self.correlation_output)
 
-        do_covariances = self.output_covariances
-        if self.output_covariances:
-            covariance_path = self.covarianceFilePath()
-            if os.path.exists(covariance_path):
-                logging.info("%s already exists, delete it if you want it figured out again", covariance_path)
+        do_covariances = self.covariance_output is not None
+        if do_covariances:
+            if os.path.exists(self.covariance_output):
+                logging.info("%s already exists, delete it if you want it figured out again", self.covariance_output)
                 do_covariances = False
             else:
-                self.writeFileHeader(covariance_path)
+                covariance_dir = os.path.dirname(self.covariance_output)
+                if not os.path.exists(covariance_dir):
+                    os.makedirs(covariance_dir)
+                self.writeFileHeader(self.covariance_output)
 
         if not do_covariances and not do_correlations:
             return
@@ -97,23 +74,15 @@ class ProcessWeightDB(object):
         names = Utilities.dosageNamesFromFolder(self.data_folder)
         for name in names:
             snps, snps_by_rsid = self.getSNPS(name, weight_db_logic)
-            if do_correlations and self.output_correlations:
+            if do_correlations:
                 self.addToCorrelationFile(weight_db_logic, name, snps, snps_by_rsid)
 
-            if do_covariances and self.output_covariances:
+            if do_covariances:
                 self.addToCovarianceFile(weight_db_logic, name, snps, snps_by_rsid)
 
     def writeFileHeader(self,path):
         with gzip.open(path, "ab") as file:
             file.write("GENE RSID1 RSID2 VALUE\n")
-
-    def correlationFilePath(self):
-        path = os.path.join(self.correlation_output_folder, "correlation.txt.gz")
-        return path
-
-    def covarianceFilePath(self):
-        path = os.path.join(self.covariance_output_folder, "covariance.txt.gz")
-        return path
 
     def getSNPS(self, name, weight_db_logic):
         dosageLoader = None
@@ -149,42 +118,13 @@ class ProcessWeightDB(object):
                 logging.log(6,"Gene %s has no snps in current file", gene)
                 continue
 
-            covariance_path = self.covarianceFilePath()
-            self.addToFile(covariance_path, gene, entries)
+            self.addToFile(self.covariance_output, gene, entries)
 
     def addToFile(self, path, gene, entries):
         with gzip.open(path, "ab") as file:
             for entry in entries:
                 line = " ".join([gene, entry[0], entry[1], entry[2]])+"\n"
                 file.write(line)
-
-    def buildCovarianceDBS(self, weight_db_logic, name, snps, snps_by_rsid):
-        logging.info("Building covariance databases for %s-%s", name, self.weight_db)
-
-        genes = weight_db_logic.weights_by_gene_name.keys()
-        total_genes = len(genes)
-        last_reported_percent = 0
-        processed = 0
-        for gene in genes:
-            processed += 1
-            percent = int(processed*100.0 / total_genes)
-            if percent == last_reported_percent+10:
-                logging.info("%d percent genes processed", percent)
-                last_reported_percent = percent
-
-            output_name_base = "cov-"+name+"-"+gene+"-"+self.weight_db
-            output_name = self.covariance_output_folder + "/" + output_name_base
-            if os.path.exists(output_name):
-                logging.info("Covariance matrix for %s already exists, delete if you want it figured out again", gene)
-                continue
-
-            entries = self.buildCovarianceEntries(name, gene, weight_db_logic, snps_by_rsid)
-
-            if len(entries) == 0:
-                logging.log(6,"Gene %s has no snps in current file", gene)
-                continue
-
-            self.writeCovarianceDB(output_name, entries)
 
     def buildCovarianceEntries(self, name, gene, weight_db_logic, snps_by_rsid):
         weights_in_gene = weight_db_logic.weights_by_gene_name[gene]
@@ -288,15 +228,6 @@ class ProcessWeightDB(object):
                             entries.append((rsid_i, rsid_j, value))
         return entries
 
-    def writeCovarianceDB(self, output_name, entries):
-        connection = sqlite3.connect(output_name)
-        cursor = connection.cursor()
-        cursor.execute("CREATE TABLE IF NOT EXISTS covariances (rsid1 CHAR, rsid2 CHAR, covariance TEXT);")
-        logging.log(6, "%d covariances inserted in %s", len(entries), output_name)
-        cursor.executemany("INSERT INTO covariances(rsid1, rsid2, covariance) VALUES (?,?,?)", entries)
-        connection.commit()
-        connection.close()
-
     def addToCorrelationFile(self, weight_db_logic, name, snps, snps_by_rsid):
         logging.info("Building correlation database for %s-%s", name, self.weight_db)
         genes = weight_db_logic.weights_by_gene_name.keys()
@@ -316,35 +247,7 @@ class ProcessWeightDB(object):
                 logging.log(6,"Gene %s has no snps in current file", gene)
                 continue
 
-            path = self.correlationFilePath()
-            self.addToFile(path, gene, entries)
-
-    def buildCorrelationDBS(self, weight_db_logic, name, snps, snps_by_rsid):
-        logging.info("Building correlation database for %s-%s", name, self.weight_db)
-        genes = weight_db_logic.weights_by_gene_name.keys()
-        total_genes = len(genes)
-        last_reported_percent = 0
-        processed = 0
-        for gene in genes:
-            processed += 1
-            percent = int(processed*100.0 / total_genes)
-            if percent == last_reported_percent+10:
-                logging.info("%d percent genes processed", percent)
-                last_reported_percent = percent
-
-            output_name_base = "cor-"+name+"-"+gene+"-"+self.weight_db
-            output_name = self.correlation_output_folder + "/" + output_name_base
-            if os.path.exists(output_name):
-                logging.info("Correlation matrix for %s already exists, delete if you want it figured out again", gene)
-                continue
-
-            entries = self.buildCorrelationEntries(name, gene, weight_db_logic, snps_by_rsid)
-
-            if len(entries) == 0:
-                logging.log(6,"Gene %s has no snps in current file", gene)
-                continue
-
-            self.writeCorrelationDB(output_name, entries)
+            self.addToFile(self.correlation_output, gene, entries)
 
     def buildCorrelationEntries(self, name, gene, weight_db_logic, snps_by_rsid):
         weights_in_gene = weight_db_logic.weights_by_gene_name[gene]
@@ -367,15 +270,6 @@ class ProcessWeightDB(object):
         if not len(entries):
             raise NameError("Couldn not build correlation entries for (%s,%s)" %(name,gene))
         return entries
-
-    def writeCorrelationDB(self, output_name, entries):
-        connection = sqlite3.connect(output_name)
-        cursor = connection.cursor()
-        cursor.execute("CREATE TABLE IF NOT EXISTS correlations (rsid1 CHAR, rsid2 CHAR, r TEXT);")
-        logging.log(6, "%d correlations inserted in %s", len(entries), output_name)
-        cursor.executemany("INSERT INTO correlations(rsid1, rsid2, r) VALUES (?,?,?)", entries)
-        connection.commit()
-        connection.close()
 
     def updateFoundCorrelation(self, gene, name):
         found = None
@@ -402,32 +296,20 @@ if __name__ == "__main__":
 
     parser.add_argument("--input_folder",
                         help="name of folder containing PHASE 3 data",
-                        default="intermediate/filtered_1000GP_Phase3")
+                        default="intermediate/TGF_EUR")
 
-    parser.add_argument("--correlation_output_folder",
+    parser.add_argument("--correlation_output",
                         help="name of folder to dump results in",
-                        default="intermediate/1000GP_Phase3_chr_cor")
+                        default=None)
+                        #default="intermediate/1000GP_Phase3_chr_cor_dgnwb_cor.txt.gz")
 
-    parser.add_argument("--correlations", help="Output correlations",
-                        action="store_true",
-                        default=False)
-
-    parser.add_argument("--covariance_output_folder",
+    parser.add_argument("--covariance_output",
                         help="name of folder to dump results in",
-                        default="intermediate/1000GP_Phase3_chr_cov")
-
-    parser.add_argument("--covariances",
-                    help="Output covariances",
-                    action="store_true",
-                    default=True)
+                        default="intermediate/1000GP_Phase3_chr_dgnwb_cov.txt.gz")
 
     parser.add_argument('--input_format',
                    help='Input dosage files format. Valid options are: IMPUTE, PrediXcan',
                    default=Formats.PrediXcan)
-
-    parser.add_argument('--output_format',
-                   help="Output covariance files format. Valid options are: 'FlatFile', 'DatabaseFile'",
-                   default=Formats.FlatFile)
 
     parser.add_argument('--min_maf_filter',
                    help="Filter snps according to this maf",

@@ -1,10 +1,8 @@
 #!/usr/bin/env python
 __author__ = 'heroico'
 
-import gc
 import logging
 import numpy
-import sqlite3
 import os
 import gzip
 import ntpath

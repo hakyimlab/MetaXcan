@@ -122,6 +122,7 @@ gene,gene_name,zscore,pvalue,pred_perf_R2,VAR_g,n,covariance_n,model_n
 CRIM1,CRIM1,-4.19069760413,2.78098095601e-05,0.13320775358,0.0983344808163,37,37,37
 FEZ2,FEZ2,3.97075348924,7.16456810029e-05,0.261426523524,0.23453565545,24,24,24
 ABLIM2,ABLIM2,-3.65940334247,0.000252803173193,0.0219411680431,0.0183096836859,30,31,31
+...
 ```
 Where each row is a gene's association result:
 * gene: a gene's id: some Tissue models provide Ensemble Id, some others (mainly DGN Whole Blood) provide [Genquant](http://www.gencodegenes.org/)'s gene name

@@ -57,18 +57,25 @@ tar -xzvpf support_data.tar.gz
 
 4) Run the High-Level MetaXcan Script
 ```bash
-$ ./MetaXcan.py --beta_column BETA --pvalue_column P --compressed --gwas_file_pattern ".*assoc*"
+$ ./MetaXcan.py \
+--gwas_folder data/GWAS \
+ --gwas_file_pattern ".*gz" \
+--compressed \
+--beta_column BETA \
+--pvalue_column P \
+--output_file results/test.csv
 ```
-This should take less than a minute on a 3GHZ computer.
-It will output its results to the **results** folder.
+This should take less than a minute on a 3GHZ computer. Bear in mind that this will generate intermediate data at `intermediate/beta`.
 
 The example command parameters mean:
 
-* *--beta_column* Tells the program the name of a column containing -phenotype beta data for each SNP- in the input GWAS files
-* *--pvalue_column* Tells the program the name of a column containing -PValue for each SNP- in the input GWAS files
-* *--compressed* This options tells that the input files are in gzip compressed form
+* *--beta_column* Tells the program the name of a column containing -phenotype beta data for each SNP- in the input GWAS files.
+* *--pvalue_column* Tells the program the name of a column containing -PValue for each SNP- in the input GWAS files.
+* *--compressed* This options tells that the input files are in gzip compressed form.
+* *--gwas_folder* Folder containing GWAS summary statistics data.
 * *--gwas_file_pattern* This option allows the program to select which files from the input to use based on their name.
 ...This allows to ignore several support files that might be generated at your GWAS analysis, such as plink logs.
+* *--output_file* Path where results will be saved to.
 
 MetaXcan supports a large amount of command line parameters. Check the documentation for those that work best for your data.
 

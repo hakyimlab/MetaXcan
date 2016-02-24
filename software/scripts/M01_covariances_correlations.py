@@ -25,6 +25,12 @@ class ProcessWeightDB(object):
         self.data_folder = args.input_folder
         self.correlation_output = args.correlation_output
         self.covariance_output = args.covariance_output
+        if args.covariance_output is None:
+            comp = os.path.splitext(self.weight_db)[0]
+            name = comp + ".cov.txt.gz"
+            path = os.path.join("intermediate", "cov")
+            path = os.path.join(path, name)
+            self.covariance_output = os.path.join(path)
 
         self.input_format = args.input_format
 
@@ -36,6 +42,7 @@ class ProcessWeightDB(object):
 
     def run(self):
         if not self.correlation_output and not self.covariance_output:
+            logging.info("Provide --correlation_output or --covariance_output or both")
             return
 
         logging.info("Loading Weights")
@@ -297,13 +304,13 @@ if __name__ == "__main__":
                         default="intermediate/TGF_EUR")
 
     parser.add_argument("--correlation_output",
-                        help="name of folder to dump results in",
+                        help="Name of file to dump correlation results in.",
                         default=None)
                         #default="intermediate/1000GP_Phase3_chr_cor_dgnwb_cor.txt.gz")
 
     parser.add_argument("--covariance_output",
-                        help="name of folder to dump results in",
-                        default="intermediate/1000GP_Phase3_chr_dgnwb_cov.txt.gz")
+                        help="Name of file to dump covariance results in. Defaults to 'intermediate/cov/' + file name prefix from '--weight_db' argument",
+                        default=None)
 
     parser.add_argument('--input_format',
                    help='Input dosage files format. Valid options are: IMPUTE, PrediXcan',

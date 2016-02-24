@@ -143,6 +143,12 @@ if __name__ == "__main__":
                             " 'from_reference', estimate normalization constant from reference, needs 'standard error' on phenotype",
                         default=None)
 
+    parser.add_argument("--keep_ens_version",
+                    help="If set, will keep the -version- postfix in gene id.",
+                    action="store_true",
+                    default=False)
+
+
     parser.add_argument("--verbosity",
                         help="Log verbosity level. 1 is everything being logged. 10 is only high level messages, above 10 will hardly log anything",
                         default = "10")

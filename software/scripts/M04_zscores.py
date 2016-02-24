@@ -3,15 +3,12 @@ __author__ = 'heroico'
 
 import logging
 import os
-import re
 import scipy.stats as stats
 import metax.KeyedDataSet as KeyedDataSet
 import metax.WeightDBUtilities as WeightDBUtilities
 import metax.Logging as Logging
 import metax.Utilities as Utilities
-import metax.DBLoaders as DBLoaders
 import metax.Person as Person
-import metax.Formats as Formats
 import metax.MatrixUtilities as MatrixUtilities
 import metax.ZScoreCalculation as ZScoreCalculation
 import metax.Normalization as Normalization
@@ -21,17 +18,13 @@ import metax.MethodGuessing as MethodGuessing
 class CalculateZScores(object):
     def __init__(self, args):
         self.weight_db_path = args.weight_db_path
-        self.folder_covariance = args.covariance_folder
+        self.covariance = args.covariance
         self.folder_beta = args.beta_folder
         self.output_file = args.output_file
         self.selected_dosage_folder = args.selected_dosage_folder
 
         self.zscore_scheme = args.zscore_scheme
         self.normalization_scheme = args.normalization_scheme
-
-        self.input_format = args.input_format
-
-        self.gene_in_covariance_regexp = re.compile(args.covariance_file_pattern)
 
     def run(self):
         folder = os.path.split(self.output_file)[0]
@@ -54,13 +47,7 @@ class CalculateZScores(object):
 
         results = None
         normalization = None
-        if self.input_format == Formats.DatabaseFile:
-            results, normalization = self.resultsFromDatabases(weight_db_logic)
-        elif self.input_format == Formats.FlatFile:
-            results, normalization = self.resultsFromCovarianceFile(weight_db_logic)
-        else:
-            logging.info("Wrong input format: %s", self.input_format)
-            assert False
+        results, normalization = self.resultsFromCovarianceFile(weight_db_logic)
 
         self.saveEntries(self.output_file, results, normalization)
 
@@ -68,9 +55,7 @@ class CalculateZScores(object):
         results = {}
 
         logging.info("Loading covariance file")
-        file = Utilities.contentsWithPatternsFromFolder(self.folder_covariance, [".gz"])[0]
-        path = os.path.join(self.folder_covariance, file)
-        covariance_contents = MatrixUtilities.loadMatrixFromFile(path)
+        covariance_contents = MatrixUtilities.loadMatrixFromFile(self.covariance)
 
         beta_contents = Utilities.contentsWithPatternsFromFolder(self.folder_beta, [])
         zscore_calculation, normalization = self.selectMethod(self.folder_beta, beta_contents, covariance_contents, weight_db_logic)
@@ -142,47 +127,6 @@ class CalculateZScores(object):
             z_score, n, VAR_g = zscore_calculation(gene, weights, dummy, covariance_matrix, valid_rsids)
             results[gene] = self.buildEntry(gene, weight_db_logic, weights, z_score, n, VAR_g)
 
-    def resultsFromDatabases(self, weight_db_logic):
-        results = {}
-
-        covariance_contents = Utilities.contentsWithPatternsFromFolder(self.folder_covariance, ["cov"])
-        beta_contents = Utilities.contentsWithPatternsFromFolder(self.folder_beta, ["beta"])
-        zscore_calculation, normalization = self.selectMethod(self.folder_beta, beta_contents, covariance_contents, weight_db_logic)
-
-        CHROMOSOMES = ["chr"+str(x) for x in xrange(1, 23)]
-        for chromosome in CHROMOSOMES:
-            logging.info("Processing %s", chromosome)
-            chromosome_covariances = Utilities.removeNamesWithPatterns(covariance_contents, [chromosome+"-"])
-
-            beta_name = Utilities.removeNameWithPatterns(beta_contents, [chromosome+"."])
-            if beta_name:
-                logging.info("beta_name %s", beta_name)
-            beta_path = os.path.join(self.folder_beta, beta_name)
-            beta_sets = KeyedDataSet.KeyedDataSetFileUtilities.loadDataSetsFromCompressedFile(beta_path, header="")
-            normalization.update(beta_sets)
-
-            total_covariances = len(chromosome_covariances)
-            reporter = Utilities.PercentReporter(logging.INFO, total_covariances)
-            for i,chromosome_covariance in enumerate(chromosome_covariances):
-                reporter.update(i, "Chromosome %s, %s" %(chromosome_covariance, "%d done"))
-
-                regexp_search = self.gene_in_covariance_regexp.search(chromosome_covariance)
-                gene = regexp_search.group(1)
-                weights = weight_db_logic.weights_by_gene_name[gene]
-                if gene in results:
-                    logging.info("Gene %s already done, skipping")
-                    continue
-
-                logging.log(7, "Loading covariance for %s", gene)
-                covariance_matrix, valid_rsids = self.loadCovarianceFromDB(weights, chromosome_covariance)
-
-                logging.log(7, "Calculating z score for %s", gene)
-                pre_zscore, n, VAR_g = zscore_calculation(gene, weights, beta_sets, covariance_matrix, valid_rsids)
-                results[gene] = self.buildEntry(gene, weight_db_logic, weights, pre_zscore, n, VAR_g)
-
-        normalization_constant = normalization.calculateNormalization()
-        return results, normalization_constant
-
     def saveEntries(self, result_path, results, normalization):
         keys = sorted(results, key=lambda key: -abs(float(results[key][2])) if results[key][2] != "NA" else 0)
         with open(result_path, 'w') as file:
@@ -204,12 +148,6 @@ class CalculateZScores(object):
                 p = entry[8]
                 line = "%s,%s,%s,%s,%s,%s,%s,%s,%s\n" % (gene, gene_name, z_score, p, R2, VAR_g, n, covariance_n, model_n)
                 file.write(line)
-
-    def loadCovarianceFromDB(self, weights, chromosome_covariance_name):
-        rsids = weights.keys()
-        db_path = os.path.join(self.folder_covariance, chromosome_covariance_name)
-        covariance_matrix, valid_rsids = DBLoaders.DBLoaders.loadCovarianceMatrix(db_path, rsids)
-        return covariance_matrix, valid_rsids
 
     def selectMethod(self, folder, beta_contents, covariance_entries, weight_db_logic):
         normalization = None
@@ -249,13 +187,9 @@ if __name__ == "__main__":
                         help="name of folder containing the selected samples, optional",
                         default="intermediate/filtered_1000GP_Phase3")
 
-    parser.add_argument("--covariance_folder",
-                        help="name of folder containing covariance data",
-                        default="intermediate/cov")
-
-    parser.add_argument("--covariance_file_pattern",
-                        help="pattern for covariance database file names, regexp to select name of gene. Optional, not used if flat file format.",
-                        default='cov-1000GP_Phase3_chr(?<!\d)\d{1,2}-(.*)-DGN-WB_0.5.db')
+    parser.add_argument("--covariance",
+                        help="name of file containing covariance data",
+                        default="intermediate/cov/covariance.txt.gz")
 
     parser.add_argument("--beta_folder",
                         help="name of folder containing beta data",
@@ -279,10 +213,6 @@ if __name__ == "__main__":
                             " 'from_pheno', estimate normalization constant from phenotype file, needs 'sigma_l' and 'standard error' in phenotype;"
                             " 'from_reference', estimate normalization constant from reference, needs 'standard error' on phenotype",
                         default=None)
-
-    parser.add_argument('--input_format',
-                   help='Input covariance files format. Valid options are: CovarianceDatabase, CovarianceFile',
-                   default=Formats.FlatFile)
 
     parser.add_argument("--verbosity",
                         help="Log verbosity level. 1 is everything being logged. 10 is only high level messages, above 10 will hardly log anything",

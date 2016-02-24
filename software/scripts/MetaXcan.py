@@ -27,8 +27,8 @@ class MetaXcanProcess(object):
 
     def buildZScores(self):
         logging.info("Calculating ZScores!")
-        self.args.input_format = self.args.covariance_input_format
         M04_zscores.run(self.args)
+
 
 if __name__ == "__main__":
     import argparse
@@ -119,14 +119,10 @@ if __name__ == "__main__":
                         #default="intermediate/filtered_1000GP_Phase3")
                         default="intermediate/filtered_1000GP_Phase3")
 
-    parser.add_argument("--covariance_folder",
-                        help="name of folder containing covariance data",
+    parser.add_argument("--covariance",
+                        help="name of file containing covariance data",
                         #default="intermediate/1000GP_Phase3_chr_cov")
-                        default="intermediate/cov")
-
-    parser.add_argument("--covariance_file_pattern",
-                        help="pattern for covariance file names, must contain 'EXTRACT_GENE'",
-                        default='cov-1000GP_Phase3_chr(?<!\d)\d{1,2}-(.*)-DGN-WB_0.5.db')
+                        default="intermediate/cov/covariance.txt.gz")
 
     parser.add_argument("--output_file",
                         help="name of output file",
@@ -146,10 +142,6 @@ if __name__ == "__main__":
                             " 'from_pheno', estimate normalization constant from phenotype file, needs 'sigma_l' and 'standard error' in phenotype;"
                             " 'from_reference', estimate normalization constant from reference, needs 'standard error' on phenotype",
                         default=None)
-
-    parser.add_argument('--covariance_input_format',
-                   help='Input covariance files format. Valid options are: CovarianceDatabase, CovarianceFile',
-                   default=Formats.FlatFile)
 
     parser.add_argument("--verbosity",
                         help="Log verbosity level. 1 is everything being logged. 10 is only high level messages, above 10 will hardly log anything",

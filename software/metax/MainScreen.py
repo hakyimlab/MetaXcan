@@ -22,7 +22,7 @@ from Utilities import checkSubdirectorySanity
 
 GWAS_INPUT_DEFAULT = "data/GWAS"
 BETA_FOLDER = "intermediate/beta"
-COVARIANCE_FOLDER = "intermediate/cov"
+COVARIANCE_FILE = "intermediate/cov/covariance.txt.gz"
 WEIGHT_DB_PATH = "data/DGN-WB_0.5.db"
 OUTPUT_PATH = "results/zscores.csv"
 
@@ -102,9 +102,9 @@ class MainScreen(object):
         self.frequency_value = Tkinter.StringVar()
         self.frequency_value.set("FRQ")
 
-        self.covariance_folder = "."
-        if os.path.exists(COVARIANCE_FOLDER):
-            self.covariance_folder = COVARIANCE_FOLDER
+        self.covariance_file = "."
+        if os.path.exists(COVARIANCE_FILE):
+            self.covariance_file = COVARIANCE_FILE
 
         self.view = MainScreenView.MainScreenView(root, self)
 
@@ -148,10 +148,10 @@ class MainScreen(object):
         if rel:
             self.output_path = rel
 
-    def covarianceFolderButtonPressed(self):
-        rel = self.folderButtonPressed(self.view.covariance_folder_button, True)
+    def covarianceFileButtonPressed(self):
+        rel = self.openFileButtonPressed(self.view.covariance_file_button)
         if rel:
-            self.covariance_folder = rel
+            self.covariance_file = rel
 
     def quitButtonPressed(self):
         self.root.quit()
@@ -338,8 +338,7 @@ class MainScreen(object):
                 self.beta_folder = source.beta_folder
                 self.weight_db_path = source.weight_db_path
                 self.output_file = source.output_path
-                self.covariance_folder = source.covariance_folder
-                self.covariance_file_pattern = 'cov-1000GP_Phase3_chr(?<!\d)\d{1,2}-(.*)-DGN-WB_0.5.db' #<- Ignore it for now
+                self.covariance = source.covariance_file
                 self.zscore_scheme = ZScoreCalculation.BETA_Z_SIGMA_REF
                 self.normalization_scheme = Normalization.NONE
                 self.input_format = Formats.FlatFile

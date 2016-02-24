@@ -22,6 +22,7 @@ class CalculateZScores(object):
         self.folder_beta = args.beta_folder
         self.output_file = args.output_file
         self.selected_dosage_folder = args.selected_dosage_folder
+        self.keep_ens_version = args.keep_ens_version
 
         self.zscore_scheme = args.zscore_scheme
         self.normalization_scheme = args.normalization_scheme
@@ -134,6 +135,10 @@ class CalculateZScores(object):
             for key in keys:
                 entry = results[key]
                 gene = entry[0]
+                if not self.keep_ens_version:
+                    if "ENSG00" in gene and "." in gene:
+                        gene = gene.split(".")[0]
+
                 gene_name = entry[1]
                 z_score = entry[2]
                 if normalization != 1:
@@ -207,10 +212,16 @@ if __name__ == "__main__":
                         help="Log verbosity level. 1 is everything being logged. 10 is only high level messages, above 10 will hardly log anything",
                         default = "10")
 
+    parser.add_argument("--keep_ens_version",
+                        help="If set, will keep the -version- postfix in gene id.",
+                    action="store_true",
+                    default=False)
+
     parser.add_argument("--throw",
                         action="store_true",
                         help="Throw exception on error",
                         default=False)
+
 
     args = parser.parse_args()
 

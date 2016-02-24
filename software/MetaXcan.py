@@ -72,6 +72,9 @@ class MetaXcanProcess(object):
             command += " --normalization_scheme " + self.args.normalization_scheme
         if self.args.throw:
             command += " --throw"
+        if self.args.keep_ens_version:
+            command += " --keep_ens_version"
+
         rcode = call(command.split(" "))
         return rcode
 
@@ -187,6 +190,12 @@ if __name__ == "__main__":
                             " 'from_pheno', estimate normalization constant from phenotype file, needs 'sigma_l' and 'standard error' in phenotype;"
                             " 'from_reference', estimate normalization constant from reference, needs 'standard error' on phenotype",
                         default=None)
+
+    parser.add_argument("--keep_ens_version",
+                    help="If set, will keep the -version- postfix in gene id.",
+                    action="store_true",
+                    default=False)
+
 
     parser.add_argument("--verbosity",
                         help="Log verbosity level. 1 is everything being logged. 10 is only high level messages, above 10 will hardly log anything",

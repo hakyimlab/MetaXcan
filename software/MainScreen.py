@@ -335,6 +335,7 @@ class MainScreen(object):
         class ZScoresWorkArgs(object):
             def __init__(self, source):
                 self.verbosity = "10"
+                self.keep_ens_version = False
                 self.beta_folder = source.beta_folder
                 self.weight_db_path = source.weight_db_path
                 self.output_file = source.output_path

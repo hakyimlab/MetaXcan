@@ -56,6 +56,18 @@ class TestKeyedDataset(unittest.TestCase):
         file_contents = open(filename, 'r').read().strip()
         self.assertEqual(file_contents, "k1 v1\nk2 v2\nk3 100\n4 0.4\n5 5")
 
+        # Test loading it back
+        with open(filename, 'r') as file:
+            kds = KeyedDataSetFileUtilities.loadContents(file, filename)
+            self.assertEqual(kds.name, filename)
+            self.assertEqual(kds.index, None)
+            self.assertEqual(len(kds.data), 5)
+            self.assertEqual(kds.values_by_key["k1"], "v1")
+            self.assertEqual(kds.values_by_key["k2"], "v2")
+            self.assertEqual(kds.values_by_key["k3"], "100")
+            self.assertEqual(kds.values_by_key["4"], "0.4")
+            self.assertEqual(kds.values_by_key["5"], "5")
+
         os.remove(filename)
 
 
@@ -70,11 +82,31 @@ class TestKeyedDataset(unittest.TestCase):
         self.assertEqual(file_contents,
                          "H1 H2\nk1 v1\nk2 v2\nk3 100\n4 0.4\n5 5")
 
+        # test loading it back in
+        kds = KeyedDataSetFileUtilities.loadFromFile(filename, header="H1 H2")
+        self.assertEqual(kds.name, filename)
+        self.assertEqual(kds.index, None)
+        self.assertEqual(len(kds.data), 5)
+        self.assertEqual(kds.values_by_key["k1"], "v1")
+        self.assertEqual(kds.values_by_key["k2"], "v2")
+        self.assertEqual(kds.values_by_key["k3"], "100")
+        self.assertEqual(kds.values_by_key["4"], "0.4")
+        self.assertEqual(kds.values_by_key["5"], "5")
+
         # No header
         KeyedDataSetFileUtilities.saveToFile(filename, kds, None, None)
         file_contents = open(filename, 'r').read().strip()
         self.assertEqual(file_contents, "k1 v1\nk2 v2\nk3 100\n4 0.4\n5 5")
 
+        kds = KeyedDataSetFileUtilities.loadFromFile(filename)
+        self.assertEqual(kds.name, filename)
+        self.assertEqual(kds.index, None)
+        self.assertEqual(len(kds.data), 5)
+        self.assertEqual(kds.values_by_key["k1"], "v1")
+        self.assertEqual(kds.values_by_key["k2"], "v2")
+        self.assertEqual(kds.values_by_key["k3"], "100")
+        self.assertEqual(kds.values_by_key["4"], "0.4")
+        self.assertEqual(kds.values_by_key["5"], "5")
         os.remove(filename)
 
 
@@ -89,10 +121,30 @@ class TestKeyedDataset(unittest.TestCase):
         self.assertEqual(file_contents,
                          "H1 H2\nk1 v1\nk2 v2\nk3 100\n4 0.4\n5 5")
 
+        kds = KeyedDataSetFileUtilities.loadFromCompressedFile(filename, header="H1 H2")
+        self.assertEqual(kds.name, filename)
+        self.assertEqual(kds.index, None)
+        self.assertEqual(len(kds.data), 5)
+        self.assertEqual(kds.values_by_key["k1"], "v1")
+        self.assertEqual(kds.values_by_key["k2"], "v2")
+        self.assertEqual(kds.values_by_key["k3"], "100")
+        self.assertEqual(kds.values_by_key["4"], "0.4")
+        self.assertEqual(kds.values_by_key["5"], "5")
+
         # No header
-        KeyedDataSetFileUtilities.saveToFile(filename, kds, None, None)
-        file_contents = open(filename, 'r').read().strip()
+        KeyedDataSetFileUtilities.saveToCompressedFile(filename, kds, None, None)
+        file_contents = gzip.open(filename, 'r').read().strip()
         self.assertEqual(file_contents, "k1 v1\nk2 v2\nk3 100\n4 0.4\n5 5")
+
+        kds = KeyedDataSetFileUtilities.loadFromCompressedFile(filename)
+        self.assertEqual(kds.name, filename)
+        self.assertEqual(kds.index, None)
+        self.assertEqual(len(kds.data), 5)
+        self.assertEqual(kds.values_by_key["k1"], "v1")
+        self.assertEqual(kds.values_by_key["k2"], "v2")
+        self.assertEqual(kds.values_by_key["k3"], "100")
+        self.assertEqual(kds.values_by_key["4"], "0.4")
+        self.assertEqual(kds.values_by_key["5"], "5")
         os.remove(filename)
 
     def testKeyedDataSetsWriteContents(self):

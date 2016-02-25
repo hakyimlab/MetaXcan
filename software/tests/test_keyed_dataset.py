@@ -47,7 +47,15 @@ class TestKeyedDataset(unittest.TestCase):
         with open(filename, 'w') as file:
             KeyedDataSetFileUtilities.writeContents(file, kds, "H1", "H2")
         file_contents = open(filename, 'r').read().strip()
-        self.assertEqual(file_contents, "H1 H2\nk1 v1\nk2 v2\nk3 100\n4 0.4\n5 5")
+        self.assertEqual(file_contents,
+                         "H1 H2\nk1 v1\nk2 v2\nk3 100\n4 0.4\n5 5")
+
+        # No Header
+        with open(filename, 'w') as file:
+            KeyedDataSetFileUtilities.writeContents(file, kds, None, None)
+        file_contents = open(filename, 'r').read().strip()
+        self.assertEqual(file_contents, "k1 v1\nk2 v2\nk3 100\n4 0.4\n5 5")
+
         os.remove(filename)
 
 
@@ -59,7 +67,14 @@ class TestKeyedDataset(unittest.TestCase):
         filename = "kds1_file.txt"
         KeyedDataSetFileUtilities.saveToFile(filename, kds, "H1", "H2")
         file_contents = open(filename, 'r').read().strip()
-        self.assertEqual(file_contents, "H1 H2\nk1 v1\nk2 v2\nk3 100\n4 0.4\n5 5")
+        self.assertEqual(file_contents,
+                         "H1 H2\nk1 v1\nk2 v2\nk3 100\n4 0.4\n5 5")
+
+        # No header
+        KeyedDataSetFileUtilities.saveToFile(filename, kds, None, None)
+        file_contents = open(filename, 'r').read().strip()
+        self.assertEqual(file_contents, "k1 v1\nk2 v2\nk3 100\n4 0.4\n5 5")
+
         os.remove(filename)
 
 
@@ -71,5 +86,83 @@ class TestKeyedDataset(unittest.TestCase):
         filename = "kds1_file.txt.gz"
         KeyedDataSetFileUtilities.saveToCompressedFile(filename, kds, "H1", "H2")
         file_contents = gzip.open(filename, 'rb').read().strip()
-        self.assertEqual(file_contents, "H1 H2\nk1 v1\nk2 v2\nk3 100\n4 0.4\n5 5")
+        self.assertEqual(file_contents,
+                         "H1 H2\nk1 v1\nk2 v2\nk3 100\n4 0.4\n5 5")
+
+        # No header
+        KeyedDataSetFileUtilities.saveToFile(filename, kds, None, None)
+        file_contents = open(filename, 'r').read().strip()
+        self.assertEqual(file_contents, "k1 v1\nk2 v2\nk3 100\n4 0.4\n5 5")
+        os.remove(filename)
+
+    def testKeyedDataSetsWriteContents(self):
+        keys = "k1,k2,k3,k4,k5".split(",")
+        values1 = "v1,v2,v3,v4,v5".split(",")
+        values2 = "d1,d2,d3,d4,d5".split(",")
+        values3 = "j1,j2,j3,j4,j5".split(",")
+
+        kds1 = KeyedDataSet("col1", 1, values1, keys)
+        kds2 = KeyedDataSet("col2", 2, values2, keys)
+        kds3 = KeyedDataSet("col3", 3, values3, keys)
+
+        filename = "kds_multi.txt"
+        with open(filename, "w") as file:
+            KeyedDataSetFileUtilities.writeSetsContent(file,
+                        [kds1, kds2, kds3], "K")
+        file_contents = open(filename, 'r').read().strip()
+        self.assertEqual(file_contents, ("K col1 col2 col3\nk1 v1 d1 j1\n" +
+                        "k2 v2 d2 j2\nk3 v3 d3 j3\nk4 v4 d4 j4\nk5 v5 d5 j5"))
+
+        with open(filename, "w") as file:
+            KeyedDataSetFileUtilities.writeSetsContent(file,
+                        [kds1, kds2, kds3], None)
+        file_contents = open(filename, 'r').read().strip()
+        self.assertEqual(file_contents, ("k1 v1 d1 j1\n" +
+                        "k2 v2 d2 j2\nk3 v3 d3 j3\nk4 v4 d4 j4\nk5 v5 d5 j5"))
+
+        os.remove(filename)
+
+
+    def testKeyedDataSetsSave(self):
+        keys = "k1,k2,k3,k4,k5".split(",")
+        values1 = "v1,v2,v3,v4,v5".split(",")
+        values2 = "d1,d2,d3,d4,d5".split(",")
+        values3 = "j1,j2,j3,j4,j5".split(",")
+
+        kds1 = KeyedDataSet("col1", 1, values1, keys)
+        kds2 = KeyedDataSet("col2", 2, values2, keys)
+        kds3 = KeyedDataSet("col3", 3, values3, keys)
+
+        filename = "kds1_sets_file.txt"
+        KeyedDataSetFileUtilities.saveSetsToFile(filename, [kds1, kds2, kds3], "K")
+        file_contents = open(filename, 'r').read().strip()
+        self.assertEqual(file_contents, ("K col1 col2 col3\nk1 v1 d1 j1\n" +
+                        "k2 v2 d2 j2\nk3 v3 d3 j3\nk4 v4 d4 j4\nk5 v5 d5 j5"))
+        KeyedDataSetFileUtilities.saveSetsToFile(filename, [kds1, kds2, kds3], None)
+        file_contents = open(filename, 'r').read().strip()
+        self.assertEqual(file_contents, ("k1 v1 d1 j1\n" +
+                        "k2 v2 d2 j2\nk3 v3 d3 j3\nk4 v4 d4 j4\nk5 v5 d5 j5"))
+
+        os.remove(filename)
+
+    def testKeyedDataSetsCompressedSave(self):
+        keys = "k1,k2,k3,k4,k5".split(",")
+        values1 = "v1,v2,v3,v4,v5".split(",")
+        values2 = "d1,d2,d3,d4,d5".split(",")
+        values3 = "j1,j2,j3,j4,j5".split(",")
+
+        kds1 = KeyedDataSet("col1", 1, values1, keys)
+        kds2 = KeyedDataSet("col2", 2, values2, keys)
+        kds3 = KeyedDataSet("col3", 3, values3, keys)
+
+        filename = "kds1_sets_file.txt"
+        KeyedDataSetFileUtilities.saveSetsToCompressedFile(filename, [kds1, kds2, kds3], "K")
+        file_contents = gzip.open(filename, 'rb').read().strip()
+        self.assertEqual(file_contents, ("K col1 col2 col3\nk1 v1 d1 j1\n" +
+                        "k2 v2 d2 j2\nk3 v3 d3 j3\nk4 v4 d4 j4\nk5 v5 d5 j5"))
+        KeyedDataSetFileUtilities.saveSetsToCompressedFile(filename, [kds1, kds2, kds3], None)
+        file_contents = gzip.open(filename, 'rb').read().strip()
+        self.assertEqual(file_contents, ("k1 v1 d1 j1\n" +
+                        "k2 v2 d2 j2\nk3 v3 d3 j3\nk4 v4 d4 j4\nk5 v5 d5 j5"))
+
         os.remove(filename)

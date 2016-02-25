@@ -3,6 +3,7 @@ __author__ = 'heroico'
 import logging
 import os
 import numpy
+
 import metax.WeightDBUtilities as WeightDBUtilities
 import metax.Logging as Logging
 import metax.Utilities as Utilities

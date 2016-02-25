@@ -3,11 +3,11 @@ __author__ = 'heroico'
 
 import logging
 import os
-import ThousandGenomesUtilities
-import GWASUtilities
-import Utilities
-import WeightDBUtilities
-import Logging
+import metax.ThousandGenomesUtilities as ThousandGenomesUtilities
+import metax.GWASUtilities as GWASUtilities
+import metax.Utilities as Utilities
+import metax.WeightDBUtilities as WeightDBUtilities
+import metax.Logging as Logging
 
 
 class AlleleStats(object):

@@ -11,3 +11,13 @@
 
 # RStudio files
 .Rproj.user/
+
+# Mac hidden files
+*.DS_Store
+
+# Python's setuptools stuff
+*dist/
+*.egg-info
+
+# PyCharm project files
+*.idea

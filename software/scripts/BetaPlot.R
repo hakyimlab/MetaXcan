@@ -1,3 +1,4 @@
+#!/usr/bin/env Rscript
 library(ggplot2)
 
 beta_plot <- function(z, z_q, file_prefix) {

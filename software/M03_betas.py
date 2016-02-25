@@ -1,15 +1,15 @@
 #! /usr/bin/env python
 __author__ = 'heroico'
-
+__version__ = 0.1
 import logging
 import os
 import re
-import KeyedDataSet
-import WeightDBUtilities
-import GWASUtilities
-import MethodGuessing
-import Utilities
-import Logging
+import metax.KeyedDataSet as KeyedDataSet
+import metax.WeightDBUtilities as WeightDBUtilities
+import metax.GWASUtilities as GWASUtilities
+import metax.MethodGuessing as MethodGuessing
+import metax.Utilities as Utilities
+import metax.Logging as Logging
 
 class GetBetas(object):
     def __init__(self, args):
@@ -51,9 +51,26 @@ class GetBetas(object):
         result_sets = dosage_loader.load()
         KeyedDataSet.KeyedDataSetFileUtilities.saveSetsToCompressedFile(output_path, result_sets, "rsid")
 
+
+def run(args):
+    "Wrapper for common behavior for execution. "
+
+    work = GetBetas(args)
+    if args.throw:
+        work.run()
+    else:
+        try:
+            work.run()
+        except NameError as e:
+            logging.info("Unexpected error: %s" % str(e))
+            exit(1)
+        except Exception as e:
+            print e
+            exit(1)
+
 if __name__ == "__main__":
     import argparse
-    parser = argparse.ArgumentParser(description='Build betas from GWAS data.')
+    parser = argparse.ArgumentParser(description='M03_betas.py %s: Build betas from GWAS data.' % (__version__))
 
     parser.add_argument("--weight_db_path",
                         help="name of weight db in data folder",
@@ -141,16 +158,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     Logging.configureLogging(int(args.verbosity))
+    run(args)
 
-    work = GetBetas(args)
-    if args.throw:
-        work.run()
-    else:
-        try:
-            work.run()
-        except NameError as e:
-            logging.info("Unexpected error: %s" % str(e))
-            exit(1)
-        except Exception as e:
-            print e
-            exit(1)

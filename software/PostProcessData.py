@@ -3,9 +3,9 @@ __author__ = 'heroico'
 
 import logging
 import os
-import Gene
-import Logging
-import KeyedDataSet
+import metax.Gene as Gene
+import metax.Logging as Logging
+import metax.KeyedDataSet as KeyedDataSet
 
 EXCLUDED = { "MROH7":True, "DCAF8":True, "F11R":True,"LIMS3":True, "CRYBG3":True, "FAM47E":True, "CKS1B":True, "DEFB130":True, "TMEM236":True,
              "LSP1":True, "CCDC177":True, "GOLGA6L9":True, "ZNF177":True, "ZNF763":True, "PLCXD1":True, "GTPBP6":True, "PPP2R3B":True,

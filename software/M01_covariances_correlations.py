@@ -6,12 +6,12 @@ import numpy
 import os
 import gzip
 import ntpath
-import WeightDBUtilities
-import PrediXcanFormatUtilities
-import ThousandGenomesUtilities
-import Logging
-import Utilities
-import Formats
+import metax.WeightDBUtilities as WeightDBUtilities
+import metax.PrediXcanFormatUtilities as PrediXcanFormatUtilities
+import metax.ThousandGenomesUtilities as ThousandGenomesUtilities
+import metax.Logging as Logging
+import metax.Utilities as Utilities
+import metax.Formats as Formats
 
 
 def pathLeaf(path):

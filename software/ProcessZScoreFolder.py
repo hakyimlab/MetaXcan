@@ -6,8 +6,8 @@ import re
 import logging
 import rpy2.robjects as robjects
 from subprocess import  call
-import Logging
-import Gene
+import metax.Logging as Logging
+import metax.Gene as Gene
 
 class ProcessFiles(object):
     def __init__(self, args):

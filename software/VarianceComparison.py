@@ -3,12 +3,12 @@ __author__ = 'heroico'
 
 import os
 import logging
-import Logging
-import Utilities
-import MatrixUtilities
-import KeyedDataSet
-import WeightDBUtilities
-import GWASUtilities
+import metax.Logging as Logging
+import metax.Utilities as Utilities
+import metax.MatrixUtilities as MatrixUtilities
+import metax.KeyedDataSet as KeyedDataSet
+import metax.WeightDBUtilities as WeightDBUtilities
+import metax.GWASUtilities as GWASUtilities
 
 if __name__ == "__main__":
     Logging.configureLogging(logging.INFO)

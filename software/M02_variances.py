@@ -5,10 +5,10 @@ import logging
 import numpy
 import gzip
 import os
-import WeightDBUtilities
-import Utilities
-import PrediXcanFormatUtilities
-import Logging
+import metax.WeightDBUtilities as WeightDBUtilities
+import metax.Utilities as Utilities
+import metax.PrediXcanFormatUtilities as PrediXcanFormatUtilities
+import metax.Logging as Logging
 
 class CalculateVariances(object):
     def __init__(self, args):

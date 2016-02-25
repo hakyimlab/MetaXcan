@@ -8,14 +8,14 @@ import tkMessageBox
 import Tkinter
 from subprocess import call
 from threading import Thread
-import MainScreenView
-import MetaXcanUITask
+import metax.MainScreenView as MainScreenView
+import metax.MetaXcanUITask as MetaXcanUITask
 import M03_betas
 import M04_zscores
-import Formats
-import GWASUtilities
-import ZScoreCalculation
-import Normalization
+import metax.Formats as Formats
+import metax.GWASUtilities as GWASUtilities
+import metax.ZScoreCalculation as ZScoreCalculation
+import metax.Normalization as Normalization
 from Utilities import TS
 from Utilities import checkSubdirectorySanity
 

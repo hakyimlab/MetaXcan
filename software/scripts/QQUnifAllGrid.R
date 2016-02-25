@@ -1,5 +1,16 @@
+#!/usr/bin/env Rscript
+
+
 library(argparse)
-source("Plots.R")
+
+# The following allows R to find sister scripts inside the same directory as
+# the current script (when run as an executable program via Rscript)
+initial.options <- commandArgs(trailingOnly = FALSE)
+file.arg.name <- "--file="
+script.name <- sub(file.arg.name, "", initial.options[grep(file.arg.name, initial.options)])
+script.basename <- dirname(script.name)
+
+source(paste(script.basename, "Plots.R", sep="/"))
 
 parser <- ArgumentParser(description="Plot and compare different population's MetaXcan against different population's predixcan")
 parser$add_argument('--input_pattern',

@@ -3,7 +3,8 @@
 import os
 from subprocess import call
 import logging
-import Logging
+import metax.Logging as Logging
+
 __author__ = 'heroico'
 
 EUR = "EUR"
@@ -63,7 +64,7 @@ def zscore_path(study, reference):
     return output_file
 
 def zscore(study, reference):
-    command = "./M04_zscores.py"
+    command = "M04_zscores.py"
     command += " --covariance_folder " + COV[reference]
     command += " --beta_folder " + BETA[study]
     command += " --output_file " + zscore_path(study, reference)
@@ -78,7 +79,7 @@ def predixcan_zscore_path(study, reference):
     return output_file
 
 def post_process(study, reference):
-    command = "./PostProcessData.py"
+    command = "PostProcessData.py"
     command += " --predixcan_file " + PREDIXCAN[study]
     command += " --zscore_file " + zscore_path(study, reference)
     command += " --output " + predixcan_zscore_path(study, reference)

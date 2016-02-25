@@ -1,0 +1,5 @@
+
+Version 0.2.1
+	* added option to zscores for saving ensembl versions
+Version 0.2
+	* Changed covariance format and runtime flag

@@ -3,11 +3,12 @@ __author__ = 'heroico'
 import logging
 import os
 import numpy
-import WeightDBUtilities
-import Logging
-import Utilities
-import MatrixUtilities
-import ZScoreCalculation
+
+import metax.WeightDBUtilities as WeightDBUtilities
+import metax.Logging as Logging
+import metax.Utilities as Utilities
+import metax.MatrixUtilities as MatrixUtilities
+import metax.ZScoreCalculation as ZScoreCalculation
 
 
 class GeneStats(object):

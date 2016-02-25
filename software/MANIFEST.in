@@ -1,0 +1,3 @@
+include Readme.md
+include CHANGES
+include ez_setup.py

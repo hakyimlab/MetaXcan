@@ -2,85 +2,37 @@
 
 __author__ = 'heroico'
 
+import metax
+__version__ = metax.__version__
 from subprocess import call
 import logging
-import Logging
-import ZScoreCalculation
-import Formats
+import metax.Logging as Logging
+import metax.ZScoreCalculation as ZScoreCalculation
+import metax.Formats as Formats
+import M03_betas
+import M04_zscores
 
 class MetaXcanProcess(object):
     def __init__(self, args):
         self.args = args
 
     def run(self):
-        rcode = self.buildBetas()
-        if rcode != 0:
-            logging.info("Beta step failed!")
-            return
-
+        self.buildBetas()
         self.buildZScores()
 
     def buildBetas(self):
         logging.info("Processing betas!")
-        command = "./M03_betas.py"
-        command += " --weight_db_path " + self.args.weight_db_path
-        command += " --gwas_folder " + self.args.gwas_folder
-        command += " --output_folder " + self.args.beta_folder
-        command += " --verbosity " + self.args.verbosity
-        if self.args.gwas_file_pattern:
-            command += " --gwas_file_pattern " + self.args.gwas_file_pattern
-        command += " --a1_column " + self.args.a1_column
-        command += " --a2_column " + self.args.a2_column
-        command += " --snp_column " + self.args.snp_column
-        if self.args.scheme:
-            command += " --scheme " + self.args.scheme
-        if self.args.or_column:
-            command += " --or_column " + self.args.or_column
-        if self.args.beta_column:
-            command += " --beta_column " + self.args.beta_column
-        if self.args.beta_sign_column:
-            command += " --beta_sign_column " + self.args.beta_sign_column
-        if self.args.beta_zscore_column:
-            command += " --beta_zscore_column " + self.args.beta_zscore_column
-        if self.args.se_column:
-            command += " --se_column " + self.args.se_column
-        if self.args.frequency_column:
-            command += " --frequency_column " + self.args.frequency_column
-        if self.args.pvalue_column:
-            command += " --pvalue_column " + self.args.pvalue_column
-        if self.args.compressed:
-            command += " --compressed"
-        if self.args.throw:
-            command += " --throw"
-        if self.args.separator:
-            command = " --separator "+self.args.separator
-        rcode = call(command.split(" "))
-        return rcode
+        self.args.output_folder = args.beta_folder
+        M03_betas.run(self.args)
 
     def buildZScores(self):
         logging.info("Calculating ZScores!")
-        command = "./M04_zscores.py"
-        command += " --weight_db_path " + self.args.weight_db_path
-        command += " --selected_dosage_folder " + self.args.selected_dosage_folder
-        command += " --covariance " + self.args.covariance
-        command += " --beta_folder " + self.args.beta_folder
-        command += " --output_file " + self.args.output_file
-        command += " --verbosity " + self.args.verbosity
-        if self.args.zscore_scheme:
-            command += " --zscore_scheme " + self.args.zscore_scheme
-        if self.args.normalization_scheme:
-            command += " --normalization_scheme " + self.args.normalization_scheme
-        if self.args.throw:
-            command += " --throw"
-        if self.args.keep_ens_version:
-            command += " --keep_ens_version"
+        M04_zscores.run(self.args)
 
-        rcode = call(command.split(" "))
-        return rcode
 
 if __name__ == "__main__":
     import argparse
-    parser = argparse.ArgumentParser(description='Will estimate MetaXcan results from a set of snp covariance matrices, a model database, and GWAS beta files.')
+    parser = argparse.ArgumentParser(description='MetaXcan.py %s:  Will estimate MetaXcan results from a set of snp covariance matrices, a model database, and GWAS beta files.' % (__version__))
 
 #weight db model
     parser.add_argument("--weight_db_path",

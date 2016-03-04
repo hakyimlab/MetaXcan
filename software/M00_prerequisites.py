@@ -110,7 +110,6 @@ class ProcessPrerequisites(object):
 
         contents = Utilities.contentsWithPatternsFromFolder(self.dosage_folder, ["dosage.txt.gz"])
         for content_name in contents:
-            logging.info("Processing %s", content_name)
             input_path = os.path.join(self.dosage_folder, content_name)
             fileBuilder = PrediXcanFormatUtilities.PrediXcanFormatFilteredFilesProcess(input_path, self.output_folder, content_name, all_people, selected_people_by_id, snp_dict)
             if self.output_format == Formats.IMPUTE:

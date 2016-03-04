@@ -51,25 +51,7 @@ class Person(object):
         return person
 
     @classmethod
-    def filterSamples(cls, input, output, population_filters = ["EUR"], individual_filters =[], row_delimiter=' ', skip_header=True):
-        filtered = []
-        with open(input, 'rb') as csv_file:
-            reader = csv.reader(csv_file, delimiter=row_delimiter, quotechar='"')
-            for row in reader:
-                if skip_header and reader.line_num == 1:
-                    continue
-
-                person = Person.loadPersonFromSampleRowIfFilter(row, population_filters, individual_filters)
-                if person is not None:
-                    filtered.append(person)
-
-        with open(output, 'w+') as output_file:
-            output_file.write(" ".join(["ID", "POP", "GROUP", "SEX"])+"\n")
-            for person in filtered:
-                output_file.write(person.toTextLine()+"\n")
-
-    @classmethod
-    def allPeople(cls, input, delim=' ', skip_header=True):
+    def loadPeople(cls, input, delim=' ', skip_header=True):
         people = []
         with open(input, 'rb') as csv_file:
             reader = csv.reader(csv_file, delimiter=delim, quotechar='"')
@@ -81,14 +63,24 @@ class Person(object):
         return people
 
     @classmethod
-    def peopleByIdFromFile(cls, input):
-        people_by_id = {}
-        with open(input, 'rb') as csv_file:
-            reader = csv.reader(csv_file, delimiter=' ', quotechar='"')
+    def loadFilteredPeople(cls, input_path, population_filters = ["EUR"], individual_filters =[], row_delimiter=' ', skip_header=True):
+        filtered = []
+        with open(input_path, 'rb') as csv_file:
+            reader = csv.reader(csv_file, delimiter=row_delimiter, quotechar='"')
             for row in reader:
-                if reader.line_num == 1:
+                if skip_header and reader.line_num == 1:
                     continue
 
-                person = Person.loadPersonFromSampleRow(row)
-                people_by_id[person.id] = person
-        return people_by_id
+                person = Person.loadPersonFromSampleRowIfFilter(row, population_filters, individual_filters)
+                if person is not None:
+                    filtered.append(person)
+        return filtered
+
+    @classmethod
+    def buildFilteredSamples(cls, input_path, output, population_filters = ["EUR"], individual_filters =[], row_delimiter=' ', skip_header=True):
+        filtered = cls.loadFilteredSamples(input_path, population_filters, individual_filters, row_delimiter, skip_header)
+
+        with open(output, 'w+') as output_file:
+            output_file.write(" ".join(["ID", "POP", "GROUP", "SEX"])+"\n")
+            for person in filtered:
+                output_file.write(person.toTextLine()+"\n")

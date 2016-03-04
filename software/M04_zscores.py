@@ -41,7 +41,8 @@ class CalculateZScores(object):
         if os.path.exists(self.selected_dosage_folder):
             samples_path = Utilities.samplesInputPath(self.selected_dosage_folder)
             if samples_path is not None:
-                people_by_id = Person.Person.peopleByIdFromFile(samples_path)
+                people = Person.Person.loadPeople(samples_path)
+                people_by_id = {p.id:p for p in people}
 
         logging.info("Loading weight db")
         weight_db_logic = WeightDBUtilities.WeightDBEntryLogic(self.weight_db_path)

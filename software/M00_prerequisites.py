@@ -42,9 +42,9 @@ class ProcessPrerequisites(object):
             logging.info("%s already exists, delete it if you want it figured out again", self.samples_output)
         else:
             if self.input_format == Formats.IMPUTE:
-                Person.Person.filterSamples(self.samples_input, self.samples_output, self.population_filters, self.individual_filters)
+                Person.Person.buildFilteredSamples(self.samples_input, self.samples_output, self.population_filters, self.individual_filters)
             elif self.input_format == Formats.PrediXcan:
-                Person.Person.filterSamples(self.samples_input, self.samples_output,
+                Person.Person.buildFilteredSamples(self.samples_input, self.samples_output,
                                             population_filters=self.population_filters,
                                             individual_filters=self.individual_filters,
                                             row_delimiter="\t", skip_header=False)
@@ -65,8 +65,10 @@ class ProcessPrerequisites(object):
     def processIMPUTEFiles(self):
         logging.info("Loading people")
         names = Utilities.hapNamesFromFolder(self.dosage_folder)
-        all_people = Person.Person.allPeople(self.samples_input)
-        selected_people_by_id = Person.Person.peopleByIdFromFile(self.samples_output)
+        all_people = Person.Person.loadPeople(self.samples_input)
+
+        selected_people = Person.Person.loadPeople(self.samples_output, delim=" ")
+        selected_people_by_id = {p.id:p for p in selected_people}
 
         logging.info("Loading snps")
         snp_data_set = DataSet.DataSetFileUtilities.loadFromCompressedFile(self.snp_list)
@@ -108,6 +110,7 @@ class ProcessPrerequisites(object):
 
         contents = Utilities.contentsWithPatternsFromFolder(self.dosage_folder, ["dosage.txt.gz"])
         for content_name in contents:
+            logging.info("Processing %s", content_name)
             input_path = os.path.join(self.dosage_folder, content_name)
             fileBuilder = PrediXcanFormatUtilities.PrediXcanFormatFilteredFilesProcess(input_path, self.output_folder, content_name, all_people, selected_people_by_id, snp_dict)
             if self.output_format == Formats.IMPUTE:

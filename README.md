@@ -18,6 +18,27 @@ Some support scripts use [scipy](http://www.scipy.org/) too, and there is a GUI 
 [R](https://www.r-project.org/) with [ggplot](http://ggplot2.org/) and [dplyr](https://cran.r-project.org/web/packages/dplyr/index.html) 
 is needed for some optional statistics and charts.
 
+## Project Layou
+
+You will find a preliminary version of MetaXcan's manuscript under */manuscript* folder.
+
+*software* folder contains an implementation of MetaXcan's method. 
+The following scripts from that folder are different steps in the MetaXcan pipeline:
+
+```bash
+M00_prerequisites.py
+M01_covariances_correlations.py
+M02_variances.py
+M03_betas.py
+M04_zscores.py
+```
+, although a typical user will use ony the last two of them.
+
+The rest of the scripts in *software* folder are python packaging support scripts.
+
+Subfolder *software/metax* contains the bulk of Metaxcan's logic, implemented as a python package.
+
+
 ## Input data
 MetaXcan will calculate the association results from GWAS results, as output by [plink](https://www.cog-genomics.org/plink2).
 Some support data is needed, that needs to be set up prior MetaXcan execution.

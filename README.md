@@ -20,9 +20,9 @@ is needed for some optional statistics and charts.
 
 ## Project Layou
 
-You will find a preliminary version of MetaXcan's manuscript under */manuscript* folder.
+You will find a preliminary version of MetaXcan's manuscript under **manuscript** folder.
 
-*software* folder contains an implementation of MetaXcan's method. 
+**software** folder contains an implementation of MetaXcan's method. 
 The following scripts from that folder are different steps in the MetaXcan pipeline:
 
 ```bash
@@ -34,9 +34,9 @@ M04_zscores.py
 ```
 , although a typical user will use ony the last two of them.
 
-The rest of the scripts in *software* folder are python packaging support scripts.
+The rest of the scripts in **software** folder are python packaging support scripts.
 
-Subfolder *software/metax* contains the bulk of Metaxcan's logic, implemented as a python package.
+Subfolder **software/metax** contains the bulk of Metaxcan's logic, implemented as a python package.
 
 
 ## Input data

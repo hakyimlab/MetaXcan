@@ -1,6 +1,7 @@
 __author__ = 'heroico'
 
 import sqlite3
+import os
 
 class GeneEntry:
     def __init__(self, gene, gene_name, R2, n_snp):
@@ -40,16 +41,19 @@ class WDBEQF(object):
     N_SNP=3
 
 class WeightDB(object):
-    def __init__(self,file_name):
+    def __init__(self, file_name , create_if_absent=False):
         self.connection = None
         self.cursor = None
         self.file_name = file_name
+        self.create_if_absent = create_if_absent
 
     def __del__(self):
         self.closeDB()
 
     def openDBIfNecessary(self):
         if not self.connection:
+            if not self.create_if_absent and not os.path.exists(self.file_name):
+                raise RuntimeError("Weight file doesn't exist")
             self.connection = sqlite3.connect(self.file_name)
             self.cursor = self.connection.cursor()
 

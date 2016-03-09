@@ -49,6 +49,7 @@ The gist of MetaXcan input is:
 - GWAS results (such as [these](https://s3.amazonaws.com/imlab-open/Data/MetaXcan/1000G-WB/data/GWAS.tar.gz))
 
 You can use precalculated databases, or generate new ones with tools in this repository.
+GTEx-based tissues and 1000 Genomes covariances precalculated data can be found [here](https://app.box.com/s/gujt4m6njqjfqqc9tu0oqgtjvtz9860w).
 (Please refer to **/software/Readme.md** for more detailed information)
 
 ## Setup and Usage Example

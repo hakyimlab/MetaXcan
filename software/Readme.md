@@ -147,6 +147,11 @@ but might be friendlier to non technical users.
 Here is a screenshot:
 ![screen shot](../manuscript/plots/gui.png)
 
+## Useful Data
+
+We make available several GTEx tissue models and 1000 Genomes covariances [here](https://app.box.com/s/gujt4m6njqjfqqc9tu0oqgtjvtz9860w).
+This files should be enough for running **M03_betas.py** and **M04_zscores.py** on practically any GWAS study.
+
 ## The Rest
 
 The other scripts in this repository fall into two categories:

@@ -3,7 +3,6 @@ __author__ = 'heroico'
 import gzip
 import logging
 import math
-import scipy
 import scipy.stats as stats
 import KeyedDataSet
 import Utilities

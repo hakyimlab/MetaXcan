@@ -4,11 +4,8 @@ __author__ = 'heroico'
 
 import metax
 __version__ = metax.__version__
-from subprocess import call
 import logging
 import metax.Logging as Logging
-import metax.ZScoreCalculation as ZScoreCalculation
-import metax.Formats as Formats
 import M03_betas
 import M04_zscores
 

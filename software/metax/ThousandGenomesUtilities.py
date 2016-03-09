@@ -3,8 +3,6 @@ __author__ = 'heroico'
 import gzip
 import os
 import logging
-import DataSet
-import Person
 import DataSetSNP
 import Utilities
 

@@ -18,7 +18,7 @@ Some support scripts use [scipy](http://www.scipy.org/) too, and there is a GUI 
 [R](https://www.r-project.org/) with [ggplot](http://ggplot2.org/) and [dplyr](https://cran.r-project.org/web/packages/dplyr/index.html) 
 is needed for some optional statistics and charts.
 
-## Project Layou
+## Project Layout
 
 You will find a preliminary version of MetaXcan's manuscript under **manuscript** folder.
 
@@ -104,6 +104,27 @@ The example command parameters mean:
 
 MetaXcan supports a large amount of command line parameters. Check the documentation for those that work best for your data.
 
+## Installation
+
+You also have the option of installing the MetaXcan package to your python distribution.
+This will make the **metax** library available for development, and install on your system path
+the main MetaXcan scripts.
+
+You can install it from the **software** folder with:
+
+```bash
+# ordinary install
+$ python setup.py install
+```
+
+Alternatively, if you are going to modify the sources, the following may be more convenient:
+
+```bash
+# developer mode instalation
+python setup.py develop
+```
+
+PIP support coming soon.
 
 ## Where to go from here
 

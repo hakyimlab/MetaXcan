@@ -10,7 +10,8 @@ import metax.Utilities as Utilities
 import metax.DataSet as DataSet
 import metax.Logging as Logging
 import metax.Formats as Formats
-
+import metax.Exceptions as Exceptions
+from metax import exitIf
 
 class ProcessPrerequisites(object):
     """ Build data needed by posterior steps. Shouldn't be needed most than once per pipeline"""
@@ -49,8 +50,7 @@ class ProcessPrerequisites(object):
                                             individual_filters=self.individual_filters,
                                             row_delimiter="\t", skip_header=False)
             else:
-                logging.info("Invalid input format: %s", self.input_format)
-                assert False
+                raise Exceptions.InvalidInputFormat(self.input_format)
 
 
     def buildDosages(self):
@@ -59,8 +59,7 @@ class ProcessPrerequisites(object):
         elif self.input_format == Formats.PrediXcan:
             self.processPrediXcanFiles()
         else:
-            logging.info("Invalid input format: %s", self.input_format)
-            assert False
+            raise Exceptions.InvalidInputFormat(self.input_format)
 
     def processIMPUTEFiles(self):
         logging.info("Loading people")
@@ -88,12 +87,14 @@ class ProcessPrerequisites(object):
                 filter.buildIMPUTE()
             elif self.output_format == Formats.PrediXcan:
                 search = self.chromosome_in_name_regex.search(name)
+                exitIf(search is None, Exceptions.InvalidInputFormat, \
+                             "No files found in '%s' that match the pattern, '%s'" \
+                             % (self.dosage_folder, self.chromosome_in_name_regex.pattern))
                 chr = search.group(1)
                 filter.chromosome_name = chr
                 filter.buildPrediXcan()
             else:
-                logging.info("Invalid output format: %s", self.output_format)
-                assert False
+                raise Exceptions.InvalidOutputFormat(self.output_format)
             #TODO: remove once it runs properly
             #break
 
@@ -118,8 +119,8 @@ class ProcessPrerequisites(object):
             if self.output_format == Formats.PrediXcan:
                 fileBuilder.buildPrediXcan()
             else:
-                logging.info("Invalid output format: %s", self.output_format)
-                assert False
+                raise Exceptions.InvalidOutputFormat(self.output_format)
+
             #TODO: remove once it runs properly
             #break
 
@@ -158,16 +159,21 @@ if __name__ == "__main__":
                    default=[])
 
     parser.add_argument('--input_format',
-                   help='Input dosage files format. Valid options are: IMPUTE, PrediXcan',
+                   choices=[Formats.IMPUTE, Formats.PrediXcan],
+                   help='Input dosage files format. Default: IMPUTE',
                    default=Formats.IMPUTE)
 
     parser.add_argument('--output_format',
-                   help='Output dosage files format. Valid options are: IMPUTE, PrediXcan',
+                   choices=[Formats.IMPUTE, Formats.PrediXcan],
+                   help='Output dosage files format. Default: PrediXcan',
                    default=Formats.PrediXcan)
 
     args = parser.parse_args()
 
     Logging.configureLogging(int(args.verbosity))
 
-    prerequisites = ProcessPrerequisites(args)
-    prerequisites.run()
+    try:
+        prerequisites = ProcessPrerequisites(args)
+        prerequisites.run()
+    except Exceptions.ReportableException, e:
+        logging.info(e.msg)

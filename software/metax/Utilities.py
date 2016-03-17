@@ -1,6 +1,7 @@
 __author__ = 'heroico'
 
 import os
+import Exceptions
 
 VALID_ALLELES = ["A", "T", "C", "G"]
 
@@ -35,18 +36,20 @@ def namesWithPatternFromFolder(folder, pattern):
     return names
 
 def contentsWithPatternsFromFolder(folder, patterns):
-    contents = os.listdir(folder)
-    paths = []
-    for content in contents:
-        matches = True
-        for pattern in patterns:
-            if not pattern in content:
-                matches = False
-                break
+    try:
+        contents = os.listdir(folder)
+        paths = []
+        for content in contents:
+            matches = True
+            for pattern in patterns:
+                if not pattern in content:
+                    matches = False
+                    break
 
-        if matches:
-            paths.append(content)
-
+            if matches:
+                paths.append(content)
+    except OSError:
+        raise Exceptions.BadDirectory(folder)
     return paths
 
 def contentsWithRegexpFromFolder(folder, regexp):

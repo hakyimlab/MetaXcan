@@ -99,8 +99,9 @@ class ProcessPrerequisites(object):
 
     def processPrediXcanFiles(self):
         logging.info("Loading people")
-        all_people = Person.Person.allPeople(self.samples_input, '\t', False)
-        selected_people_by_id = Person.Person.peopleByIdFromFile(self.samples_output)
+        all_people = Person.Person.loadPeople(self.samples_input, '\t', False)
+        selected_people = Person.Person.loadPeople(self.samples_output)
+        selected_people_by_id = {p.id:p for p in selected_people}
         logging.info("%d total people, %d selected", len(all_people), len(selected_people_by_id))
 
         logging.info("Loading snps")

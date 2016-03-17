@@ -80,7 +80,7 @@ if __name__ == "__main__":
 
     parser.add_argument("--frequency_column",
                     help="Name of column containing frequency in input file",
-                    default="FRQ")
+                    default=None)
 
     parser.add_argument("--a1_column",
                     help="Name of column containing allele 1 in input file",

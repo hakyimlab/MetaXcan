@@ -78,7 +78,7 @@ class Person(object):
 
     @classmethod
     def buildFilteredSamples(cls, input_path, output, population_filters = ["EUR"], individual_filters =[], row_delimiter=' ', skip_header=True):
-        filtered = cls.loadFilteredSamples(input_path, population_filters, individual_filters, row_delimiter, skip_header)
+        filtered = cls.loadFilteredPeople(input_path, population_filters, individual_filters, row_delimiter, skip_header)
 
         with open(output, 'w+') as output_file:
             output_file.write(" ".join(["ID", "POP", "GROUP", "SEX"])+"\n")

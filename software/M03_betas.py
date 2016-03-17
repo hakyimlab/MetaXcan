@@ -49,7 +49,13 @@ class GetBetas(object):
         callback = GWASUtilities.GWASWeightDBFilteredBetaLineCollector(file_format, scheme, weight_db_logic)
         dosage_loader = GWASUtilities.GWASDosageFileLoader(input_path, self.compressed, self.args.separator, callback)
         result_sets = dosage_loader.load()
-        KeyedDataSet.KeyedDataSetFileUtilities.saveSetsToCompressedFile(output_path, result_sets, "rsid")
+
+        # The following check is sort of redundant, as it exists in "saveSetsToCompressedFile".
+        # It exists merely to provide different login
+        if len(result_sets):
+            KeyedDataSet.KeyedDataSetFileUtilities.saveSetsToCompressedFile(output_path, result_sets, "rsid")
+        else:
+            logging.info("Nos snps from the tissue model found in the GWAS file")
 
 
 def run(args):

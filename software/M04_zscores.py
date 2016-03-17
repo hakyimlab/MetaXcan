@@ -91,7 +91,7 @@ class CalculateZScores(object):
                     logging.info("Gene %s already processed", gene)
                     continue
 
-                reporter.update(i, "%d done")
+                reporter.update(i, "%d %% of model's snp information found so far in the gwas study") #proxied by percenteage of genes
 
                 covariance_matrix = entry[0]
                 valid_rsids = entry[1]

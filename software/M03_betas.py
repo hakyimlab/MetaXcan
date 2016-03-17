@@ -55,7 +55,7 @@ class GetBetas(object):
         if len(result_sets):
             KeyedDataSet.KeyedDataSetFileUtilities.saveSetsToCompressedFile(output_path, result_sets, "rsid")
         else:
-            logging.info("Nos snps from the tissue model found in the GWAS file")
+            logging.info("No snps from the tissue model found in the GWAS file")
 
 
 def run(args):

@@ -104,7 +104,7 @@ class PrediXcanFormatFilteredFilesProcess(object):
 
                 dosages = row[PDTF.FIRST_DATA_COLUMN:]
                 if len(dosages) != len(self.all_people):
-                    logging.log(9,"rsid %s: not enough dosage: %d, %d", rsid, len(dosages), len(self.all_people))
+                    logging.error("rsid %s: not enough dosage: %d, %d", rsid, len(dosages), len(self.all_people))
                     assert False
                 selected_dosages = pickDosages(dosages, self.all_people, self.selected_people_by_id)
                 dosage_line = " ".join(selected_dosages)+"\n"
@@ -146,7 +146,7 @@ class PrediXcanFormatFilteredFilesProcess(object):
 
                 dosages = row[PDTF.FIRST_DATA_COLUMN:]
                 if len(dosages) != len(self.all_people):
-                    logging.log(9,"rsid %s: not enough dosage: %d, %d", rsid, len(dosages), len(self.all_people))
+                    logging.error("rsid %s: not enough dosage: %d, %d", rsid, len(dosages), len(self.all_people))
                     assert False
                 selected_dosages = pickDosages(dosages, self.all_people, self.selected_people_by_id)
                 dosages = map(float,selected_dosages) # dosages may be inputed

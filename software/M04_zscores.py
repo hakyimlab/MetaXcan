@@ -13,7 +13,7 @@ import metax.MatrixUtilities as MatrixUtilities
 import metax.ZScoreCalculation as ZScoreCalculation
 import metax.Normalization as Normalization
 import metax.MethodGuessing as MethodGuessing
-
+import metax.Exceptions as Exceptions
 
 class CalculateZScores(object):
     def __init__(self, args):
@@ -173,13 +173,7 @@ class CalculateZScores(object):
 def run(args):
     "Wrapper for common behavior for execution. "
     work = CalculateZScores(args)
-    if args.throw:
-        work.run()
-    else:
-        try:
-            work.run()
-        except Exception as e:
-            logging.info("Unexpected error: %s", str(e))
+    work.run()
 
 if __name__ == "__main__":
     import argparse
@@ -238,6 +232,13 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     Logging.configureLogging(int(args.verbosity))
-    run(args)
-
-
+    if args.throw:
+        run(args)
+    else:
+        try:
+            run(args)
+        except NameError as e:
+            logging.info("Unexpected error: %s" % str(e))
+            exit(1)
+        except Exceptions.ReportableException, e:
+            logging.error(e.msg)

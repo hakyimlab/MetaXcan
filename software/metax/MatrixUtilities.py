@@ -40,7 +40,7 @@ def loadMatrixFromFile(file):
 
             the_gene = self.pending[0][0]
             if the_gene in self.entries:
-                logging.log(9, "Gene already processed! %s", the_gene)
+                logging.error("Gene already processed! %s", the_gene)
                 assert False
 
             key_filter = {}

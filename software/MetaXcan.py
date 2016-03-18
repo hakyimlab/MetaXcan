@@ -8,6 +8,7 @@ import logging
 import metax.Logging as Logging
 import M03_betas
 import M04_zscores
+import metax.Exceptions as Exceptions
 
 class MetaXcanProcess(object):
     def __init__(self, args):
@@ -159,5 +160,11 @@ if __name__ == "__main__":
 
     Logging.configureLogging(int(args.verbosity))
 
-    work = MetaXcanProcess(args)
-    work.run()
+    try:
+        work = MetaXcanProcess(args)
+        print "RUN"
+        work.run()
+        print "RUNNED"
+    except Exceptions.ReportableException, e:
+        print "FDSAFDSA"
+        logging.error(e.msg)

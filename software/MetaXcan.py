@@ -162,9 +162,6 @@ if __name__ == "__main__":
 
     try:
         work = MetaXcanProcess(args)
-        print "RUN"
         work.run()
-        print "RUNNED"
     except Exceptions.ReportableException, e:
-        print "FDSAFDSA"
         logging.error(e.msg)

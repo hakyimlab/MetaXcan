@@ -14,6 +14,10 @@ class InvalidOutputFormat(ReportableException):
     def __init__(self, msg):
         super(InvalidOutputFormat, self).__init__("Invalid output format: %s" % (msg))
 
+class MalformedInputFile(ReportableException):
+    """Errors associated with a problematic input file"""
+    def __init__(self, filename, msg):
+        super(MalformedInputFile, self).__init__("While processing file, %s: %s" % (filename, msg) )
 
 class BadFilename(ReportableException):
     """Reports invalid filename"""

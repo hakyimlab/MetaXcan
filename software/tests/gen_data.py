@@ -6,7 +6,7 @@ class StructuredExample(object):
         self.filename = "%s.txt" % (prefix)
         self.header = header
 
-        if header is not none and dtypes is not none:
+        if header is not None and dtypes is not None:
             if len(header) != len(dtypes):
                 print "Header and dtypes must be the same size: ", header, dtypes
                 sys.exit(1)

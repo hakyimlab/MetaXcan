@@ -37,7 +37,8 @@ class GetBetas(object):
                 self.buildBetas(weight_db_logic,name)
             # This just means that there is some extra stuff inside that directory,
             # so I'm thinking we want to ignore it.
-            except Exceptions.BadFilename:
+            except Exceptions.BadFilename as e:
+                logging.info("Wrong file name: %s, skipping", e.msg)
                 pass
 
     def buildBetas(self, weight_db_logic, name):

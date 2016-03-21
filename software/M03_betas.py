@@ -10,6 +10,7 @@ import metax.GWASUtilities as GWASUtilities
 import metax.MethodGuessing as MethodGuessing
 import metax.Utilities as Utilities
 import metax.Logging as Logging
+import metax.Exceptions as Exceptions
 
 class GetBetas(object):
     def __init__(self, args):
@@ -32,7 +33,12 @@ class GetBetas(object):
             os.makedirs(self.output_folder)
 
         for name in names:
-            self.buildBetas(weight_db_logic,name)
+            try:
+                self.buildBetas(weight_db_logic,name)
+            # This just means that there is some extra stuff inside that directory,
+            # so I'm thinking we want to ignore it.
+            except Exceptions.BadFilename:
+                pass
 
     def buildBetas(self, weight_db_logic, name):
         output_path = os.path.join(self.output_folder, name)
@@ -62,17 +68,7 @@ def run(args):
     "Wrapper for common behavior for execution. "
 
     work = GetBetas(args)
-    if args.throw:
-        work.run()
-    else:
-        try:
-            work.run()
-        except NameError as e:
-            logging.info("Unexpected error: %s" % str(e))
-            exit(1)
-        except Exception as e:
-            print e
-            exit(1)
+    work.run()
 
 if __name__ == "__main__":
     import argparse
@@ -164,5 +160,14 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     Logging.configureLogging(int(args.verbosity))
-    run(args)
+    if args.throw:
+        run(args)
+    else:
+        try:
+            run(args)
+        except NameError as e:
+            logging.info("Unexpected error: %s" % str(e))
+            exit(1)
+        except Exceptions.ReportableException, e:
+            logging.error(e.msg)
 

@@ -3,6 +3,7 @@ __author__ = 'heroico'
 import numpy
 import logging
 import Utilities
+import Exceptions
 
 class MTF(object):
     """Matrix table format"""
@@ -40,8 +41,7 @@ def loadMatrixFromFile(file):
 
             the_gene = self.pending[0][0]
             if the_gene in self.entries:
-                logging.log(9, "Gene already processed! %s", the_gene)
-                assert False
+                raise Exceptions.MalformedInputFile(file, "Entries for genes must be contiguous but %s was found in two different places in the file." % (the_gene))
 
             key_filter = {}
             valid_keys = []

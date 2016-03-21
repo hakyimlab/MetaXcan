@@ -269,7 +269,7 @@ def buildDosages(hap_line, all_people, selected_people_by_id):
     len_hap = len(hap)
     len_all = len(all_people)
     if len_hap != 2*len_all:
-        logging.info("not enough entries: (%d,%d)", len_hap, len_all)
+        logging.error("not enough entries: (%d,%d)", len_hap, len_all)
         assert False
 
     for index,person in enumerate(all_people):

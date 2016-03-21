@@ -6,6 +6,8 @@ import math
 import scipy.stats as stats
 import KeyedDataSet
 import Utilities
+import Exceptions
+import os
 
 class GWASTF(object):
     """GWAS file format"""
@@ -46,6 +48,8 @@ class GWASDosageFileIterator(object):
 
 class GWASFileFormat(object):
     def __init__(self, file_path, compressed, separator=None):
+        if not os.path.isfile(file_path):
+            raise Exceptions.BadFilename(file_path)
         header = None
         if compressed:
             with gzip.open(file_path, 'rb') as file:

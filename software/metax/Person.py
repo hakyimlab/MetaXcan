@@ -11,11 +11,11 @@ class STFS(object):
 
 class Person(object):
     """A person."""
-    def __init__(self):
-        self.id = None
-        self.population = None
-        self.group = None
-        self.sex = None
+    def __init__(self, id=None, population=None, group=None, sex=None):
+        self.id = id
+        self.population = population
+        self.group = group
+        self.sex = sex
 
     def toTextLine(self):
         return " ".join([self.id, self.population, self.group, self.sex])
@@ -30,11 +30,11 @@ class Person(object):
         return  person
 
     @classmethod
-    def loadPersonFromSampleRowIfFilter(cls, row, population_filters, individual_filters):
+    def loadPersonFromSampleRowIfFilter(cls, row, group_filters, individual_filters):
         person = None
 
-        if not "None" in population_filters and\
-            row[STFS.GROUP] not in population_filters:
+        if not "None" in group_filters and\
+            row[STFS.GROUP] not in group_filters:
             return person
 
         if len(individual_filters):
@@ -63,7 +63,7 @@ class Person(object):
         return people
 
     @classmethod
-    def loadFilteredPeople(cls, input_path, population_filters = ["EUR"], individual_filters =[], row_delimiter=' ', skip_header=True):
+    def loadFilteredPeople(cls, input_path, group_filters = ["EUR"], individual_filters =[], row_delimiter=' ', skip_header=True):
         filtered = []
         with open(input_path, 'rb') as csv_file:
             reader = csv.reader(csv_file, delimiter=row_delimiter, quotechar='"')
@@ -71,14 +71,14 @@ class Person(object):
                 if skip_header and reader.line_num == 1:
                     continue
 
-                person = Person.loadPersonFromSampleRowIfFilter(row, population_filters, individual_filters)
+                person = Person.loadPersonFromSampleRowIfFilter(row, group_filters, individual_filters)
                 if person is not None:
                     filtered.append(person)
         return filtered
 
     @classmethod
-    def buildFilteredSamples(cls, input_path, output, population_filters = ["EUR"], individual_filters =[], row_delimiter=' ', skip_header=True):
-        filtered = cls.loadFilteredPeople(input_path, population_filters, individual_filters, row_delimiter, skip_header)
+    def buildFilteredSamples(cls, input_path, output, group_filters = ["EUR"], individual_filters =[], row_delimiter=' ', skip_header=True):
+        filtered = cls.loadFilteredPeople(input_path, group_filters, individual_filters, row_delimiter, skip_header)
 
         with open(output, 'w+') as output_file:
             output_file.write(" ".join(["ID", "POP", "GROUP", "SEX"])+"\n")

@@ -21,7 +21,7 @@ class ProcessPrerequisites(object):
         self.output_folder = args.output_folder
         self.input_format = args.input_format
         self.output_format = args.output_format
-        self.population_filters = args.population_filters
+        self.population_group_filters = args.population_group_filters
         self.individual_filters = [re.compile(x) for x in args.individual_filters]
 
         self.chromosome_in_name_regex = re.compile(args.file_pattern)
@@ -43,10 +43,10 @@ class ProcessPrerequisites(object):
             logging.info("%s already exists, delete it if you want it figured out again", self.samples_output)
         else:
             if self.input_format == Formats.IMPUTE:
-                Person.Person.buildFilteredSamples(self.samples_input, self.samples_output, self.population_filters, self.individual_filters)
+                Person.Person.buildFilteredSamples(self.samples_input, self.samples_output, self.population_group_filters, self.individual_filters)
             elif self.input_format == Formats.PrediXcan:
                 Person.Person.buildFilteredSamples(self.samples_input, self.samples_output,
-                                            population_filters=self.population_filters,
+                                            group_filters=self.population_group_filters,
                                             individual_filters=self.individual_filters,
                                             row_delimiter="\t", skip_header=False)
             else:
@@ -150,8 +150,8 @@ if __name__ == "__main__":
                         help="pattern for dosage file names, to extract chromosome part, used for (IMPUTE input format, PrediXcan output format) only",
                         default='1000GP_Phase3_(.*)')
 
-    parser.add_argument('--population_filters', type=str, nargs='+',
-                   help='Strings to filter people by."None" for no filter. Defaulted to "EUR"',
+    parser.add_argument('--population_group_filters', type=str, nargs='+',
+                   help='Strings to filter people by, any values in this argument list will be the whitelist for group value of an individual. "None" for no filter. Defaulted to "EUR"',
                    default=["EUR"])
 
     parser.add_argument('--individual_filters', type=str, nargs='+',

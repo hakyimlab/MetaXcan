@@ -29,7 +29,7 @@ def buildDummyArgs(root):
     dummy.snp_list = os.path.join(root, "snp.txt.gz")
     dummy.output_folder = os.path.join(root, "intermediate/filtered")
     dummy.file_pattern = "set_(.*)"
-    dummy.population_filters = ["HERO"]
+    dummy.population_group_filters = ["HERO"]
     dummy.individual_filters = ["ID.*"]
     dummy.input_format = Formats.IMPUTE
     dummy.output_format = Formats.PrediXcan
@@ -57,7 +57,7 @@ class TestM00(unittest.TestCase):
         self.assertEqual(p.dosage_folder, "_test/dosage_set_1")
         self.assertEqual(p.snp_list, "_test/snp.txt.gz")
         self.assertEqual(p.output_folder, "_test/intermediate/filtered")
-        self.assertEqual(p.population_filters, ["HERO"])
+        self.assertEqual(p.population_group_filters, ["HERO"])
         self.assertEqual(p.individual_filters, [re.compile("ID.*")])
         self.assertEqual(p.chromosome_in_name_regex,re.compile("set_(.*)"))
         self.assertEqual(p.samples_input, "_test/dosage_set_1/set.sample")

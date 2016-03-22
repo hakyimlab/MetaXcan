@@ -80,6 +80,7 @@ tar -xzvpf support_data.tar.gz
 4) Run the High-Level MetaXcan Script
 ```bash
 $ ./MetaXcan.py \
+--beta_folder intermediate/beta \
 --weight_db_path data/DGN-WB_0.5.db \
 --covariance intermediate/cov/covariance.txt.gz \
 --gwas_folder data/GWAS \
@@ -89,10 +90,15 @@ $ ./MetaXcan.py \
 --pvalue_column P \
 --output_file results/test.csv
 ```
-This should take less than a minute on a 3GHZ computer. Bear in mind that this will generate intermediate data at `intermediate/beta`.
+This should take less than a minute on a 3GHZ computer.
+Bear in mind that this will generate intermediate data at `intermediate/beta`.
+This folder's content's are reused on different runs, not deleted:
+you might want to delete this folder before running MetaXcan again,
+or specify a different folder on each run.
 
 The example command parameters mean:
 
+* *--beta_folder* Folder where intermediate statistics from the GWAS files will be written to.
 * *--weight_db_path* Path to tissue transriptome model
 * *--covariance* Path to file containing covariance information. This covariance should have information related to the tissue transcriptome model.
 * *--gwas_folder* Folder containing GWAS summary statistics data.
@@ -103,7 +109,30 @@ The example command parameters mean:
 * *--compressed* This options tells that the input files are in gzip compressed form.
 * *--output_file* Path where results will be saved to.
 
-MetaXcan supports a large amount of command line parameters. Check the documentation for those that work best for your data.
+Its output is a CSV file that looks like:
+
+```
+gene,gene_name,zscore,pvalue,pred_perf_R2,VAR_g,n,covariance_n,model_n
+ENSG00000182118,FAM89A,3.33698080012,0.000846937986942,0.222578978913,0.147107349684,17,17,17
+...
+```
+Where each row is a gene's association result:
+* gene: a gene's id: as listed in the Tissue Transcriptome model.
+Ensemble Id for some, while some others (mainly DGN Whole Blood) provide [Genquant](http://www.gencodegenes.org/)'s gene name
+* gene_name: gene name as listed by the Transcriptome Model, generally extracted from Genquant
+* zscore: MetaXcan'as association result for the gene
+* pvalue: P-value of the aforementioned statistic.
+* pred_perf_R2: R2 of tissue model's correlation to gene's measured transcriptome
+* n: number of snps from GWAS that got used in MetaXcan analysis
+* covariance_n: number of snps in the covariance matrix
+* model_n: number of snps in the model
+* VAR_g: variance of the gene expression, calculated as *W' * G * W*
+(where *W* is the vector of SNP weights in a gene's model,
+*W'* is its transpose, and *G* is the covariance matrix)
+
+MetaXcan supports a large amount of command line parameters.
+Check the Github's ' wiki for those that work best for your data,
+and interpreting the results.
 
 ## Installation
 

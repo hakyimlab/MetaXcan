@@ -12,9 +12,6 @@ if "DEBUG" in sys.argv:
     sys.path.insert(0, ".")
     sys.argv.remove("DEBUG")
 
-from metax.DataSet import DataSet
-from metax.DataSet import DataSetFileUtilities
-from metax.DataSet import DataSetCollection
 import metax.Formats as Formats
 
 from M00_prerequisites import ProcessPrerequisites
@@ -38,7 +35,8 @@ def buildDummyArgs(root):
 def setupDataForArgs(args, root):
     if os.path.exists(root):
         shutil.rmtree(root)
-    shutil.copytree("tests/_td", root)
+    shutil.copytree("tests/_td/dosage_set_1", os.path.join(root,"dosage_set_1"))
+    shutil.copy("tests/_td/snp.txt.gz", root)
 
 def cleanUpDataForArgs(root):
     shutil.rmtree(root)

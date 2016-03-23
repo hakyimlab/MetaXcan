@@ -34,7 +34,8 @@ M04_zscores.py
 ```
 , although a typical user will use ony the last two of them.
 
-The rest of the scripts in **software** folder are python packaging support scripts.
+The rest of the scripts in **software** folder are python packaging support scripts,
+and convenience wrappers such as the GUI.
 
 Subfolder **software/metax** contains the bulk of Metaxcan's logic, implemented as a python package.
 

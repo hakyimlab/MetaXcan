@@ -125,11 +125,10 @@ class IMPUTEFilteredDosageFileBuilder(object):
         self.base_path = base_path
         self.name = name
         self.output_pattern = output_pattern
-        self.snp_dict = snp_dict
-        self.all_people = all_people
-        self.selected_people_by_id = selected_people_by_id
-        self.snp_dict = {}
         self.chromosome_name = chromosome_name
+        self.all_people = all_people if all_people is not None else []
+        self.selected_people_by_id = selected_people_by_id if selected_people_by_id is not None else {}
+        self.snp_dict = snp_dict if snp_dict is not None else {}
 
     def buildIMPUTE(self):
         logging.info("Building IMPUTE dosage file for %s", os.path.join(self.base_path,self.name))

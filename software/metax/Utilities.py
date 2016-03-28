@@ -57,41 +57,6 @@ def contentsWithRegexpFromFolder(folder, regexp):
     paths = [x for x in contents if regexp.match(x)] if regexp else contents
     return paths
 
-def removeNameWithPatterns(list, patterns):
-    found = None
-    for name in list:
-        matches = True
-        for pattern in patterns:
-            if not pattern in name:
-                matches = False
-                break
-
-        if matches:
-            found = name
-            break
-    return found
-
-def removeNameEndingWith(list, pattern):
-    found = None
-    for name in list:
-        if name.endswith(pattern):
-            found = name
-            break
-    return found
-
-def removeNamesWithPatterns(list, patterns):
-    found = []
-    for name in list:
-        matches = True
-        for pattern in patterns:
-            if not pattern in name:
-                matches = False
-                break
-
-        if matches:
-            found.append(name)
-    return found
-
 def samplesInputPath(path):
     samples_content = contentsWithPatternsFromFolder(path, [".sample"])
     if len(samples_content) == 0:
@@ -151,10 +116,10 @@ class FileIterator(object):
                 self._iterateOverFile(file_object, callback)
 
     def _iterateOverFile(self, file_object, callback):
-        if self.header is not None:
+        if self.header is not None and len(self.header):
             line = file_object.readline().strip("\n")
-            if len(self.header):
-                assert line == self.header
+            if line != self.header:
+                raise Exceptions.MalformedInputFile(self.path, "Unexpected header")
 
         self._processFile(file_object, callback)
 

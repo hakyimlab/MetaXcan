@@ -78,28 +78,29 @@ class WeightDB(object):
             weights.append(weight)
             if result_callback:
                 result_callback(weight, extra)
-        return weight
+        return weights
 
-    def loadFromDBWithGeneName(self, gene_name, callback=None):
-        self.openDBIfNecessary()
-        extra = self.loadExtraColumnData(gene_name)
-        results = self.cursor.execute("SELECT rsid, gene, weight, ref_allele, eff_allele, pval, N, cis FROM weights WHERE gene = ?;",(gene_name,))
-        weights = self.weightEntriesFromResults(results, extra, callback)
-        return  weights
-
-    def loadFromDB(self, callback=None):
+    def loadFromDB(self, callback=None, gene_key=None):
         self.openDBIfNecessary()
         extra = self.loadExtraColumnData()
-        results = self.cursor.execute("SELECT rsid, gene, weight, ref_allele, eff_allele, pval, N, cis FROM weights;")
+        extra = {e.gene:e for e in extra}
+
+        if gene_key is None:
+            results = self.cursor.execute("SELECT rsid, gene, weight, ref_allele, eff_allele, pval, N, cis FROM weights;")
+        else:
+            results = self.cursor.execute("SELECT rsid, gene, weight, ref_allele, eff_allele, pval, N, cis FROM weights where gene = ?;", (gene_key))
+
         weights = self.weightEntriesFromResults(results, extra, callback)
         return  weights
 
-    def loadExtraColumnData(self, gene_name=None):
-        if not gene_name:
+    def loadExtraColumnData(self, gene_key=None):
+        self.openDBIfNecessary()
+        if gene_key is None:
             results = self.cursor.execute("SELECT gene, genename, R2, `n.snps` FROM extra;")
         else:
-            results = self.cursor.execute("SELECT gene, genename, R2, `n.snps` FROM extra WHERE gene = ?;", (gene_name,))
-        extra = {x[WDBEQF.GENE]:(x[WDBEQF.GENE],x[WDBEQF.GENE_NAME], x[WDBEQF.R2], x[WDBEQF.N_SNP]) for x in results}
+            results = self.cursor.execute("SELECT gene, genename, R2, `n.snps` FROM extra WHERE gene = ?;", (gene_key,))
+
+        extra = [GeneEntry(x[WDBEQF.GENE], x[WDBEQF.GENE_NAME], x[WDBEQF.R2], x[WDBEQF.N_SNP]) for x in results]
         return  extra
 
     def loadGeneNamesFromDB(self):
@@ -157,8 +158,7 @@ class WeightDBEntryLogic(object):
                 if not weight.gene in genes:
                     genes.append(weight.gene)
 
-                e = extra[weight.gene]
-                gene_entry = GeneEntry(e[WDBEQF.GENE], e[WDBEQF.GENE_NAME], e[WDBEQF.R2], e[WDBEQF.N_SNP])
+                gene_entry = extra[weight.gene]
                 self.gene_data_for_gene[weight.gene] = gene_entry
 
         callback = ByNameCallback(self.weights_by_gene_name, self.genes_for_an_rsid, self.gene_data_for_gene)

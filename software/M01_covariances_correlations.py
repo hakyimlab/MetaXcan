@@ -30,7 +30,7 @@ class ProcessWeightDB(object):
             name = comp + ".cov.txt.gz"
             path = os.path.join("intermediate", "cov")
             path = os.path.join(path, name)
-            self.covariance_output = os.path.join(path)
+            self.covariance_output = path
 
         self.input_format = args.input_format
 

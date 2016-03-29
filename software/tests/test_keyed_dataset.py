@@ -10,6 +10,7 @@ if "DEBUG" in sys.argv:
     sys.path.insert(0, "..")
     sys.path.insert(0, "../..")
     sys.path.insert(0, ".")
+    sys.argv.remove("DEBUG")
 
 import os
 import gzip
@@ -398,3 +399,6 @@ class TestKeyedDataset(unittest.TestCase):
         self.assertEqual(kds3.values_by_key["k5"], "j5")
 
         os.remove(filename)
+
+if __name__ == "__main__":
+    unittest.main()

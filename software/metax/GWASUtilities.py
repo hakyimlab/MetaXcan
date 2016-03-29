@@ -366,7 +366,6 @@ class GWASWeightDBFilteredBetaLineCollector(GWASBetaLineCollector):
                 logging.log(6, "%s not in weight db", rsid)
                 return
 
-            entry = self.weight_db_logic.anEntryWithRSID(rsid)
             a1 = row[file_format.A1].upper()
             a2 = row[file_format.A2].upper()
             if not a1 in GWASTF.VALID_ALLELES or \
@@ -374,6 +373,9 @@ class GWASWeightDBFilteredBetaLineCollector(GWASBetaLineCollector):
                 logging.log(6,"invalid alleles %s %s", a1, a2)
                 return
 
+            # The following works but is inappropriate. All entries for a given SNP have the same ref allele.
+            # but bear in mind that we are using any entry.
+            entry = self.weight_db_logic.anEntryWithRSID(rsid)
             if entry.ref_allele == a2 and entry.eff_allele == a1:
                 logging.log(7, "alleles are flipped for rsid %s", rsid)
                 if file_format.BETA:

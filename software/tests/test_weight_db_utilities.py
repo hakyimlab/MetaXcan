@@ -59,6 +59,9 @@ class TestWeightDBUtilities(unittest.TestCase):
         extra = weight_db.loadExtraColumnData("C")
         self.assertExtra(extra, [expected_extra[2]])
 
+        extra = weight_db.loadExtraColumnData("D")
+        self.assertExtra(extra, [expected_extra[3]])
+
         extra = weight_db.loadExtraColumnData()
         self.assertExtra(extra, expected_extra)
 
@@ -84,13 +87,27 @@ class TestWeightDBUtilities(unittest.TestCase):
         callback_weights = [e[0] for e in callback.entries]
         self.assertEqual(callback_weights, weights)
 
-        #genbe names
+        callback = DummyCallback()
+        weights = weight_db.loadFromDB(callback, "D")
+        self.assertWeights(weights, [expected_weights[6]])
+        self.assertEqual(len(callback.entries),1)
+        callback_weights = [e[0] for e in callback.entries]
+        self.assertEqual(callback_weights, weights)
+
+        callback = DummyCallback()
+        weights = weight_db.loadFromDB(callback)
+        self.assertWeights(weights, expected_weights)
+        self.assertEqual(len(callback.entries),7)
+        callback_weights = [e[0] for e in callback.entries]
+        self.assertEqual(callback_weights, weights)
+
+        #gene names
         gene_names = weight_db.loadGeneNamesFromDB()
-        self.assertEqual(gene_names, ["A", "B", "C"])
+        self.assertEqual(gene_names, ["A", "B", "C", "D"])
 
     def testWeightDBEntryLogic(self):
         weight_db_entry_logic = WeightDBUtilities.WeightDBEntryLogic("tests/_td/test.db")
-        self.assertEquals(len(weight_db_entry_logic.weights_by_gene), 3)
+        self.assertEquals(len(weight_db_entry_logic.weights_by_gene), 4)
 
     def assertWeights(self, weights, expected):
         self.assertEqual(len(weights), len(expected))
@@ -126,7 +143,8 @@ def expected_weights_results():
         ["rs3", "A", 0.05, "G", "A", 0.3, 3, 3],
         ["rs4", "B", 0.4, "T", "C", 0.4, 2, 4],
         ["rs5", "B", 0.3, "C", "T", 0.5, 2, 5],
-        ["rs6", "C", 0.5, "T", "C", 0.6, 1, 6]
+        ["rs6", "C", 0.5, "T", "C", 0.6, 1, 6],
+        ["rs1", "D", 0.6, "T", "C", 0.7, 1, 7]
     ]
 
     for e in expected_data:
@@ -145,7 +163,8 @@ def expected_extra_results():
     expected_data = [
         ["A", "gene1", 0.9, 3],
         ["B", "gene2", 0.8, 2],
-        ["C", "gene3", 0.7, 1]
+        ["C", "gene3", 0.7, 1],
+        ["D", "gene4", 0.6, 1]
     ]
 
     for e in expected_data:

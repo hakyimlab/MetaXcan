@@ -18,6 +18,7 @@ class PDTF:
     FIRST_DATA_COLUMN = 6
 
 class PrediXcanFormatDosageLoader(object):
+    #weight_db_logic is used only for discarding absent snps.
     def __init__(self, path, weight_db_logic):
         self.path = path
         self.weight_db_logic = weight_db_logic
@@ -47,6 +48,7 @@ class PrediXcanFormatDosageLoader(object):
                     logging.log(9, "wrong eff allele, rsid %s is not an SNP", rsid)
                     return
                 dosages = map(float,components[PDTF.FIRST_DATA_COLUMN:]) #dosages may be inputed
+                #Should we flip based on weight_db at this point?
 
                 snp = DataSetSNP.DataSetSNP(name=rsid, index=i, data=dosages, position=int(position), ref_allele=ref_allele, eff_allele=eff_allele)
                 if snp.name in self.snps_by_rsid:

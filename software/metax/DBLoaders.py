@@ -4,14 +4,21 @@ __author__ = 'heroico'
 import sqlite3
 import numpy
 import KeyedDataSet
+import Exceptions
+import os
 
 class DBLoaders(object):
     @classmethod
     def loadKeyedDataSetFromDB(cls, db_path, table_name,  key_column, value_column):
+        if not os.path.exists(db_path):
+            raise Exceptions.BadFilename(db_path)
         connection = sqlite3.connect(db_path)
         cursor = connection.cursor()
         query = "SELECT "+key_column+", "+value_column+" FROM " + table_name
-        entries = cursor.execute(query)
+        try:
+            entries = cursor.execute(query)
+        except sqlite3.Error as e:
+            raise Exceptions.InvalidDbFormat(db_path, e.args[0])
 
         rsids = []
         variances = []
@@ -29,13 +36,16 @@ class DBLoaders(object):
 
     @classmethod
     def loadCovarianceMatrix(cls, db_path, keys):
+        if not os.path.exists(db_path):
+            raise Exceptions.BadFilename(db_path)
         connection = sqlite3.connect(db_path)
         cursor = connection.cursor()
 
         key_filter = {}
-        valid_keys = []
+        valid_keys = []         # list of valid rsid 1s
 
-        values = {}
+        values = {}             # Lookup for all observed pairwise covariances
+                                # rsx=>{rsy=>X,},
         def get_row(dict, key):
             row = None
             if key in dict:

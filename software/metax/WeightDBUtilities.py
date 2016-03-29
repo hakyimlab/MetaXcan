@@ -117,7 +117,7 @@ class WeightDB(object):
 
 class WeightDBEntryLogic(object):
     def __init__(self, db_file_name):
-        self.weights_by_gene_name = {}
+        self.weights_by_gene = {}
         self.genes_for_an_rsid = {}
         self.gene_data_for_gene = {}
         self._loadData(db_file_name)
@@ -129,7 +129,7 @@ class WeightDBEntryLogic(object):
 
         genes = self.genes_for_an_rsid[rsid]
         gene = genes[0]
-        weights = self.weights_by_gene_name[gene]
+        weights = self.weights_by_gene[gene]
         entry = weights[rsid]
         return  entry
 
@@ -161,5 +161,5 @@ class WeightDBEntryLogic(object):
                 gene_entry = extra[weight.gene]
                 self.gene_data_for_gene[weight.gene] = gene_entry
 
-        callback = ByNameCallback(self.weights_by_gene_name, self.genes_for_an_rsid, self.gene_data_for_gene)
+        callback = ByNameCallback(self.weights_by_gene, self.genes_for_an_rsid, self.gene_data_for_gene)
         weights_db.loadFromDB(callback)

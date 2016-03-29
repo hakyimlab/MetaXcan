@@ -76,7 +76,7 @@ class CalculateZScores(object):
             normalization.update(beta_sets)
 
             for gene, entry in covariance_contents.iteritems():
-                weights = weight_db_logic.weights_by_gene_name[gene]
+                weights = weight_db_logic.weights_by_gene[gene]
                 process = False
                 for rsid, weight in weights.iteritems():
                     if rsid in check.values_by_key:
@@ -122,7 +122,7 @@ class CalculateZScores(object):
         for gene, entry in entries.iteritems():
             if gene in results:
                 continue
-            weights = weight_db_logic.weights_by_gene_name[gene]
+            weights = weight_db_logic.weights_by_gene[gene]
             covariance_matrix = entry[0]
             valid_rsids = entry[1]
 

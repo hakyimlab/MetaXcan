@@ -106,7 +106,7 @@ class ProcessWeightDB(object):
     def addToCovarianceFile(self, weight_db_logic, name, snps, snps_by_rsid):
         logging.info("Adding to covariance for %s-%s", name, self.weight_db)
 
-        genes = weight_db_logic.weights_by_gene_name.keys()
+        genes = weight_db_logic.weights_by_gene.keys()
         total_genes = len(genes)
         last_reported_percent = 0
         processed = 0
@@ -132,7 +132,7 @@ class ProcessWeightDB(object):
                 file.write(line)
 
     def buildCovarianceEntries(self, name, gene, weight_db_logic, snps_by_rsid):
-        weights_in_gene = weight_db_logic.weights_by_gene_name[gene]
+        weights_in_gene = weight_db_logic.weights_by_gene[gene]
         rsids_from_genes = weights_in_gene.keys()
 
         #gather as much data as we can work on
@@ -235,7 +235,7 @@ class ProcessWeightDB(object):
 
     def addToCorrelationFile(self, weight_db_logic, name, snps, snps_by_rsid):
         logging.info("Building correlation database for %s-%s", name, self.weight_db)
-        genes = weight_db_logic.weights_by_gene_name.keys()
+        genes = weight_db_logic.weights_by_gene.keys()
         total_genes = len(genes)
         last_reported_percent = 0
         processed = 0
@@ -255,7 +255,7 @@ class ProcessWeightDB(object):
             self.addToFile(self.correlation_output, gene, entries)
 
     def buildCorrelationEntries(self, name, gene, weight_db_logic, snps_by_rsid):
-        weights_in_gene = weight_db_logic.weights_by_gene_name[gene]
+        weights_in_gene = weight_db_logic.weights_by_gene[gene]
         rsids_from_genes = weights_in_gene.keys()
 
         #gather as much data as we can work on

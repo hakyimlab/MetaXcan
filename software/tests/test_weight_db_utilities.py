@@ -88,6 +88,10 @@ class TestWeightDBUtilities(unittest.TestCase):
         gene_names = weight_db.loadGeneNamesFromDB()
         self.assertEqual(gene_names, ["A", "B", "C"])
 
+    def testWeightDBEntryLogic(self):
+        weight_db_entry_logic = WeightDBUtilities.WeightDBEntryLogic("tests/_td/test.db")
+        self.assertEquals(len(weight_db_entry_logic.weights_by_gene), 3)
+
     def assertWeights(self, weights, expected):
         self.assertEqual(len(weights), len(expected))
         for i,actual in enumerate(weights):

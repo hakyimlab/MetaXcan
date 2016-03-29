@@ -62,6 +62,7 @@ class TestGenes(unittest.TestCase):
 
     def tearDown(self):
         os.remove(self.txt_filename)
+        os.remove(self.header_filename)
         os.remove(self.gz_filename)
 
 

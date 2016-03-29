@@ -107,7 +107,28 @@ class TestWeightDBUtilities(unittest.TestCase):
 
     def testWeightDBEntryLogic(self):
         weight_db_entry_logic = WeightDBUtilities.WeightDBEntryLogic("tests/_td/test.db")
-        self.assertEquals(len(weight_db_entry_logic.weights_by_gene), 4)
+
+        expected_weights = expected_weights_results()
+        expected_extra = expected_extra_results()
+
+        self.assertEqual(len(weight_db_entry_logic.weights_by_gene), len(expected_extra))
+        self.assertEqual(len(weight_db_entry_logic.gene_data_for_gene), len(expected_extra))
+
+        for e in expected_extra:
+            self.assertTrue(e.gene in weight_db_entry_logic.weights_by_gene)
+            self.assertTrue(e.gene in weight_db_entry_logic.gene_data_for_gene)
+
+            actual_gene_data = weight_db_entry_logic.gene_data_for_gene[e.gene]
+            self.assertExtra([actual_gene_data], [e])
+
+            actual_weights = [w for k,w in weight_db_entry_logic.weights_by_gene[e.gene].iteritems()]
+            e_w = [w for w in expected_weights if w.gene == e.gene]
+            self.assertWeights(actual_weights, e_w)
+
+        self.assertEqual(len(weight_db_entry_logic.genes_for_an_rsid), 6)
+        for rsid, genes in weight_db_entry_logic.genes_for_an_rsid.iteritems():
+            expected = [w.gene for w in expected_weights if w.rsid == rsid]
+            self.assertEqual(expected, genes)
 
     def assertWeights(self, weights, expected):
         self.assertEqual(len(weights), len(expected))

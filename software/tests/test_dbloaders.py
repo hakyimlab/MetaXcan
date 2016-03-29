@@ -5,6 +5,7 @@ import os
 import sqlite3      # Just use direct DBI to build up the database
 import metax.Exceptions as Exceptions
 import numpy
+from . import silentRm
 
 # This allows us to run an individual test as it's own 'program'. Very useful
 # for debugging
@@ -17,11 +18,6 @@ if "DEBUG" in sys.argv:
 from metax.DBLoaders import DBLoaders
 import unittest
 
-def silentRm(filename):
-    try:
-        os.unlink(filename)
-    except:
-        pass
 
 class geneEntry(object):
     def __init__(self, gene, genename, rsq, snp_count):

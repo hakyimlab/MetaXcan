@@ -30,3 +30,10 @@ class BadDirectory(ReportableException):
 
     def __init__(self, dir):
         super(BadDirectory, self).__init__("Invalid directory: %s" % (dir))
+
+class InvalidDbFormat(ReportableException):
+    """Report invalid table names, missing columns, etc"""
+
+    def __init__(self, filename, msg):
+        errorMsg = "DB Error encounted loading data from %s\n\t'%s'" % (filename, msg)
+        super(InvalidDbFormat, self).__init__(errorMsg)

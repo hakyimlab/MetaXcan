@@ -44,7 +44,7 @@ class CalculateZScores(object):
                 people = Person.Person.loadPeople(samples_path)
                 people_by_id = {p.id:p for p in people}
 
-        logging.info("Loading weight db")
+        logging.info("Loading weights from database: %s" % (self.weight_db_path))
         weight_db_logic = WeightDBUtilities.WeightDBEntryLogic(self.weight_db_path)
 
         results = None
@@ -97,6 +97,7 @@ class CalculateZScores(object):
                 valid_rsids = entry[1]
 
                 logging.log(7, "Calculating z score for %s", gene)
+
                 pre_zscore, n, VAR_g = zscore_calculation(gene, weights, beta_sets, covariance_matrix, valid_rsids)
                 results[gene] = self.buildEntry(gene, weight_db_logic, weights, pre_zscore, n, VAR_g)
                 i+=1

@@ -56,7 +56,9 @@ class TestM00(unittest.TestCase):
         self.assertEqual(p.snp_list, "_test/snp.txt.gz")
         self.assertEqual(p.output_folder, "_test/intermediate/filtered")
         self.assertEqual(p.population_group_filters, ["HERO"])
-        self.assertEqual(p.individual_filters, [re.compile("ID.*")])
+        # Previous check below looked at memory locations, which failed under
+        # some conditions even though the expressions were effectively identical
+        self.assertEqual([x.pattern for x in p.individual_filters], ["ID.*"])
         self.assertEqual(p.chromosome_in_name_regex,re.compile("set_(.*)"))
         self.assertEqual(p.samples_input, "_test/dosage_set_1/set.sample")
         self.assertEquals(p.samples_output, "_test/intermediate/filtered/set.sample")
@@ -90,3 +92,6 @@ class TestM00(unittest.TestCase):
                 actual_line = f.readline().strip()
                 self.assertEqual(actual_line, expected_line)
         cleanUpDataForArgs("_test")
+
+if __name__ == "__main__":
+    unittest.main()

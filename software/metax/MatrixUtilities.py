@@ -41,7 +41,8 @@ def loadMatrixFromFile(file):
 
             the_gene = self.pending[0][0]
             if the_gene in self.entries:
-                raise Exceptions.MalformedInputFile(file, "Snp Covariance Entries for genes must be contiguous but %s was found in two different places in the file." % (the_gene))
+                raise Exceptions.MalformedInputFile(file,
+                        "Snp Covariance Entries for genes must be contiguous but %s was found in two different places in the file." % (the_gene))
 
             key_filter = {}
             valid_keys = []

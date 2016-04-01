@@ -17,8 +17,7 @@
 
 # Python's setuptools stuff
 *dist/
-*.egg-info
-*.egg
+*.egg*
 setuptools*.zip
 
 # PyCharm project files

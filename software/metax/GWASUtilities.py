@@ -233,7 +233,7 @@ def _scheme(scheme, file_format):
 
 class _GWASLineScheme(object):
     def __call__(self, collector, row, file_format):
-        collector.rsids.append(row[file_format.SNP])
+        collector.rsids.append(snpFromRow(file_format, row))
 
         sigma = "NA"
         if collector.file_format.FRQ:
@@ -279,6 +279,16 @@ def pFromFrow(file_format, row):
     if "," in p:
         p = p.replace(",",".")
     return p
+
+def snpFromRow(file_format, row):
+    snp = row[file_format.SNP]
+    #Hacky heuristic for rs numbers
+    if not "rs" in snp:
+        #snps like "chr1:123456"
+        if "chr" and ":" in snp:
+            snp = "rs" + snp.split(":")[1]
+
+    return snp
 
 class _BETA_Scheme(_GWASLineScheme):
     def __call__(self, collector, row, file_format):
@@ -369,7 +379,7 @@ class GWASWeightDBFilteredBetaLineCollector(GWASBetaLineCollector):
 
     def __call__(self, row):
         file_format = self.file_format
-        rsid = row[file_format.SNP]
+        rsid = snpFromRow(file_format, row)
         if self.weight_db_logic:
             if not rsid in self.weight_db_logic.genes_for_an_rsid:
                 logging.log(6, "%s not in weight db", rsid)

@@ -269,6 +269,17 @@ def betaSignFromRow(file_format, row):
            sign = s
     return sign
 
+def pFromFrow(file_format, row):
+    p = row[file_format.P]
+
+    if p == ".":
+        p = "NA"
+
+    # Quick hack for files that miught be in non EN locale
+    if "," in p:
+        p = p.replace(",",".")
+    return p
+
 class _BETA_Scheme(_GWASLineScheme):
     def __call__(self, collector, row, file_format):
         super(_BETA_Scheme, self).__call__(collector, row, file_format)
@@ -304,10 +315,7 @@ class _BETA_PVALUE_Scheme(_GWASLineScheme):
     def __call__(self, collector, row, file_format):
         super(_BETA_PVALUE_Scheme, self).__call__(collector, row, file_format)
         z = "NA"
-        p = row[file_format.P]
-
-        if p == ".":
-            p = "NA"
+        p = pFromFrow(file_format, row)
 
         if p != "NA":
             p = float(p)
@@ -325,9 +333,7 @@ class _BETA_SIGN_PVALUE_Scheme(_GWASLineScheme):
     def __call__(self, collector, row, file_format):
         super(_BETA_SIGN_PVALUE_Scheme, self).__call__(collector, row, file_format)
         z = "NA"
-        p = row[file_format.P]
-        if p == ".":
-            p = "NA"
+        p = pFromFrow(file_format, row)
 
         if p != "NA":
             p = float(p)

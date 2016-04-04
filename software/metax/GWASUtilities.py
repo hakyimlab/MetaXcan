@@ -247,6 +247,9 @@ def betaFromRow(file_format, row):
     beta = "NA"
     if file_format.BETA:
         beta = row[file_format.BETA]
+        # Quick hack for files that miught be in non EN locale
+        if "," in beta:
+            beta = beta.replace(",",".")
     elif file_format.OR and not file_format.BETA:
         OR = row[file_format.OR]
         if OR != "NA":

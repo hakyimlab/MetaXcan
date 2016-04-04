@@ -3,6 +3,7 @@ __author__ = 'heroico'
 import logging
 import numpy
 import math
+import Exceptions
 
 
 BETA_Z = "beta_z"
@@ -158,6 +159,8 @@ def preProcess(covariance_matrix, valid_rsids, weights, beta_sets):
     weight_values = []
     variances = {}
     for i,rsid in enumerate(valid_rsids):
+        if rsid not in weights:
+            raise Exceptions.ReportableException("RSID %s can't be found in the weights database. Are you sure your covariance data matches the weights database you are using?" % (rsid))
         weight = weights[rsid].weight
         if b and (not rsid in b.values_by_key or b.values_by_key[rsid] == "NA"):
             logging.log(7, "snp %s not present in beta data, skipping weight")

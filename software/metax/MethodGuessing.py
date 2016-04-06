@@ -6,9 +6,13 @@ import gzip
 import ZScoreCalculation
 import GWASUtilities
 import Normalization
+import Exceptions
 
 
 def chooseZscoreSchemeFromFiles(folder, beta_contents, covariance_entries, weight_db_logic):
+    if len(beta_contents) == 0:
+        raise Exceptions.ReportableException("No snp's beta data found. Please check your beta files and/or command line arguments.")
+
     beta_content = beta_contents[0]
     beta_path = os.path.join(folder, beta_content)
     zscore_scheme = None

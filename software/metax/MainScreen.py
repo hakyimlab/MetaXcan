@@ -328,6 +328,8 @@ class MainScreen(object):
                 self.gwas_file_pattern = source.gwas_file_pattern_value.get() if len(source.gwas_file_pattern_value.get()) else None
                 self.separator = source.separator_value.get() if len(source.separator_value.get()) else None
                 self.scheme = GWASUtilities.BETA_P
+                # TODO: implement this
+                self.skip_until_header = None
 
         beta_args = BetaWorkArgs(source=self)
         beta_work = M03_betas.GetBetas(beta_args)

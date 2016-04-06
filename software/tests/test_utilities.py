@@ -92,6 +92,16 @@ class TestThousandGenomesUtilities(unittest.TestCase):
              (5,"B1 L T female")])
 
         c = DummyCallback()
+        f = Utilities.FileIterator("tests/_td/dosage_set_1/set.sample", "")
+        f.iterate(c)
+        self.assertEqual(c.lines,
+            [(0, "ID1 K HERO male"),
+             (1, "ID2 K HERO female"),
+             (2, "DI5 K HERO male"),
+             (3, "ID3 K HERO female"),
+             (4,"B1 L T female")])
+
+        c = DummyCallback()
         f = Utilities.FileIterator("tests/_td/dosage_set_1/set.sample", "ID POP GROUP SEX")
         f.iterate(c)
         self.assertEqual(c.lines,
@@ -100,6 +110,13 @@ class TestThousandGenomesUtilities(unittest.TestCase):
              (2, "DI5 K HERO male"),
              (3, "ID3 K HERO female"),
              (4,"B1 L T female")])
+
+        c = DummyCallback()
+        f = Utilities.FileIterator("tests/_td/dosage_set_1/set.sample", "DI5 K", ignore_until_header=True)
+        f.iterate(c)
+        self.assertEqual(c.lines,
+             [(0, "ID3 K HERO female"),
+             (1,"B1 L T female")])
 
         c = DummyCallback()
         f = Utilities.FileIterator("tests/_td/dosage_set_1/set_chr1.legend.gz", header="a", compressed=True)
@@ -154,6 +171,25 @@ class TestThousandGenomesUtilities(unittest.TestCase):
              (3, ["DI5", "K", "HERO", "male"]),
              (4, ["ID3", "K", "HERO", "female"]),
              (5, ["B1", "L", "T", "female"])]
+        )
+
+        c = DummyCallback()
+        f = Utilities.CSVFileIterator("tests/_td/dosage_set_1/set.sample", "")
+        f.iterate(c)
+        self.assertEqual(c.lines,
+            [(0, ["ID1", "K", "HERO", "male"]),
+             (1, ["ID2", "K", "HERO", "female"]),
+             (2, ["DI5", "K", "HERO", "male"]),
+             (3, ["ID3", "K", "HERO", "female"]),
+             (4, ["B1", "L", "T", "female"])]
+        )
+
+        c = DummyCallback()
+        f = Utilities.CSVFileIterator("tests/_td/dosage_set_1/set.sample", "DI5 K", ignore_until_header=True)
+        f.iterate(c)
+        self.assertEqual(c.lines,
+            [(0, ["ID3", "K", "HERO", "female"]),
+             (1, ["B1", "L", "T", "female"])]
         )
 
         c = DummyCallback()

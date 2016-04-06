@@ -24,11 +24,12 @@ class GWASTF(object):
 
 class GWASDosageFileIterator(object):
     """Exists mostly because gWAS output is not a CSV, and has variable whitespace between values"""
-    def __init__(self, path=None, compressed=True, separator=None, callback=None):
+    def __init__(self, path=None, compressed=True, separator=None, callback=None, skip_until_header=None):
         self.path = path
         self.callback = callback
         self.compressed = compressed
         self.separator = separator
+        self.skip_until_header = skip_until_header
 
     def iterateOverFile(self):
         class CallbackWrapper(object):
@@ -42,21 +43,24 @@ class GWASDosageFileIterator(object):
                 row = line.split()
                 self.callback(row)
 
-        file_iterator = Utilities.FileIterator(self.path, header="", compressed=self.compressed)
+        file_iterator = Utilities.FileIterator(self.path, header="", compressed=self.compressed) \
+                            if not self.skip_until_header else \
+                        Utilities.FileIterator(self.path, header=self.skip_until_header, compressed=self.compressed, ignore_until_header=True)
+
         callback = CallbackWrapper(self.callback, self.separator)
         file_iterator.iterate(callback)
 
 class GWASFileFormat(object):
-    def __init__(self, file_path, compressed, separator=None):
+    def __init__(self, file_path, compressed, separator=None, skip_until_header=None):
         if not os.path.isfile(file_path):
             raise Exceptions.BadFilename(file_path)
         header = None
         if compressed:
             with gzip.open(file_path, 'rb') as file:
-                header = file.readline().strip()
+                header = fileHeader(file, skip_until_header)
         else:
             with open(file_path) as file:
-                header = file.readline().strip()
+                header = fileHeader(file, skip_until_header)
         comps = header.split(separator) if separator else header.split()
         if "" in comps:
             comps.remove("")
@@ -137,7 +141,7 @@ class GWASFileFormat(object):
 
     @classmethod
     def fileFormatFromArgs(cls, file, args):
-        file_format = GWASFileFormat(file, args.compressed, args.separator)
+        file_format = GWASFileFormat(file, args.compressed, args.separator, args.skip_until_header)
         if args.or_column:
             file_format.addORColumn(args.or_column)
         if args.beta_column:
@@ -159,6 +163,20 @@ class GWASFileFormat(object):
         if args.pvalue_column:
             file_format.addPValueColumn(args.pvalue_column)
         return file_format
+
+def fileHeader( file, skip_until_header):
+    header = None
+    if skip_until_header:
+        for i,l in enumerate(file):
+            l = l.strip()
+            if skip_until_header in l:
+                header = skip_until_header
+                break
+        if not header:
+            raise  Exceptions.InvalidArguments("Wrong header lookup for GWAS files")
+    else:
+        header = file.readline().strip()
+    return header
 
 class GWASSNPInfoLineCollector(object):
     A1=0
@@ -436,21 +454,22 @@ class GWASWeightDBFilteredBetaLineCollector(GWASBetaLineCollector):
 
 
 class GWASDosageFileLoader(object):
-    def __init__(self, path, compressed=True, separator=None, callback=None, file_format=None, scheme=None):
+    def __init__(self, path, compressed=True, separator=None, skip_until_header=None, callback=None, file_format=None, scheme=None):
         self.path = path
         self.callback = callback
         self.file_format = file_format
         self.compressed = compressed
         self.scheme = scheme
         self.separator = separator
+        self.skip_until_header = skip_until_header
 
     def load(self):
         callback = self.callback
         if not callback:
             logging.info("Default Beta callback")
-            callback = GWASBetaLineCollector(self.path, self.file_format, self.scheme)
+            callback = GWASBetaLineCollector(self.file_format, self.scheme)
 
-        file_iterator = GWASDosageFileIterator(self.path, self.compressed, self.separator, callback)
+        file_iterator = GWASDosageFileIterator(self.path, self.compressed, self.separator, callback, self.skip_until_header)
         file_iterator.iterateOverFile()
 
         results = []

@@ -54,7 +54,7 @@ class GetBetas(object):
         scheme = MethodGuessing.chooseGWASProcessingScheme(file_format, weight_db_logic, self.args, input_path)
 
         callback = GWASUtilities.GWASWeightDBFilteredBetaLineCollector(file_format, scheme, weight_db_logic)
-        dosage_loader = GWASUtilities.GWASDosageFileLoader(input_path, self.compressed, self.args.separator, callback)
+        dosage_loader = GWASUtilities.GWASDosageFileLoader(input_path, self.compressed, self.args.separator, self.args.skip_until_header, callback)
         result_sets = dosage_loader.load()
 
         # The following check is sort of redundant, as it exists in "saveSetsToCompressedFile".
@@ -147,6 +147,11 @@ if __name__ == "__main__":
 
     parser.add_argument("--separator",
                         help="Character or string separating fields in input file. Defaults to any whitespace.",
+                        default=None)
+
+    parser.add_argument("--skip_until_header",
+                        help="Some files may be malformed and contain unespecified bytes in the beggining."
+                             " Specify this option (string value) to identify a header up to which file contents should be skipped.",
                         default=None)
 
     parser.add_argument("--verbosity",

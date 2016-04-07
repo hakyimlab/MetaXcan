@@ -30,51 +30,60 @@ import metax.Exceptions as Exceptions
 import os
 import metax.WeightDBUtilities as WeightDBUtilities
 import metax.Utilities as Utilities
+import re
 
 class MetaXcanProcess(object):
     def __init__(self, args):
         self.args = args
+        self.gwas_regexp = None
+        if args.gwas_file_pattern:
+            self.gwas_regexp = re.compile(args.gwas_file_pattern)
 
 
     def buildBetas(self, db_filename):
-        filebase = os.path.basename(filename).replace(".db", "")
+        filebase = os.path.basename(db_filename).replace(".db", "")
         output_folder = self.args.output_folder
         logging.info("Processing betas for %s" % (db_filename))
         self.args.weight_db_path = os.path.abspath(db_filename)
-        self.args.covariance = os.path.join(self.args.covariance_directory, filebase) + ".txt.gz"
-        self.args.output_file = os.path.join(self.args.output_directory, filename) + ".csv"
+        self.args.covariance = os.path.join(self.args.covariance_directory, filebase) + ".cov.txt.gz"
+        self.args.output_file = os.path.join(self.args.output_directory, filebase) + ".csv"
 
         logging.info("Loading weight model")
         weight_db_logic = WeightDBUtilities.WeightDBEntryLogic(self.args.weight_db_path)
 
-        names = Utilities.contentsWithRegexpFromFolder(self.args.gwas_folder, self.args.gwas_regexp)
+        betaScript = M03_betas.GetBetas(self.args)
+        names = Utilities.contentsWithRegexpFromFolder(self.args.gwas_folder, betaScript.gwas_regexp)
 
         if not os.path.exists(self.args.output_folder):
             os.makedirs(self.args.output_folder)
+        betaScript.output_folder = os.path.join(output_folder, filebase)
+        if not os.path.exists(betaScript.output_folder):
+            os.makedirs(betaScript.output_folder)
 
         for name in names:
             try:
-                resultName = "%s-%s" % (name.split("/")[-1].split(".")[0], filebase)
-                self.buildBetas(weight_db_logic,name,resultName)
+                betaScript.buildBetas(weight_db_logic,name)
+
+
             # This just means that there is some extra stuff inside that directory,
             # so I'm thinking we want to ignore it.
             except Exceptions.BadFilename as e:
                 logging.info("Wrong file name: %s, skipping", e.msg)
                 pass
+
+        # ZScores
+        logging.info("Calculating ZScores for %s" % (filebase))
+        zscoreScript = M04_zscores.CalculateZScores(self.args)
+        zscoreScript.folder_beta = betaScript.output_folder
+        zscoreScript.run()
+
     def run(self):
         self.args.output_folder = args.beta_folder
         for weight_db in self.args.weight_dbs:
-            filename = weight_db.name
-            filebase = os.path.basename(filename).replace(".db", "")
             weight_db.close()
-            logging.info("Processing betas for %s" % (filebase))
-            self.args.weight_db_path = os.path.abspath(filename)
-            self.args.covariance = os.path.join(self.args.covariance_directory, filebase) + ".txt.gz"
+            self.buildBetas(weight_db.name)
 
-            self.args.output_file = os.path.join(self.args.output_directory, filename) + ".csv"
-            M03_betas.run(self.args)
 
-            logging.info("Calculating ZScores for %s" % (filebase))
 
 
 if __name__ == "__main__":

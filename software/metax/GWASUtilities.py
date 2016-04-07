@@ -7,6 +7,7 @@ import scipy.stats as stats
 import KeyedDataSet
 import Utilities
 import Exceptions
+from Exceptions import ReportableException
 import os
 
 class GWASTF(object):
@@ -54,6 +55,7 @@ class GWASFileFormat(object):
     def __init__(self, file_path, compressed, separator=None, skip_until_header=None):
         if not os.path.isfile(file_path):
             raise Exceptions.BadFilename(file_path)
+        self.file_path = file_path
         header = None
         if compressed:
             with gzip.open(file_path, 'rb') as file:
@@ -81,61 +83,61 @@ class GWASFileFormat(object):
 
     def addSNPColumn(self, snp_column_name):
         if not snp_column_name in self.header_comps:
-            raise NameError("SNP column name -%s- not found" % snp_column_name)
+            raise ReportableException("SNP column name -%s- not found in file '%s'" % (snp_column_name, self.file_path))
 
         self.SNP = self.header_comps.index(snp_column_name)
 
     def addSEColumn(self, se_column_name):
         if not se_column_name in self.header_comps:
-            raise NameError("SE column name -%s- not found" % se_column_name)
+            raise ReportableException("SE column name -%s- not found in file '%s'" % (se_column_name, self.file_path))
 
         self.SE = self.header_comps.index(se_column_name)
 
     def addA1Column(self, A1_column_name):
         if not A1_column_name in self.header_comps:
-            raise NameError("A1 column name -%s- not found" % A1_column_name)
+            raise ReportableException("A1 column name -%s- not found in file '%s'" % (A1_column_name, self.file_path))
 
         self.A1 = self.header_comps.index(A1_column_name)
 
     def addA2Column(self, A2_column_name):
         if not A2_column_name in self.header_comps:
-            raise NameError("A1 column name -%s- not found" % A2_column_name)
+            raise ReportableException("A2 column name -%s- not found in file '%s'" % (A2_column_name, self.file_path))
 
         self.A2 = self.header_comps.index(A2_column_name)
 
     def addFrequencyColumn(self, frequency_column_name):
         if not frequency_column_name in self.header_comps:
-            raise NameError("frequency column name -%s- not found" % frequency_column_name)
+            raise ReportableException("frequency column name -%s- not found in file '%s'" % (frequency_column_name, self.file_path))
 
         self.FRQ = self.header_comps.index(frequency_column_name)
 
     def addORColumn(self, or_column_name):
         if not or_column_name in self.header_comps:
-            raise NameError("OR column name -%s- not found" % or_column_name)
+            raise ReportableException("OR column name -%s- not found in file '%s'" % (or_column_name, self.file_path))
 
         self.OR = self.header_comps.index(or_column_name)
 
     def addBetaColumn(self, beta_column_name):
         if not beta_column_name in self.header_comps:
-            raise NameError("beta column name -%s- not found" % beta_column_name)
+            raise ReportableException("beta column name -%s- not found in file '%s'" % (beta_column_name, self.file_path))
 
         self.BETA = self.header_comps.index(beta_column_name)
 
     def addBetaSignColumn(self, beta_sign_column_name):
         if not beta_sign_column_name in self.header_comps:
-            raise NameError("'beta sign' column name -%s- not found" % beta_sign_column_name)
+            raise ReportableException("beta sign column name -%s- not found in file '%s'" % (beta_sign_column_name, self.file_path))
 
         self.BETA_SIGN = self.header_comps.index(beta_sign_column_name)
 
     def addBetaZScoreColumn(self, beta_zscore_column_name):
         if not beta_zscore_column_name in self.header_comps:
-            raise NameError("'beta zscore' column name -%s- not found" % beta_zscore_column_name)
+            raise ReportableException("beta zscore column name -%s- not found in file '%s'" % (beta_zscore_column_name, self.file_path))
 
         self.BETA_ZSCORE = self.header_comps.index(beta_zscore_column_name)
 
     def addPValueColumn(self, pvalue_column_name):
         if not pvalue_column_name in self.header_comps:
-            raise NameError("'pvalue' column name '%s' not found", pvalue_column_name)
+            raise ReportableException("pvalue column name -%s- not found in file '%s'" % (pvalue_column_name, self.file_path))
 
         self.P = self.header_comps.index(pvalue_column_name)
 

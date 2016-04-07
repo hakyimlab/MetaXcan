@@ -1,4 +1,5 @@
-
+Version 0.2.3
+	* Added support for some GWAS input files. Improved unit test coverage.
 Version 0.2.1
 	* added option to zscores for saving ensembl versions
 Version 0.2

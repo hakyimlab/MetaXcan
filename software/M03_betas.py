@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 __author__ = 'heroico'
-__version__ = 0.1
+import metax
+__version__ = metax.__version__
 import logging
 import os
 import re

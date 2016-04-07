@@ -1,5 +1,7 @@
 #! /usr/bin/env python
 __author__ = 'heroico'
+import metax
+__version__ = metax.__version__
 
 import logging
 import os
@@ -178,7 +180,7 @@ def run(args):
 
 if __name__ == "__main__":
     import argparse
-    parser = argparse.ArgumentParser(description='Build betas from GWAS data.')
+    parser = argparse.ArgumentParser(description='M04_zscores.py %s: Build ZScores from GWAS data.' % (__version__,))
 
     parser.add_argument("--weight_db_path",
                         help="name of weight db in data folder",

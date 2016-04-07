@@ -33,6 +33,9 @@ class GetBetas(object):
         if not os.path.exists(self.output_folder):
             os.makedirs(self.output_folder)
 
+        if len(names) == 0:
+            raise Exceptions.ReportableException("No GWAS files found on %s with pattern %s" %(self.gwas_folder, self.gwas_regexp.pattern,))
+
         for name in names:
             try:
                 self.buildBetas(weight_db_logic,name)

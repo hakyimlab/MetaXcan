@@ -1,3 +1,5 @@
+Version 0.2.4
+	* Some input bug fixes. Added "MetaMany.py", a convenience for running MetaXcan with different tissue models on a single command.
 Version 0.2.3
 	* Added support for some GWAS input files. Improved unit test coverage.
 Version 0.2.1

@@ -129,6 +129,73 @@ but might be friendlier to non technical users.
 Here is a screenshot:
 ![screen shot](../manuscript/plots/gui.png)
 
+## MetaMany
+
+MetaMany: Perform MetaXcan on multiple tissues serially in a single command
+
+### Differences from standard MetaXcan parameter set
+
+MetaMany was written to simplify the execution of multiple MetaXcan runs where the user is 
+interested in looking at multiple tissues. In order to facilitate this in the most convenient
+manner, MetaMany's argument set is slightly different than those of the regular program:
+
+#### --weight_db_path doesn't exist in MetaMany
+ 
+Unlike MetaXcan proper, the user points directly to one or more weight databases
+directly on the command line with no argument prefix. The program will iterate over each of these
+in serial fashion and perform the same analysis that would have been performed had the user done
+each individually using MetaXcan. 
+
+#### --covariance is now --covariance_directory in MetaMany
+
+Rather than specifying a single covariance file, users must specify a single directory and MetaMany 
+will look for a matching covariance file inside that directory. To find a matching covariance file, 
+MetaMany strips the tissue database filename of the ".db" extension and replaces it with 
+".cov.txt.gz". If such a file is not found, the program will halt and an error will be reported. 
+
+#### --output_file is now --output_directory in MetaMany
+
+Rersults are written to the directory specified by --output_directory under the filename similar to
+the tissue database where the ".db" extension is replaced by ".csv". 
+
+
+### MetaMany Import Note
+
+This script is based on MetaXcan.py, with chances necessary for running the anlaysis over multiple 
+tissues in serial fashion. In order for this script to work, there is a major assumption about the 
+file arrangement of the tissue databases and covariates:
+
+**Databases and covariates must be named identically except for extentions (as can be seen in the 
+current version of the GTEX tissue databases). The script allows for separate directories for
+each of the two types of data, but they must be named identically up to a certain point. For 
+instance, CrossTissue_elasticNet0_0.5.db has a corresponding covariance file named 
+CrossTissue_elasticNet0_0.5.cov.txt.gz.**
+
+### Example MetaMany Statement
+
+The following command line would perform typical MetaXcan analysis on for the output in GWAS_Results 
+for each of the tissues starting with TW_Brain_ inside the GTEx-2016-02-29 directory. It will look
+inside the directory GTEx-2016-02-29/covariances/0.5 for appropriate covariance files for each 
+of the databases. Results would be written to the directory, results, with similar file names as each
+of the corresponding databases. 
+
+```bash
+$ MetaMany.py  \
+    --gwas_folder GWAS_Results/ \
+    --beta_column beta \
+    --pvalue_column p \
+    --se_column se \
+    --frequency_column maf \
+    --snp_column markername \
+    --a1_column effect_allele \
+    --a2_column other_allele\
+    --covariance_directory GTEx-2016-02-29/covariances/0.5/ \
+    --output_directory results \
+    GTEx-2016-02-29/TW_Brain*.db
+```
+
+
+
 ## Useful Data
 
 We make available several GTEx tissue models and 1000 Genomes covariances [here](https://app.box.com/s/gujt4m6njqjfqqc9tu0oqgtjvtz9860w).

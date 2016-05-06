@@ -155,14 +155,22 @@ Alternatively, if you are going to modify the sources, the following may be more
 python setup.py develop
 ```
 
-PIP support coming soon.
+PIP support coming soon-ish.
+
+## Support & Community
+
+Issues and questions can be raised at this repository's issue tracker.
+
+There is also a [Google Group](https://groups.google.com/forum/?hl=en#!forum/predixcanmetaxcan) mail list
+for general discussion, feature requests, etc. 
+Join if you want to be notified of new releases, feature sets and important news concerning this software.
 
 ## Where to go from here
 
 Check [this](https://github.com/hakyimlab/MetaXcan/tree/master/software) if you want to learn more
 about more general or advanced usages of MetaXcan.
 
-Check out the [Wiki](https://github.com/hakyimlab/MetaXcan/wiki)
+Check out the [Wiki](https://github.com/hakyimlab/MetaXcan/wiki) for exhaustive usage information.
 
 You will find the manuscript with the theory and rationale for the method at
 ```bash

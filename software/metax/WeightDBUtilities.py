@@ -2,13 +2,15 @@ __author__ = 'heroico'
 
 import sqlite3
 import os
+import Exceptions
 
 class GeneEntry:
-    def __init__(self, gene, gene_name, R2, n_snp):
+    def __init__(self, gene, gene_name, R2, n_snp, pval):
         self.gene = gene
         self.gene_name = gene_name
         self.R2 = R2
         self.n_snp = n_snp
+        self.pval = pval
 
 class WeightDBEntry:
     def __init__(self, rsid=None, gene=None, weight=None, ref_allele=None, eff_allele=None, pval=None, N=None, cis=None):
@@ -23,7 +25,7 @@ class WeightDBEntry:
         self.cis = cis
 
 class WDBQF(object):
-    "Weight DB Query Format"
+    "Weight DB weight Query Format"
     RSID=0
     GENE=1
     WEIGHT=2
@@ -34,11 +36,12 @@ class WDBQF(object):
     CIS=7
 
 class WDBEQF(object):
-    "Weight DB Query Format"
+    "Weight DB extra table Query Format"
     GENE=0
     GENE_NAME=1
     R2=2
     N_SNP=3
+    PVAL=4
 
 class WeightDB(object):
     def __init__(self, file_name , create_if_absent=False):
@@ -95,12 +98,17 @@ class WeightDB(object):
 
     def loadExtraColumnData(self, gene_key=None):
         self.openDBIfNecessary()
-        if gene_key is None:
-            results = self.cursor.execute("SELECT gene, genename, R2, `n.snps` FROM extra;")
-        else:
-            results = self.cursor.execute("SELECT gene, genename, R2, `n.snps` FROM extra WHERE gene = ?;", (gene_key,))
+        try:
+            if gene_key is None:
+                results = self.cursor.execute("SELECT gene, genename, R2, `n.snps`, pval FROM extra;")
+            else:
+                results = self.cursor.execute("SELECT gene, genename, R2, `n.snps`, pval FROM extra WHERE gene = ?;", (gene_key,))
+        except sqlite3.OperationalError as e:
+            raise Exceptions.ReportableException("Could not read input tissue database. Please try updating the tissue model files.")
+        except Exception as e:
+            raise e
 
-        extra = [GeneEntry(x[WDBEQF.GENE], x[WDBEQF.GENE_NAME], x[WDBEQF.R2], x[WDBEQF.N_SNP]) for x in results]
+        extra = [GeneEntry(x[WDBEQF.GENE], x[WDBEQF.GENE_NAME], x[WDBEQF.R2], x[WDBEQF.N_SNP], x[WDBEQF.PVAL]) for x in results]
         return  extra
 
     def loadGeneNamesFromDB(self):

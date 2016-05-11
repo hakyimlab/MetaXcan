@@ -12,11 +12,12 @@ import metax.WeightDBUtilities as WeightDBUtilities
 
 class TestWeightDBUtilities(unittest.TestCase):
     def testGeneEntry(self):
-        entry = WeightDBUtilities.GeneEntry("a", "b", "c", "d")
+        entry = WeightDBUtilities.GeneEntry("a", "b", "c", "d", "e")
         self.assertEqual(entry.gene, "a")
         self.assertEqual(entry.gene_name, "b")
         self.assertEqual(entry.R2, "c")
         self.assertEqual(entry.n_snp, "d")
+        self.assertEqual(entry.pval, "e")
 
     def testWeightDBEntry(self):
         entry = WeightDBUtilities.WeightDBEntry("a", "b", "c", "d", "e", "f", "g", "h")

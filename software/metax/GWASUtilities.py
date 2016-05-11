@@ -83,61 +83,61 @@ class GWASFileFormat(object):
 
     def addSNPColumn(self, snp_column_name):
         if not snp_column_name in self.header_comps:
-            raise ReportableException("SNP column name -%s- not found in file '%s'" % (snp_column_name, self.file_path))
+            raise ReportableException("SNP column name -%s- not found in file '%s'. Is the file compressed?" % (snp_column_name, self.file_path))
 
         self.SNP = self.header_comps.index(snp_column_name)
 
     def addSEColumn(self, se_column_name):
         if not se_column_name in self.header_comps:
-            raise ReportableException("SE column name -%s- not found in file '%s'" % (se_column_name, self.file_path))
+            raise ReportableException("SE column name -%s- not found in file '%s'. Is the file compressed?" % (se_column_name, self.file_path))
 
         self.SE = self.header_comps.index(se_column_name)
 
     def addA1Column(self, A1_column_name):
         if not A1_column_name in self.header_comps:
-            raise ReportableException("A1 column name -%s- not found in file '%s'" % (A1_column_name, self.file_path))
+            raise ReportableException("A1 column name -%s- not found in file '%s'. Is the file compressed?" % (A1_column_name, self.file_path))
 
         self.A1 = self.header_comps.index(A1_column_name)
 
     def addA2Column(self, A2_column_name):
         if not A2_column_name in self.header_comps:
-            raise ReportableException("A2 column name -%s- not found in file '%s'" % (A2_column_name, self.file_path))
+            raise ReportableException("A2 column name -%s- not found in file '%s'. Is the file compressed?" % (A2_column_name, self.file_path))
 
         self.A2 = self.header_comps.index(A2_column_name)
 
     def addFrequencyColumn(self, frequency_column_name):
         if not frequency_column_name in self.header_comps:
-            raise ReportableException("frequency column name -%s- not found in file '%s'" % (frequency_column_name, self.file_path))
+            raise ReportableException("frequency column name -%s- not found in file '%s'. Is the file compressed?" % (frequency_column_name, self.file_path))
 
         self.FRQ = self.header_comps.index(frequency_column_name)
 
     def addORColumn(self, or_column_name):
         if not or_column_name in self.header_comps:
-            raise ReportableException("OR column name -%s- not found in file '%s'" % (or_column_name, self.file_path))
+            raise ReportableException("OR column name -%s- not found in file '%s'. Is the file compressed?" % (or_column_name, self.file_path))
 
         self.OR = self.header_comps.index(or_column_name)
 
     def addBetaColumn(self, beta_column_name):
         if not beta_column_name in self.header_comps:
-            raise ReportableException("beta column name -%s- not found in file '%s'" % (beta_column_name, self.file_path))
+            raise ReportableException("beta column name -%s- not found in file '%s'. Is the file compressed?" % (beta_column_name, self.file_path))
 
         self.BETA = self.header_comps.index(beta_column_name)
 
     def addBetaSignColumn(self, beta_sign_column_name):
         if not beta_sign_column_name in self.header_comps:
-            raise ReportableException("beta sign column name -%s- not found in file '%s'" % (beta_sign_column_name, self.file_path))
+            raise ReportableException("beta sign column name -%s- not found in file '%s'. Is the file compressed?" % (beta_sign_column_name, self.file_path))
 
         self.BETA_SIGN = self.header_comps.index(beta_sign_column_name)
 
     def addBetaZScoreColumn(self, beta_zscore_column_name):
         if not beta_zscore_column_name in self.header_comps:
-            raise ReportableException("beta zscore column name -%s- not found in file '%s'" % (beta_zscore_column_name, self.file_path))
+            raise ReportableException("beta zscore column name -%s- not found in file '%s'. Is the file compressed?" % (beta_zscore_column_name, self.file_path))
 
         self.BETA_ZSCORE = self.header_comps.index(beta_zscore_column_name)
 
     def addPValueColumn(self, pvalue_column_name):
         if not pvalue_column_name in self.header_comps:
-            raise ReportableException("pvalue column name -%s- not found in file '%s'" % (pvalue_column_name, self.file_path))
+            raise ReportableException("pvalue column name -%s- not found in file '%s'. Is the file compressed?" % (pvalue_column_name, self.file_path))
 
         self.P = self.header_comps.index(pvalue_column_name)
 

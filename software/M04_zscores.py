@@ -116,7 +116,7 @@ class CalculateZScores(object):
             z = float(zscore)
             p = stats.norm.sf(abs(z))*2
             p = str(p)
-        return (gene, gene_entry.gene_name, zscore, VAR_g, n, str(len(weights.keys())), gene_entry.n_snp, gene_entry.R2, p, )
+        return (gene, gene_entry.gene_name, zscore, p, VAR_g, n, str(len(weights.keys())), gene_entry.n_snp, gene_entry.R2, gene_entry.pval, )
 
     def fillBlanks(self, results, entries, weight_db_logic, zscore_calculation):
         dummy = { "beta_z": KeyedDataSet.KeyedDataSet(name="beta_z"),
@@ -135,7 +135,7 @@ class CalculateZScores(object):
     def saveEntries(self, result_path, results, normalization):
         keys = sorted(results, key=lambda key: -abs(float(results[key][2])) if results[key][2] != "NA" else 0)
         with open(result_path, 'w') as file:
-            file.write("gene,gene_name,zscore,pvalue,pred_perf_R2,VAR_g,n,covariance_n,model_n\n")
+            file.write("gene,gene_name,zscore,pvalue,VAR_g,pred_perf_R2,pred_perf_p,n,covariance_n,model_n\n")
             for key in keys:
                 entry = results[key]
                 gene = entry[0]
@@ -149,13 +149,14 @@ class CalculateZScores(object):
                     if z_score != "NA":
                         z = float(z_score)
                         z_score = str(z*normalization)
-                VAR_g = entry[3]
-                n = entry[4]
-                covariance_n = entry[5]
-                model_n = entry[6]
-                R2 = entry[7]
-                p = entry[8]
-                line = "%s,%s,%s,%s,%s,%s,%s,%s,%s\n" % (gene, gene_name, z_score, p, R2, VAR_g, n, covariance_n, model_n)
+                p = entry[3]
+                VAR_g = entry[4]
+                n = entry[5]
+                covariance_n = entry[6]
+                model_n = entry[7]
+                R2 = entry[8]
+                gene_p = entry[9]
+                line = "%s,%s,%s,%s,%s,%s,%s,%s,%s.%s\n" % (gene, gene_name, z_score, p, VAR_g, R2, gene_p, n, covariance_n, model_n)
                 file.write(line)
 
     def selectMethod(self, folder, beta_contents, covariance_entries, weight_db_logic):

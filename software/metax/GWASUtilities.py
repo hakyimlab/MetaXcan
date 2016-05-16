@@ -289,6 +289,12 @@ def betaSignFromRow(file_format, row):
            sign = s
     return sign
 
+def betaZscoreFromRow(file_format, row):
+    b_z = "NA"
+    if file_format.BETA_ZSCORE:
+        b_z = row[file_format.BETA_ZSCORE]
+    return b_z
+
 def pFromFrow(file_format, row):
     p = row[file_format.P]
 
@@ -334,23 +340,26 @@ class _BETA_SE_TO_Z_Scheme(_GWASLineScheme):
         if beta != "NA" and "se" != "NA":
             beta_z = str(float(beta)/float(se))
         collector.beta_z.append(beta_z)
+        collector.beta.append(beta)
 
 class _BETA_Z_Scheme(_GWASLineScheme):
     def __call__(self, collector, row, file_format):
         super(_BETA_Z_Scheme, self).__call__(collector, row, file_format)
-        b_z = row[file_format.BETA_ZSCORE]
+        b_z = betaZscoreFromRow(file_format, row)
         collector.beta_z.append(b_z)
+        b = betaFromRow(file_format, row)
+        collector.beta.append(b)
 
 class _BETA_PVALUE_Scheme(_GWASLineScheme):
     def __call__(self, collector, row, file_format):
         super(_BETA_PVALUE_Scheme, self).__call__(collector, row, file_format)
         z = "NA"
         p = pFromFrow(file_format, row)
+        beta = betaFromRow(file_format, row)
 
         if p != "NA":
             p = float(p)
             abs_z = -stats.norm.ppf(p/2)
-            beta = betaFromRow(file_format, row)
             if beta != "NA":
                 try:
                     s = 1 if float(beta) >= 0 else -1
@@ -358,6 +367,7 @@ class _BETA_PVALUE_Scheme(_GWASLineScheme):
                 except Exception as e:
                     logging.log(9, "Error converting number: %s", str(e))
         collector.beta_z.append(z)
+        collector.beta.append(beta)
 
 class _BETA_SIGN_PVALUE_Scheme(_GWASLineScheme):
     def __call__(self, collector, row, file_format):
@@ -373,6 +383,9 @@ class _BETA_SIGN_PVALUE_Scheme(_GWASLineScheme):
                 s = 1.0 if sign == "+" else -1.0
                 z = abs_z * s
         collector.beta_z.append(z)
+        #nothing we can do, if we got the sign of beta, then there is probably no beta present
+        b = betaFromRow(file_format, row)
+        collector.beta.append(b)
 
 class GWASBetaLineCollector(object):
     def __init__(self, file_format, scheme):

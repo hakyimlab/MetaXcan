@@ -38,9 +38,9 @@ class CalculateZScores(object):
             logging.info("Results path %s already exists, delete it if you want it to be calculated again", self.output_file)
             return
 
-        logging.info("Loading people")
         people_by_id = None
         if os.path.exists(self.selected_dosage_folder):
+            logging.info("Loading people")
             samples_path = Utilities.samplesInputPath(self.selected_dosage_folder)
             if samples_path is not None:
                 people = Person.Person.loadPeople(samples_path)
@@ -100,8 +100,8 @@ class CalculateZScores(object):
 
                 logging.log(7, "Calculating z score for %s", gene)
 
-                pre_zscore, n, VAR_g = zscore_calculation(gene, weights, beta_sets, covariance_matrix, valid_rsids)
-                results[gene] = self.buildEntry(gene, weight_db_logic, weights, pre_zscore, n, VAR_g)
+                pre_zscore, n, VAR_g, effect_size = zscore_calculation(gene, weights, beta_sets, covariance_matrix, valid_rsids)
+                results[gene] = self.buildEntry(gene, weight_db_logic, weights, pre_zscore, n, VAR_g, effect_size)
                 i+=1
 
         #second pass, for genes not in any beta file
@@ -109,14 +109,14 @@ class CalculateZScores(object):
         normalization_constant = normalization.calculateNormalization()
         return results, normalization_constant
 
-    def buildEntry(self, gene, weight_db_logic, weights, zscore, n, VAR_g):
+    def buildEntry(self, gene, weight_db_logic, weights, zscore, n, VAR_g, effect_size):
         gene_entry = weight_db_logic.gene_data_for_gene[gene]
         p = "NA"
         if zscore != "NA":
             z = float(zscore)
             p = stats.norm.sf(abs(z))*2
             p = str(p)
-        return (gene, gene_entry.gene_name, zscore, p, VAR_g, n, str(len(weights.keys())), gene_entry.n_snp, gene_entry.R2, gene_entry.pval, )
+        return (gene, gene_entry.gene_name, zscore, effect_size, p, VAR_g, n, str(len(weights.keys())), gene_entry.n_snp, gene_entry.R2, gene_entry.pval, )
 
     def fillBlanks(self, results, entries, weight_db_logic, zscore_calculation):
         dummy = { "beta_z": KeyedDataSet.KeyedDataSet(name="beta_z"),
@@ -129,13 +129,13 @@ class CalculateZScores(object):
             covariance_matrix = entry[0]
             valid_rsids = entry[1]
 
-            z_score, n, VAR_g = zscore_calculation(gene, weights, dummy, covariance_matrix, valid_rsids)
-            results[gene] = self.buildEntry(gene, weight_db_logic, weights, z_score, n, VAR_g)
+            z_score, n, VAR_g, effect_size = zscore_calculation(gene, weights, dummy, covariance_matrix, valid_rsids)
+            results[gene] = self.buildEntry(gene, weight_db_logic, weights, z_score, n, VAR_g, effect_size)
 
     def saveEntries(self, result_path, results, normalization):
         keys = sorted(results, key=lambda key: -abs(float(results[key][2])) if results[key][2] != "NA" else 0)
         with open(result_path, 'w') as file:
-            file.write("gene,gene_name,zscore,pvalue,VAR_g,pred_perf_R2,pred_perf_p,n,covariance_n,model_n\n")
+            file.write("gene,gene_name,zscore,effect_size,pvalue,VAR_g,pred_perf_R2,pred_perf_p,n,covariance_n,model_n\n")
             for key in keys:
                 entry = results[key]
                 gene = entry[0]
@@ -149,14 +149,15 @@ class CalculateZScores(object):
                     if z_score != "NA":
                         z = float(z_score)
                         z_score = str(z*normalization)
-                p = entry[3]
-                VAR_g = entry[4]
-                n = entry[5]
-                covariance_n = entry[6]
-                model_n = entry[7]
-                R2 = entry[8]
-                gene_p = entry[9]
-                line = "%s,%s,%s,%s,%s,%s,%s,%s,%s.%s\n" % (gene, gene_name, z_score, p, VAR_g, R2, gene_p, n, covariance_n, model_n)
+                effect_size = entry[3]
+                p = entry[4]
+                VAR_g = entry[5]
+                n = entry[6]
+                covariance_n = entry[7]
+                model_n = entry[8]
+                R2 = entry[9]
+                gene_p = entry[10]
+                line = "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n" % (gene, gene_name, z_score, effect_size, p, VAR_g, R2, gene_p, n, covariance_n, model_n)
                 file.write(line)
 
     def selectMethod(self, folder, beta_contents, covariance_entries, weight_db_logic):

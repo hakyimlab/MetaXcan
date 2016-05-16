@@ -384,8 +384,9 @@ class _BETA_SIGN_PVALUE_Scheme(_GWASLineScheme):
                 z = abs_z * s
         collector.beta_z.append(z)
         #nothing we can do, if we got the sign of beta, then there is probably no beta present
-        b = betaFromRow(file_format, row)
-        collector.beta.append(b)
+        if collector.beta:
+            b = betaFromRow(file_format, row)
+            collector.beta.append(b)
 
 class GWASBetaLineCollector(object):
     def __init__(self, file_format, scheme):

@@ -4,7 +4,7 @@ import logging
 import numpy
 import math
 import Exceptions
-
+import KeyedDataSet
 
 BETA_Z = "beta_z"
 BETA_Z_SIGMA_REF = "beta_z_and_ref"
@@ -42,17 +42,17 @@ class ZScoreCalculation(object):
         return value
 
     def get_beta_z(self, beta_sets, rsid):
-        b_z = beta_sets["beta_z"]
+        b_z = beta_sets["beta_z"] if "beta_z" in beta_sets else KeyedDataSet.EMPTY
         value = self.getValue(b_z, rsid)
         return value
 
     def get_beta(self, beta_sets, rsid):
-        betas = beta_sets["beta"]
+        betas = beta_sets["beta"] if "beta" in beta_sets else KeyedDataSet.EMPTY
         value = self.getValue(betas, rsid)
         return value
 
     def get_sigma_l(self, beta_sets, rsid):
-        sigma_l = beta_sets["sigma_l"]
+        sigma_l = beta_sets["sigma_l"] if "sigma_l" in beta_sets else KeyedDataSet.EMPTY
         value = self.getValue(sigma_l, rsid)
         return value
 

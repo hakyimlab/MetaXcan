@@ -31,6 +31,13 @@ class MResult(object):
         self.gene_R2 = None
         self.gene_p = None
 
+    HEADER="gene,gene_name,zscore,effect_size,pvalue,VAR_g,pred_perf_R2,pred_perf_p,n_snps_used,n_snps_in_cov,n_snps_in_model\n"
+
+    def toCSVLine(self):
+        line = "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n" % \
+               (self.gene, self.gene_name, self.zscore, self.effect_size, self.p, self.VAR_g, self.gene_R2, self.gene_p, self.n, self.n_cov, self.n_model)
+        return line
+
 class CalculateZScores(object):
     def __init__(self, args):
         self.weight_db_path = args.weight_db_path
@@ -63,11 +70,12 @@ class CalculateZScores(object):
         logging.info("Loading weights from database: %s" % (self.weight_db_path))
         weight_db_logic = WeightDBUtilities.WeightDBEntryLogic(self.weight_db_path)
 
+        #Normalization is ignored at the moment. Not sure if it will return.
         results = None
         normalization = None
         results, normalization = self.resultsFromCovarianceFile(weight_db_logic)
 
-        self.saveEntries(self.output_file, results, normalization)
+        self.saveEntries(self.output_file, results)
 
     def resultsFromCovarianceFile(self, weight_db_logic):
         results = {}
@@ -131,6 +139,10 @@ class CalculateZScores(object):
             p = stats.norm.sf(abs(z))*2
             p = str(p)
         e = MResult()
+
+        if not self.keep_ens_version:
+            if "ENSG00" in gene and "." in gene:
+                gene = gene.split(".")[0]
         e.gene = gene
         e.gene_name = gene_entry.gene_name
         e.zscore = zscore
@@ -158,23 +170,13 @@ class CalculateZScores(object):
             z_score, n, VAR_g, effect_size = zscore_calculation(gene, weights, dummy, covariance_matrix, valid_rsids)
             results[gene] = self.buildEntry(gene, weight_db_logic, weights, z_score, n, VAR_g, effect_size)
 
-    def saveEntries(self, result_path, results, normalization):
+    def saveEntries(self, result_path, results):
         keys = sorted(results, key=lambda key: -abs(float(results[key].zscore)) if results[key].zscore != "NA" else 0)
         with open(result_path, 'w') as file:
-            file.write("gene,gene_name,zscore,effect_size,pvalue,VAR_g,pred_perf_R2,pred_perf_p,n_snps_used,n_snps_in_cov,n_snps_in_model\n")
+            file.write(MResult.HEADER)
             for key in keys:
                 e = results[key]
-                gene = e.gene
-                if not self.keep_ens_version:
-                    if "ENSG00" in gene and "." in gene:
-                        gene = gene.split(".")[0]
-
-                z_score = e.zscore
-                if normalization != 1:
-                    if z_score != "NA":
-                        z = float(z_score)
-                        z_score = str(z*normalization)
-                line = "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n" % (gene, e.gene_name, z_score, e.effect_size, e.p, e.VAR_g, e.gene_R2, e.gene_p, e.n, e.n_cov, e.n_model)
+                line = e.toCSVLine()
                 file.write(line)
 
     def selectMethod(self, folder, beta_contents, covariance_entries, weight_db_logic):

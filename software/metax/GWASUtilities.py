@@ -399,7 +399,7 @@ class GWASBetaLineCollector(object):
 
     def reset(self):
         self.rsids = []
-        self.beta = [] if (self.file_format.BETA or self.file_format.OR) else None
+        self.beta = [] if (self.file_format.BETA or self.file_format.OR or self.file_format.BETA_ZSCORE) else None
         self.ses = [] if self.file_format.SE else None
         self.sigma = [] if ( self.file_format.FRQ ) else None #more coming soon
         self.OR = True if self.file_format.OR else None

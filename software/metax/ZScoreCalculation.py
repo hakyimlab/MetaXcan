@@ -102,7 +102,7 @@ class _BetaZ(ZScoreCalculation):
             if n > 0:
                 numerator = sum(zscore_numerator_terms)
                 zscore = str(numerator/denominator)
-                if len(effect_size):
+                if len(effect_size_numerator_terms):
                     e_numerator = sum(effect_size_numerator_terms)
                     effect_size = str(e_numerator/denominator)
             else:

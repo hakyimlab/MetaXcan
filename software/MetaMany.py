@@ -160,6 +160,7 @@ if __name__ == "__main__":
     parser.add_argument("--separator",
                         help="Character or string separating fields in input file. Defaults to any whitespace.",
                         default=None)
+    # Added to support GWAS utilities
     parser.add_argument("--skip_until_header",
                         help="Some files may be malformed and contain unespecified bytes in the beggining."
                              " Specify this option (string value) to identify a header up to which file contents should be skipped.",

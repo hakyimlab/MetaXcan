@@ -165,7 +165,7 @@ if __name__ == "__main__":
                              " Specify this option (string value) to identify a header up to which file contents should be skipped.",
                         default=None)
 
-    #both
+#both
 
     parser.add_argument("--beta_folder",
                         help="name of folder to put beta parsing results in",

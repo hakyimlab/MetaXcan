@@ -40,6 +40,8 @@ class ProcessWeightDB(object):
         self.min_maf_filter = float(args.min_maf_filter) if args.min_maf_filter else None
         self.max_maf_filter = float(args.max_maf_filter) if args.max_maf_filter else None
 
+        self.max_snps_in_gene = int(args.max_snps_in_gene) if args.max_snps_in_gene else None
+
     def run(self):
         if not self.correlation_output and not self.covariance_output:
             logging.info("Provide --correlation_output or --covariance_output or both")
@@ -48,7 +50,10 @@ class ProcessWeightDB(object):
         logging.info("Loading Weights")
         weight_db_logic = WeightDBUtilities.WeightDBEntryLogic(self.db_path)
 
+        logging.info("Building files")
         self.buildFiles(weight_db_logic)
+
+        logging.info("Ran successfully")
 
     def buildFiles(self, weight_db_logic):
         do_correlations = self.correlation_output is not None
@@ -166,6 +171,12 @@ class ProcessWeightDB(object):
     def buildRelatedData(self, rsids_from_genes, snps_by_rsid, weights_in_gene):
         related_rsids = []
         related_data = []
+
+        l = len(rsids_from_genes)
+        if self.max_snps_in_gene and l > self.max_snps_in_gene:
+            logging.info("Skipping covariance too large: %d", l)
+            return related_data, related_rsids
+
         for rsid in rsids_from_genes:
             if not rsid in snps_by_rsid:
                 logging.log(5, "related rsid %s not present in genotype data", rsid)
@@ -324,6 +335,10 @@ if __name__ == "__main__":
                    help="Filter snps according to this maf",
                    default=None)
 
+    parser.add_argument("--max_snps_in_gene",
+                        help="Ignore any gene that has snps above this value",
+                        type=int,
+                        default=None)
 
     args = parser.parse_args()
 

@@ -423,6 +423,16 @@ class GWASWeightDBFilteredBetaLineCollector(GWASBetaLineCollector):
             entry = self.weight_db_logic.anEntryWithRSID(rsid)
             if entry.ref_allele == a2 and entry.eff_allele == a1:
                 logging.log(7, "alleles are flipped for rsid %s", rsid)
+
+                if file_format.BETA_ZSCORE:
+                    try:
+                        z = betaZscoreFromRow(file_format, row)
+                        z = -float(z)
+                        row[file_format.BETA_ZSCORE] = str(z)
+                    except Exception as e:
+                        logging.log(9, "error flipping allele %s: %s", rsid, str(e))
+                        row[file_format.BETA_ZSCORE] = "NA"
+
                 if file_format.BETA:
                     try:
                         beta = betaFromRow(file_format, row)
@@ -436,14 +446,6 @@ class GWASWeightDBFilteredBetaLineCollector(GWASBetaLineCollector):
                         beta = betaFromRow(file_format, row)
                         OR = math.exp(-float(beta))
                         row[file_format.OR] = str(OR)
-                    except Exception as e:
-                        logging.log(9, "error flipping allele %s: %s", rsid, str(e))
-                        row[file_format.OR] = "NA"
-                elif file_format.BETA_ZSCORE:
-                    try:
-                        z = betaZscoreFromRow(file_format, row)
-                        z = -float(z)
-                        row[file_format.BETA_ZSCORE] = str(z)
                     except Exception as e:
                         logging.log(9, "error flipping allele %s: %s", rsid, str(e))
                         row[file_format.OR] = "NA"
@@ -461,7 +463,7 @@ class GWASWeightDBFilteredBetaLineCollector(GWASBetaLineCollector):
                         row[file_format.BETA_SIGN] = sign
                     except Exception as e:
                         logging.log(9, "error flipping allele %s: %s", rsid, str(e))
-                        row[file_format.OR] = "NA"
+                        row[file_format.BETA_SIGN] = "NA"
             elif not entry.ref_allele == a1 or not entry.eff_allele == a2:
                 logging.log(6, "%s alleles dont match:(%s, %s)(%s, %s)",rsid, entry.ref_allele, entry.eff_allele, a1, a2)
                 return

@@ -66,7 +66,9 @@ class ZScoreCalculation(object):
 
 class _BetaZ(ZScoreCalculation):
     def __call__(self, gene, weights, beta_sets, covariance_matrix, valid_rsids):
-        weight_values, variances = preProcess(covariance_matrix, valid_rsids, weights, beta_sets)
+        #TODO: have beta_z_validation be provided by each calculation class,
+        #So as to check for standard error in input sets if applicable
+        weight_values, variances = preProcess(covariance_matrix, valid_rsids, weights, beta_sets, beta_z_validation)
 
         pre_zscore = "NA"
         n = 0
@@ -110,7 +112,9 @@ class _BetaZAndRef(_BetaZ):
 
 class _MetaXcan(ZScoreCalculation):
     def __call__(self, gene, weights, beta_sets, covariance_matrix, valid_rsids):
-        weight_values, variances = preProcess(covariance_matrix, valid_rsids, weights, beta_sets)
+        #TODO: have beta_z_validation be provided by each calculation class,
+        #So as to check for standard error in input sets if applicable
+        weight_values, variances = preProcess(covariance_matrix, valid_rsids, weights, beta_sets, beta_validation)
 
         pre_zscore = "NA"
         n = 0
@@ -149,20 +153,39 @@ class _MetaXcanFromReference(_MetaXcan):
     def sigma_l(self, beta_sets, variances, rsid):
         return self.get_reference_sigma_l(variances, rsid)
 
-def preProcess(covariance_matrix, valid_rsids, weights, beta_sets):
-    b = None
-    if "beta" in beta_sets:
-        b = beta_sets["beta"]
-    elif "beta_z" in beta_sets:
-        b = beta_sets["beta_z"]
+def check_input_set_rsid(input_set, rsid):
+    if not rsid in input_set.values_by_key or input_set.values_by_key[rsid] == "NA":
+        return False
+    return True
 
+def beta_validation(beta_sets, rsid):
+    if not "beta" in beta_sets:
+        return False
+
+    b = beta_sets["beta"]
+    if not check_input_set_rsid(b, rsid):
+        return False
+
+    return True
+
+def beta_z_validation(beta_sets, rsid):
+    if not "beta_z" in beta_sets:
+        return False
+
+    b_z = beta_sets["beta_z"]
+    if not check_input_set_rsid(b_z, rsid):
+        return False
+
+    return True
+
+def preProcess(covariance_matrix, valid_rsids, weights, beta_sets, validation):
     weight_values = []
     variances = {}
     for i,rsid in enumerate(valid_rsids):
         if rsid not in weights:
             raise Exceptions.ReportableException("RSID %s can't be found in the weights database. Are you sure your covariance data matches the weights database you are using?" % (rsid))
         weight = weights[rsid].weight
-        if b and (not rsid in b.values_by_key or b.values_by_key[rsid] == "NA"):
+        if not validation(beta_sets, rsid):
             logging.log(7, "snp %s not present in beta data, skipping weight")
             # this will effectively skip this rsid at (w * G * w)
             weight = 0

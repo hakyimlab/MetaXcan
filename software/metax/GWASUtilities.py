@@ -310,6 +310,12 @@ def snpFromRow(file_format, row):
 
     return snp
 
+def betaZscoreFromRow(file_format, row):
+    b_z = "NA"
+    if file_format.BETA_ZSCORE:
+        b_z = row[file_format.BETA_ZSCORE]
+    return b_z
+
 class _BETA_Scheme(_GWASLineScheme):
     def __call__(self, collector, row, file_format):
         super(_BETA_Scheme, self).__call__(collector, row, file_format)
@@ -338,7 +344,7 @@ class _BETA_SE_TO_Z_Scheme(_GWASLineScheme):
 class _BETA_Z_Scheme(_GWASLineScheme):
     def __call__(self, collector, row, file_format):
         super(_BETA_Z_Scheme, self).__call__(collector, row, file_format)
-        b_z = row[file_format.BETA_ZSCORE]
+        b_z = betaZscoreFromRow(file_format, row)
         collector.beta_z.append(b_z)
 
 class _BETA_PVALUE_Scheme(_GWASLineScheme):
@@ -430,6 +436,14 @@ class GWASWeightDBFilteredBetaLineCollector(GWASBetaLineCollector):
                         beta = betaFromRow(file_format, row)
                         OR = math.exp(-float(beta))
                         row[file_format.OR] = str(OR)
+                    except Exception as e:
+                        logging.log(9, "error flipping allele %s: %s", rsid, str(e))
+                        row[file_format.OR] = "NA"
+                elif file_format.BETA_ZSCORE:
+                    try:
+                        z = betaZscoreFromRow(file_format, row)
+                        z = -float(z)
+                        row[file_format.BETA_ZSCORE] = str(z)
                     except Exception as e:
                         logging.log(9, "error flipping allele %s: %s", rsid, str(e))
                         row[file_format.OR] = "NA"

@@ -100,10 +100,11 @@ class WeightDB(object):
         self.openDBIfNecessary()
         try:
             if gene_key is None:
-                results = self.cursor.execute("SELECT gene, genename, R2, `n.snps`, pval FROM extra;")
+                results = self.cursor.execute("SELECT gene, genename, R2, `n.snps`, `pred.perf.pval` FROM extra;")
             else:
-                results = self.cursor.execute("SELECT gene, genename, R2, `n.snps`, pval FROM extra WHERE gene = ?;", (gene_key,))
+                results = self.cursor.execute("SELECT gene, genename, R2, `n.snps`, `pred.perf.pval` FROM extra WHERE gene = ?;", (gene_key,))
         except sqlite3.OperationalError as e:
+            print str(e)
             raise Exceptions.ReportableException("Could not read input tissue database. Please try updating the tissue model files.")
         except Exception as e:
             raise e

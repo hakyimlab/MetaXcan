@@ -62,11 +62,12 @@ class GetBetas(object):
         result_sets = dosage_loader.load()
 
         # The following check is sort of redundant, as it exists in "saveSetsToCompressedFile".
-        # It exists merely to provide different login
+        # It exists merely to provide different logging
         if len(result_sets):
             KeyedDataSet.KeyedDataSetFileUtilities.saveSetsToCompressedFile(output_path, result_sets, "rsid")
         else:
             logging.info("No snps from the tissue model found in the GWAS file")
+        logging.info("Successfully ran GWAS input processing")
 
 
 def run(args):

@@ -78,6 +78,8 @@ class CalculateZScores(object):
 
         self.saveEntries(self.output_file, results)
 
+        logging.info("Successfully ran MetaXcan analysis")
+
     def resultsFromCovarianceFile(self, weight_db_logic):
         results = {}
 

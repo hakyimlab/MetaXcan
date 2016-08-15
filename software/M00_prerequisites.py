@@ -38,6 +38,8 @@ class ProcessPrerequisites(object):
 
         self.buildDosages()
 
+        logging.info("Successfully processed input samples")
+
     def buildPeople(self):
         if os.path.exists(self.samples_output):
             logging.info("%s already exists, delete it if you want it figured out again", self.samples_output)

@@ -30,12 +30,13 @@ class MResult(object):
         self.n_model = None
         self.gene_R2 = None
         self.gene_p = None
+        self.gene_q = None
 
-    HEADER="gene,gene_name,zscore,effect_size,pvalue,VAR_g,pred_perf_R2,pred_perf_p,n_snps_used,n_snps_in_cov,n_snps_in_model\n"
+    HEADER="gene,gene_name,zscore,effect_size,pvalue,VAR_g,pred_perf_R2,pred_perf_p,pred_perf_q,n_snps_used,n_snps_in_cov,n_snps_in_model\n"
 
     def toCSVLine(self):
-        line = "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n" % \
-               (self.gene, self.gene_name, self.zscore, self.effect_size, self.p, self.VAR_g, self.gene_R2, self.gene_p, self.n, self.n_cov, self.n_model)
+        line = "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n" % \
+               (self.gene, self.gene_name, self.zscore, self.effect_size, self.p, self.VAR_g, self.gene_R2, self.gene_p, self.gene_q, self.n, self.n_cov, self.n_model)
         return line
 
 class CalculateZScores(object):
@@ -151,9 +152,10 @@ class CalculateZScores(object):
         e.VAR_g = VAR_g
         e.n = n
         e.n_cov = str(len(weights.keys()))
-        e.n_model = gene_entry.n_snp
-        e.gene_R2 = gene_entry.R2
-        e.gene_p = gene_entry.pval
+        e.n_model = gene_entry.n_snps
+        e.gene_R2 = gene_entry.pred_perf_R2
+        e.gene_p = gene_entry.pred_perf_pval
+        e.gene_q = gene_entry.pred_perf_qval
         return e
 
     def fillBlanks(self, results, entries, weight_db_logic, zscore_calculation):

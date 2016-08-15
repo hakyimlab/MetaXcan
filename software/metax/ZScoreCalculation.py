@@ -128,7 +128,7 @@ class _MetaXcan(ZScoreCalculation):
         #So as to check for standard error in input sets if applicable
         weight_values, variances = preProcess(covariance_matrix, valid_rsids, weights, beta_sets, beta_validation)
 
-        zscore = "NA"
+        pre_zscore = "NA"
         effect_size = "NA" # Stubbed out, proper approach in this scheme is not clear
         n = 0
         #dot_product is Var(g)

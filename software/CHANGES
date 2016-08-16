@@ -1,3 +1,5 @@
+Version 0.2.6
+	* Fixed bug in --zscore_column option data handling
 Version 0.2.5
 	* Made some file handling errors more verbous. Added unit test for GWAS processing logic.
 Version 0.2.4

@@ -114,8 +114,8 @@ The example command parameters mean:
 Its output is a CSV file that looks like:
 
 ```
-gene,gene_name,zscore,pvalue,pred_perf_R2,VAR_g,n,covariance_n,model_n
-ENSG00000182118,FAM89A,3.33698080012,0.000846937986942,0.222578978913,0.147107349684,17,17,17
+gene,gene_name,zscore,effect_size,pvalue,VAR_g,pred_perf_R2,pred_perf_p,pred_perf_q,n_snps_used,n_snps_in_cov,n_snps_in_model
+ENSG00000150938,CRIM1,-4.19069760413,-0.231471478373,2.78098095601e-05,0.0983344808163,0.13320775358,1.97496173512e-30,7.47907447189e-30,37,37,37
 ...
 ```
 Where each row is a gene's association result:
@@ -123,11 +123,14 @@ Where each row is a gene's association result:
 Ensemble Id for some, while some others (mainly DGN Whole Blood) provide [Genquant](http://www.gencodegenes.org/)'s gene name
 * gene_name: gene name as listed by the Transcriptome Model, generally extracted from Genquant
 * zscore: MetaXcan'as association result for the gene
+* effect_size: MetaXcan'as association effect size for the gene
 * pvalue: P-value of the aforementioned statistic.
-* pred_perf_R2: R2 of tissue model's correlation to gene's measured transcriptome
-* n: number of snps from GWAS that got used in MetaXcan analysis
-* covariance_n: number of snps in the covariance matrix
-* model_n: number of snps in the model
+* pred_perf_R2: R2 of tissue model's correlation to gene's measured transcriptome (prediction performance)
+* pred_perf_pval: pval of tissue model's correlation to gene's measured transcriptome (prediction performance)
+* pred_perf_qval: qval of tissue model's correlation to gene's measured transcriptome (prediction performance)
+* n_snps_used: number of snps from GWAS that got used in MetaXcan analysis
+* n_snps_in_cov: number of snps in the covariance matrix
+* n_snps_in_model: number of snps in the model
 * VAR_g: variance of the gene expression, calculated as *W' * G * W*
 (where *W* is the vector of SNP weights in a gene's model,
 *W'* is its transpose, and *G* is the covariance matrix)
@@ -165,6 +168,15 @@ Issues and questions can be raised at this repository's issue tracker.
 There is also a [Google Group](https://groups.google.com/forum/?hl=en#!forum/predixcanmetaxcan) mail list for general discussion, feature requests, etc. 
 Join if you want to be notified of new releases, feature sets and important news concerning this software.
 
+### Cautionary Warning to Existing Users on Updates and Transcriptome Models
+
+Transcriptome Models are a key component of MetaXcan (and PrediXcan) input. As models are improved,
+sometimes the format of this databases need be changed too. We only provide support for the very latest databases;
+if a user updates their repository to the latest version and MetaXcan complains about the transcriptome weight dbs,
+please check if new databases [have been published here](http://predictdb.hakyimlab.org).
+
+For the time being, the only way to use old transcriptome models is to use older versions of MetaXcan.
+
 ## Where to go from here
 
 Check [this](https://github.com/hakyimlab/MetaXcan/tree/master/software) if you want to learn more
@@ -181,3 +193,5 @@ The code lies at
 ```bash
 /software
 ```
+
+

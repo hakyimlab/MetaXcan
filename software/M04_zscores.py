@@ -17,6 +17,28 @@ import metax.Normalization as Normalization
 import metax.MethodGuessing as MethodGuessing
 import metax.Exceptions as Exceptions
 
+class MResult(object):
+    def __init__(self):
+        self.gene = None,
+        self.gene_name = None
+        self.zscore = None
+        self.effect_size = None
+        self.p = None
+        self.VAR_g = None
+        self.n = None
+        self.n_cov = None
+        self.n_model = None
+        self.gene_R2 = None
+        self.gene_p = None
+        self.gene_q = None
+
+    HEADER="gene,gene_name,zscore,effect_size,pvalue,VAR_g,pred_perf_R2,pred_perf_p,pred_perf_q,n_snps_used,n_snps_in_cov,n_snps_in_model\n"
+
+    def toCSVLine(self):
+        line = "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n" % \
+               (self.gene, self.gene_name, self.zscore, self.effect_size, self.p, self.VAR_g, self.gene_R2, self.gene_p, self.gene_q, self.n, self.n_cov, self.n_model)
+        return line
+
 class CalculateZScores(object):
     def __init__(self, args):
         self.weight_db_path = args.weight_db_path
@@ -38,9 +60,9 @@ class CalculateZScores(object):
             logging.info("Results path %s already exists, delete it if you want it to be calculated again", self.output_file)
             return
 
-        logging.info("Loading people")
         people_by_id = None
         if os.path.exists(self.selected_dosage_folder):
+            logging.info("Loading people")
             samples_path = Utilities.samplesInputPath(self.selected_dosage_folder)
             if samples_path is not None:
                 people = Person.Person.loadPeople(samples_path)
@@ -49,11 +71,14 @@ class CalculateZScores(object):
         logging.info("Loading weights from database: %s" % (self.weight_db_path))
         weight_db_logic = WeightDBUtilities.WeightDBEntryLogic(self.weight_db_path)
 
+        #Normalization is ignored at the moment. Not sure if it will return.
         results = None
         normalization = None
         results, normalization = self.resultsFromCovarianceFile(weight_db_logic)
 
-        self.saveEntries(self.output_file, results, normalization)
+        self.saveEntries(self.output_file, results)
+
+        logging.info("Successfully ran MetaXcan analysis")
 
     def resultsFromCovarianceFile(self, weight_db_logic):
         results = {}
@@ -100,8 +125,8 @@ class CalculateZScores(object):
 
                 logging.log(7, "Calculating z score for %s", gene)
 
-                pre_zscore, n, VAR_g = zscore_calculation(gene, weights, beta_sets, covariance_matrix, valid_rsids)
-                results[gene] = self.buildEntry(gene, weight_db_logic, weights, pre_zscore, n, VAR_g)
+                pre_zscore, n, VAR_g, effect_size = zscore_calculation(gene, weights, beta_sets, covariance_matrix, valid_rsids)
+                results[gene] = self.buildEntry(gene, weight_db_logic, weights, pre_zscore, n, VAR_g, effect_size)
                 i+=1
 
         #second pass, for genes not in any beta file
@@ -109,14 +134,31 @@ class CalculateZScores(object):
         normalization_constant = normalization.calculateNormalization()
         return results, normalization_constant
 
-    def buildEntry(self, gene, weight_db_logic, weights, zscore, n, VAR_g):
+    def buildEntry(self, gene, weight_db_logic, weights, zscore, n, VAR_g, effect_size):
         gene_entry = weight_db_logic.gene_data_for_gene[gene]
         p = "NA"
         if zscore != "NA":
             z = float(zscore)
             p = stats.norm.sf(abs(z))*2
             p = str(p)
-        return (gene, gene_entry.gene_name, zscore, VAR_g, n, str(len(weights.keys())), gene_entry.n_snp, gene_entry.R2, p, )
+        e = MResult()
+
+        if not self.keep_ens_version:
+            if "ENSG00" in gene and "." in gene:
+                gene = gene.split(".")[0]
+        e.gene = gene
+        e.gene_name = gene_entry.gene_name
+        e.zscore = zscore
+        e.effect_size = effect_size
+        e.p = p
+        e.VAR_g = VAR_g
+        e.n = n
+        e.n_cov = str(len(weights.keys()))
+        e.n_model = gene_entry.n_snps
+        e.gene_R2 = gene_entry.pred_perf_R2
+        e.gene_p = gene_entry.pred_perf_pval
+        e.gene_q = gene_entry.pred_perf_qval
+        return e
 
     def fillBlanks(self, results, entries, weight_db_logic, zscore_calculation):
         dummy = { "beta_z": KeyedDataSet.KeyedDataSet(name="beta_z"),
@@ -129,33 +171,16 @@ class CalculateZScores(object):
             covariance_matrix = entry[0]
             valid_rsids = entry[1]
 
-            z_score, n, VAR_g = zscore_calculation(gene, weights, dummy, covariance_matrix, valid_rsids)
-            results[gene] = self.buildEntry(gene, weight_db_logic, weights, z_score, n, VAR_g)
+            z_score, n, VAR_g, effect_size = zscore_calculation(gene, weights, dummy, covariance_matrix, valid_rsids)
+            results[gene] = self.buildEntry(gene, weight_db_logic, weights, z_score, n, VAR_g, effect_size)
 
-    def saveEntries(self, result_path, results, normalization):
-        keys = sorted(results, key=lambda key: -abs(float(results[key][2])) if results[key][2] != "NA" else 0)
+    def saveEntries(self, result_path, results):
+        keys = sorted(results, key=lambda key: -abs(float(results[key].zscore)) if results[key].zscore != "NA" else 0)
         with open(result_path, 'w') as file:
-            file.write("gene,gene_name,zscore,pvalue,pred_perf_R2,VAR_g,n,covariance_n,model_n\n")
+            file.write(MResult.HEADER)
             for key in keys:
-                entry = results[key]
-                gene = entry[0]
-                if not self.keep_ens_version:
-                    if "ENSG00" in gene and "." in gene:
-                        gene = gene.split(".")[0]
-
-                gene_name = entry[1]
-                z_score = entry[2]
-                if normalization != 1:
-                    if z_score != "NA":
-                        z = float(z_score)
-                        z_score = str(z*normalization)
-                VAR_g = entry[3]
-                n = entry[4]
-                covariance_n = entry[5]
-                model_n = entry[6]
-                R2 = entry[7]
-                p = entry[8]
-                line = "%s,%s,%s,%s,%s,%s,%s,%s,%s\n" % (gene, gene_name, z_score, p, R2, VAR_g, n, covariance_n, model_n)
+                e = results[key]
+                line = e.toCSVLine()
                 file.write(line)
 
     def selectMethod(self, folder, beta_contents, covariance_entries, weight_db_logic):

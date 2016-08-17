@@ -15,6 +15,8 @@ class KeyedDataSet(DataSet):
                 value = data[i]
                 self.values_by_key[key] = value
 
+EMPTY = KeyedDataSet()
+
 class KeyedDataSetFileUtilities(object):
 #SAVE
     @classmethod

@@ -45,12 +45,13 @@ MetaXcan will calculate the association results from GWAS results, as output by 
 Some support data is needed, that needs to be set up prior MetaXcan execution.
 
 The gist of MetaXcan input is:
-- A Transcriptome Prediction Model database (an example is [here](https://s3.amazonaws.com/imlab-open/Data/MetaXcan/1000G-WB/data/DGN-WB_0.5.db))
-- A file with the covariance matrices of the SNPs within each gene model (such as [this one](https://s3.amazonaws.com/imlab-open/Data/MetaXcan/1000G-WB/intermediate/covariance.txt.gz))
-- GWAS results (such as [these](https://s3.amazonaws.com/imlab-open/Data/MetaXcan/1000G-WB/data/GWAS.tar.gz))
+- A Transcriptome Prediction Model database (an example is [here](https://s3.amazonaws.com/imlab-open/Data/MetaXcan/sample_data/DGN-WB_0.5.db))
+- A file with the covariance matrices of the SNPs within each gene model (such as [this one](https://s3.amazonaws.com/imlab-open/Data/MetaXcan/sample_data/covariance.DGN-WB_0.5.txt.gz))
+- GWAS results (such as [these](https://s3.amazonaws.com/imlab-open/Data/MetaXcan/sample_data/GWAS.tar.gz), which are just randomly generated)
 
 You can use precalculated databases, or generate new ones with tools in this repository.
-GTEx-based tissues and 1000 Genomes covariances precalculated data can be found [here](https://app.box.com/s/gujt4m6njqjfqqc9tu0oqgtjvtz9860w).
+GTEx-based tissues and 1000 Genomes covariances precalculated data can be found [here](http://predictdb.hakyimlab.org).
+<!-- old box https://app.box.com/s/gujt4m6njqjfqqc9tu0oqgtjvtz9860w  -->
 (Please refer to **/software/Readme.md** for more detailed information)
 
 ## Setup and Usage Example
@@ -65,7 +66,7 @@ $ git clone https://github.com/hakyimlab/MetaXcan
 $ cd MetaXcan/software
 ```
 
-3) Download sample [data](https://s3.amazonaws.com/imlab-open/Data/MetaXcan/example/support_data.tar.gz):
+3) Download sample [data](https://s3.amazonaws.com/imlab-open/Data/MetaXcan/sample_data/sample_data.tar.gz):
 ```bash
 # You can click on the link above or type the following at a terminal
 $ wget https://s3.amazonaws.com/imlab-open/Data/MetaXcan/example/support_data.tar.gz
@@ -83,7 +84,7 @@ tar -xzvpf support_data.tar.gz
 $ ./MetaXcan.py \
 --beta_folder intermediate/beta \
 --weight_db_path data/DGN-WB_0.5.db \
---covariance intermediate/cov/covariance.txt.gz \
+--covariance data/covariance.DGN-WB_0.5.txt.gz \
 --gwas_folder data/GWAS \
 --gwas_file_pattern ".*gz" \
 --compressed \
@@ -161,8 +162,7 @@ PIP support coming soon-ish.
 
 Issues and questions can be raised at this repository's issue tracker.
 
-There is also a [Google Group](https://groups.google.com/forum/?hl=en#!forum/predixcanmetaxcan) mail list
-for general discussion, feature requests, etc. 
+There is also a [Google Group](https://groups.google.com/forum/?hl=en#!forum/predixcanmetaxcan) mail list for general discussion, feature requests, etc. 
 Join if you want to be notified of new releases, feature sets and important news concerning this software.
 
 ## Where to go from here

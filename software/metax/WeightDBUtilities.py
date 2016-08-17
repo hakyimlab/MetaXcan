@@ -2,13 +2,16 @@ __author__ = 'heroico'
 
 import sqlite3
 import os
+import Exceptions
 
 class GeneEntry:
-    def __init__(self, gene, gene_name, R2, n_snp):
+    def __init__(self, gene, gene_name, n_snps, R2, pval,qval):
         self.gene = gene
         self.gene_name = gene_name
-        self.R2 = R2
-        self.n_snp = n_snp
+        self.n_snps = n_snps
+        self.pred_perf_R2 = R2
+        self.pred_perf_pval = pval
+        self.pred_perf_qval = qval
 
 class WeightDBEntry:
     def __init__(self, rsid=None, gene=None, weight=None, ref_allele=None, eff_allele=None, pval=None, N=None, cis=None):
@@ -23,22 +26,21 @@ class WeightDBEntry:
         self.cis = cis
 
 class WDBQF(object):
-    "Weight DB Query Format"
+    "Weight DB weight Query Format"
     RSID=0
     GENE=1
     WEIGHT=2
     REF_ALLELE=3
     EFF_ALLELE=4
-    PVAL=5
-    N=6
-    CIS=7
 
 class WDBEQF(object):
-    "Weight DB Query Format"
+    "Weight DB extra table Query Format"
     GENE=0
     GENE_NAME=1
-    R2=2
-    N_SNP=3
+    N_SNP_IN_MODEL=2
+    PRED_PERF_R2=3
+    PRED_PERF_PVAL=4
+    PRED_PERF_QVAL=5
 
 class WeightDB(object):
     def __init__(self, file_name , create_if_absent=False):
@@ -66,15 +68,11 @@ class WeightDB(object):
     def weightEntriesFromResults(self, results, extra, result_callback=None):
         weights = []
         for result in results:
-            gene = result[WDBQF.GENE]
             weight = WeightDBEntry(result[WDBQF.RSID],
-                                   gene,
+                                   result[WDBQF.GENE],
                                    result[WDBQF.WEIGHT],
                                    result[WDBQF.REF_ALLELE],
-                                   result[WDBQF.EFF_ALLELE],
-                                   result[WDBQF.PVAL],
-                                   result[WDBQF.N],
-                                   result[WDBQF.CIS])
+                                   result[WDBQF.EFF_ALLELE])
             weights.append(weight)
             if result_callback:
                 result_callback(weight, extra)
@@ -86,21 +84,27 @@ class WeightDB(object):
         extra = {e.gene:e for e in extra}
 
         if gene_key is None:
-            results = self.cursor.execute("SELECT rsid, gene, weight, ref_allele, eff_allele, pval, N, cis FROM weights;")
+            results = self.cursor.execute("SELECT rsid, gene, weight, ref_allele, eff_allele FROM weights;")
         else:
-            results = self.cursor.execute("SELECT rsid, gene, weight, ref_allele, eff_allele, pval, N, cis FROM weights where gene = ?;", (gene_key))
+            results = self.cursor.execute("SELECT rsid, gene, weight, ref_allele, eff_allele FROM weights where gene = ?;", (gene_key))
 
         weights = self.weightEntriesFromResults(results, extra, callback)
         return  weights
 
     def loadExtraColumnData(self, gene_key=None):
         self.openDBIfNecessary()
-        if gene_key is None:
-            results = self.cursor.execute("SELECT gene, genename, R2, `n.snps` FROM extra;")
-        else:
-            results = self.cursor.execute("SELECT gene, genename, R2, `n.snps` FROM extra WHERE gene = ?;", (gene_key,))
+        try:
+            if gene_key is None:
+                results = self.cursor.execute("SELECT gene, genename, `n.snps.in.model`, `pred.perf.R2`, `pred.perf.pval`, `pred.perf.qval` FROM extra;")
+            else:
+                results = self.cursor.execute("SELECT gene, genename, `n.snps.in.model`, `pred.perf.R2`, `pred.perf.pval`, `pred.perf.qval` FROM extra WHERE gene = ?;", (gene_key,))
+        except sqlite3.OperationalError as e:
+            print str(e)
+            raise Exceptions.ReportableException("Could not read input tissue database. Please try updating the tissue model files.")
+        except Exception as e:
+            raise e
 
-        extra = [GeneEntry(x[WDBEQF.GENE], x[WDBEQF.GENE_NAME], x[WDBEQF.R2], x[WDBEQF.N_SNP]) for x in results]
+        extra = [GeneEntry(x[WDBEQF.GENE], x[WDBEQF.GENE_NAME], x[WDBEQF.N_SNP_IN_MODEL], x[WDBEQF.PRED_PERF_R2], x[WDBEQF.PRED_PERF_PVAL], x[WDBEQF.PRED_PERF_QVAL]) for x in results]
         return  extra
 
     def loadGeneNamesFromDB(self):

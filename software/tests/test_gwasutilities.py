@@ -108,38 +108,38 @@ class TestGWASUtilities(unittest.TestCase):
 
         with self.assertRaises(Exceptions.ReportableException) as fnexcpt:
             gwff.addSNPColumn("Markerzz")
-        self.assertEqual(("%s column name -%s- not found in file '%s'" % ("SNP", "Markerzz", filename)), fnexcpt.exception.msg)
+        self.assertEqual(("%s column name -%s- not found in file '%s'. Is the file compressed?" % ("SNP", "Markerzz", filename)), fnexcpt.exception.msg)
 
 
         with self.assertRaises(Exceptions.ReportableException) as fnexcpt:
             gwff.addSEColumn("StdErrzz")
-        self.assertEqual(("%s column name -%s- not found in file '%s'" % ("SE", "StdErrzz", filename)), fnexcpt.exception.msg)
+        self.assertEqual(("%s column name -%s- not found in file '%s'. Is the file compressed?" % ("SE", "StdErrzz", filename)), fnexcpt.exception.msg)
 
         with self.assertRaises(Exceptions.ReportableException) as fnexcpt:
             gwff.addA1Column("all1")
-        self.assertEqual(("%s column name -%s- not found in file '%s'" % ("A1", "all1", filename)), fnexcpt.exception.msg)
+        self.assertEqual(("%s column name -%s- not found in file '%s'. Is the file compressed?" % ("A1", "all1", filename)), fnexcpt.exception.msg)
         with self.assertRaises(Exceptions.ReportableException) as fnexcpt:
             gwff.addA2Column("all2")
-        self.assertEqual(("%s column name -%s- not found in file '%s'" % ("A2", "all2", filename)), fnexcpt.exception.msg)
+        self.assertEqual(("%s column name -%s- not found in file '%s'. Is the file compressed?" % ("A2", "all2", filename)), fnexcpt.exception.msg)
 
         with self.assertRaises(Exceptions.ReportableException) as fnexcpt:
             gwff.addFrequencyColumn("F")
-        self.assertEqual(("%s column name -%s- not found in file '%s'" % ("frequency", "F", filename)), fnexcpt.exception.msg)
+        self.assertEqual(("%s column name -%s- not found in file '%s'. Is the file compressed?" % ("frequency", "F", filename)), fnexcpt.exception.msg)
         with self.assertRaises(Exceptions.ReportableException) as fnexcpt:
             gwff.addPValueColumn("P")
-        self.assertEqual(("%s column name -%s- not found in file '%s'" % ("pvalue", "P", filename)), fnexcpt.exception.msg)
+        self.assertEqual(("%s column name -%s- not found in file '%s'. Is the file compressed?" % ("pvalue", "P", filename)), fnexcpt.exception.msg)
         with self.assertRaises(Exceptions.ReportableException) as fnexcpt:
             gwff.addORColumn("OR")
-        self.assertEqual(("%s column name -%s- not found in file '%s'" % ("OR", "OR", filename)), fnexcpt.exception.msg)
+        self.assertEqual(("%s column name -%s- not found in file '%s'. Is the file compressed?" % ("OR", "OR", filename)), fnexcpt.exception.msg)
         with self.assertRaises(Exceptions.ReportableException) as fnexcpt:
             gwff.addBetaColumn("Betas")
-        self.assertEqual(("%s column name -%s- not found in file '%s'" % ("beta", "Betas", filename)), fnexcpt.exception.msg)
+        self.assertEqual(("%s column name -%s- not found in file '%s'. Is the file compressed?" % ("beta", "Betas", filename)), fnexcpt.exception.msg)
         with self.assertRaises(Exceptions.ReportableException) as fnexcpt:
             gwff.addBetaSignColumn("BetaSigns")
-        self.assertEqual(("%s column name -%s- not found in file '%s'" % ("beta sign", "BetaSigns", filename)), fnexcpt.exception.msg)
+        self.assertEqual(("%s column name -%s- not found in file '%s'. Is the file compressed?" % ("beta sign", "BetaSigns", filename)), fnexcpt.exception.msg)
         with self.assertRaises(Exceptions.ReportableException) as fnexcpt:
             gwff.addBetaZScoreColumn("BetaZcore")
-        self.assertEqual(("%s column name -%s- not found in file '%s'" % ("beta zscore", "BetaZcore", filename)), fnexcpt.exception.msg)
+        self.assertEqual(("%s column name -%s- not found in file '%s'. Is the file compressed?" % ("beta zscore", "BetaZcore", filename)), fnexcpt.exception.msg)
 
 
     def testGWASUtilitiesAddColErrors(self):
@@ -147,38 +147,38 @@ class TestGWASUtilities(unittest.TestCase):
 
         with self.assertRaises(Exceptions.ReportableException) as fnexcpt:
             gwff.addSNPColumn("Markerzz")
-        self.assertEqual(("%s column name -%s- not found in file '%s'" % ("SNP", "Markerzz", self.filename)), fnexcpt.exception.msg)
+        self.assertEqual(("%s column name -%s- not found in file '%s'. Is the file compressed?" % ("SNP", "Markerzz", self.filename)), fnexcpt.exception.msg)
 
 
         with self.assertRaises(Exceptions.ReportableException) as fnexcpt:
             gwff.addSEColumn("StdErrzz")
-        self.assertEqual(("%s column name -%s- not found in file '%s'" % ("SE", "StdErrzz", self.filename)), fnexcpt.exception.msg)
+        self.assertEqual(("%s column name -%s- not found in file '%s'. Is the file compressed?" % ("SE", "StdErrzz", self.filename)), fnexcpt.exception.msg)
 
         with self.assertRaises(Exceptions.ReportableException) as fnexcpt:
             gwff.addA1Column("all1")
-        self.assertEqual(("%s column name -%s- not found in file '%s'" % ("A1", "all1", self.filename)), fnexcpt.exception.msg)
+        self.assertEqual(("%s column name -%s- not found in file '%s'. Is the file compressed?" % ("A1", "all1", self.filename)), fnexcpt.exception.msg)
         with self.assertRaises(Exceptions.ReportableException) as fnexcpt:
             gwff.addA2Column("all2")
-        self.assertEqual(("%s column name -%s- not found in file '%s'" % ("A2", "all2", self.filename)), fnexcpt.exception.msg)
+        self.assertEqual(("%s column name -%s- not found in file '%s'. Is the file compressed?" % ("A2", "all2", self.filename)), fnexcpt.exception.msg)
 
         with self.assertRaises(Exceptions.ReportableException) as fnexcpt:
             gwff.addFrequencyColumn("F")
-        self.assertEqual(("%s column name -%s- not found in file '%s'" % ("frequency", "F", self.filename)), fnexcpt.exception.msg)
+        self.assertEqual(("%s column name -%s- not found in file '%s'. Is the file compressed?" % ("frequency", "F", self.filename)), fnexcpt.exception.msg)
         with self.assertRaises(Exceptions.ReportableException) as fnexcpt:
             gwff.addPValueColumn("P")
-        self.assertEqual(("%s column name -%s- not found in file '%s'" % ("pvalue", "P", self.filename)), fnexcpt.exception.msg)
+        self.assertEqual(("%s column name -%s- not found in file '%s'. Is the file compressed?" % ("pvalue", "P", self.filename)), fnexcpt.exception.msg)
         with self.assertRaises(Exceptions.ReportableException) as fnexcpt:
             gwff.addORColumn("OR")
-        self.assertEqual(("%s column name -%s- not found in file '%s'" % ("OR", "OR", self.filename)), fnexcpt.exception.msg)
+        self.assertEqual(("%s column name -%s- not found in file '%s'. Is the file compressed?" % ("OR", "OR", self.filename)), fnexcpt.exception.msg)
         with self.assertRaises(Exceptions.ReportableException) as fnexcpt:
             gwff.addBetaColumn("Betas")
-        self.assertEqual(("%s column name -%s- not found in file '%s'" % ("beta", "Betas", self.filename)), fnexcpt.exception.msg)
+        self.assertEqual(("%s column name -%s- not found in file '%s'. Is the file compressed?" % ("beta", "Betas", self.filename)), fnexcpt.exception.msg)
         with self.assertRaises(Exceptions.ReportableException) as fnexcpt:
             gwff.addBetaSignColumn("BetaSigns")
-        self.assertEqual(("%s column name -%s- not found in file '%s'" % ("beta sign", "BetaSigns", self.filename)), fnexcpt.exception.msg)
+        self.assertEqual(("%s column name -%s- not found in file '%s'. Is the file compressed?" % ("beta sign", "BetaSigns", self.filename)), fnexcpt.exception.msg)
         with self.assertRaises(Exceptions.ReportableException) as fnexcpt:
             gwff.addBetaZScoreColumn("BetaZcore")
-        self.assertEqual(("%s column name -%s- not found in file '%s'" % ("beta zscore", "BetaZcore", self.filename)), fnexcpt.exception.msg)
+        self.assertEqual(("%s column name -%s- not found in file '%s'. Is the file compressed?" % ("beta zscore", "BetaZcore", self.filename)), fnexcpt.exception.msg)
 
 
 if __name__ == "__main__":

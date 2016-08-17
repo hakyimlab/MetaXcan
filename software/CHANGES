@@ -1,3 +1,5 @@
+Version 0.3
+    * New Transcriptome Model (Weight DBs) format support. Formalized Metaxcan output handling, added new fields to output (effect size, model prediction qvalue, etc)
 Version 0.2.6
 	* Fixed bug in --zscore_column option data handling
 Version 0.2.5

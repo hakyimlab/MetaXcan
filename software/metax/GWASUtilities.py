@@ -83,61 +83,61 @@ class GWASFileFormat(object):
 
     def addSNPColumn(self, snp_column_name):
         if not snp_column_name in self.header_comps:
-            raise ReportableException("SNP column name -%s- not found in file '%s'" % (snp_column_name, self.file_path))
+            raise ReportableException("SNP column name -%s- not found in file '%s'. Is the file compressed?" % (snp_column_name, self.file_path))
 
         self.SNP = self.header_comps.index(snp_column_name)
 
     def addSEColumn(self, se_column_name):
         if not se_column_name in self.header_comps:
-            raise ReportableException("SE column name -%s- not found in file '%s'" % (se_column_name, self.file_path))
+            raise ReportableException("SE column name -%s- not found in file '%s'. Is the file compressed?" % (se_column_name, self.file_path))
 
         self.SE = self.header_comps.index(se_column_name)
 
     def addA1Column(self, A1_column_name):
         if not A1_column_name in self.header_comps:
-            raise ReportableException("A1 column name -%s- not found in file '%s'" % (A1_column_name, self.file_path))
+            raise ReportableException("A1 column name -%s- not found in file '%s'. Is the file compressed?" % (A1_column_name, self.file_path))
 
         self.A1 = self.header_comps.index(A1_column_name)
 
     def addA2Column(self, A2_column_name):
         if not A2_column_name in self.header_comps:
-            raise ReportableException("A2 column name -%s- not found in file '%s'" % (A2_column_name, self.file_path))
+            raise ReportableException("A2 column name -%s- not found in file '%s'. Is the file compressed?" % (A2_column_name, self.file_path))
 
         self.A2 = self.header_comps.index(A2_column_name)
 
     def addFrequencyColumn(self, frequency_column_name):
         if not frequency_column_name in self.header_comps:
-            raise ReportableException("frequency column name -%s- not found in file '%s'" % (frequency_column_name, self.file_path))
+            raise ReportableException("frequency column name -%s- not found in file '%s'. Is the file compressed?" % (frequency_column_name, self.file_path))
 
         self.FRQ = self.header_comps.index(frequency_column_name)
 
     def addORColumn(self, or_column_name):
         if not or_column_name in self.header_comps:
-            raise ReportableException("OR column name -%s- not found in file '%s'" % (or_column_name, self.file_path))
+            raise ReportableException("OR column name -%s- not found in file '%s'. Is the file compressed?" % (or_column_name, self.file_path))
 
         self.OR = self.header_comps.index(or_column_name)
 
     def addBetaColumn(self, beta_column_name):
         if not beta_column_name in self.header_comps:
-            raise ReportableException("beta column name -%s- not found in file '%s'" % (beta_column_name, self.file_path))
+            raise ReportableException("beta column name -%s- not found in file '%s'. Is the file compressed?" % (beta_column_name, self.file_path))
 
         self.BETA = self.header_comps.index(beta_column_name)
 
     def addBetaSignColumn(self, beta_sign_column_name):
         if not beta_sign_column_name in self.header_comps:
-            raise ReportableException("beta sign column name -%s- not found in file '%s'" % (beta_sign_column_name, self.file_path))
+            raise ReportableException("beta sign column name -%s- not found in file '%s'. Is the file compressed?" % (beta_sign_column_name, self.file_path))
 
         self.BETA_SIGN = self.header_comps.index(beta_sign_column_name)
 
     def addBetaZScoreColumn(self, beta_zscore_column_name):
         if not beta_zscore_column_name in self.header_comps:
-            raise ReportableException("beta zscore column name -%s- not found in file '%s'" % (beta_zscore_column_name, self.file_path))
+            raise ReportableException("beta zscore column name -%s- not found in file '%s'. Is the file compressed?" % (beta_zscore_column_name, self.file_path))
 
         self.BETA_ZSCORE = self.header_comps.index(beta_zscore_column_name)
 
     def addPValueColumn(self, pvalue_column_name):
         if not pvalue_column_name in self.header_comps:
-            raise ReportableException("pvalue column name -%s- not found in file '%s'" % (pvalue_column_name, self.file_path))
+            raise ReportableException("pvalue column name -%s- not found in file '%s'. Is the file compressed?" % (pvalue_column_name, self.file_path))
 
         self.P = self.header_comps.index(pvalue_column_name)
 
@@ -289,6 +289,12 @@ def betaSignFromRow(file_format, row):
            sign = s
     return sign
 
+def betaZscoreFromRow(file_format, row):
+    b_z = "NA"
+    if file_format.BETA_ZSCORE:
+        b_z = row[file_format.BETA_ZSCORE]
+    return b_z
+
 def pFromFrow(file_format, row):
     p = row[file_format.P]
 
@@ -340,23 +346,26 @@ class _BETA_SE_TO_Z_Scheme(_GWASLineScheme):
         if beta != "NA" and "se" != "NA":
             beta_z = str(float(beta)/float(se))
         collector.beta_z.append(beta_z)
+        collector.beta.append(beta)
 
 class _BETA_Z_Scheme(_GWASLineScheme):
     def __call__(self, collector, row, file_format):
         super(_BETA_Z_Scheme, self).__call__(collector, row, file_format)
         b_z = betaZscoreFromRow(file_format, row)
         collector.beta_z.append(b_z)
+        b = betaFromRow(file_format, row)
+        collector.beta.append(b)
 
 class _BETA_PVALUE_Scheme(_GWASLineScheme):
     def __call__(self, collector, row, file_format):
         super(_BETA_PVALUE_Scheme, self).__call__(collector, row, file_format)
         z = "NA"
         p = pFromFrow(file_format, row)
+        beta = betaFromRow(file_format, row)
 
         if p != "NA":
             p = float(p)
             abs_z = -stats.norm.ppf(p/2)
-            beta = betaFromRow(file_format, row)
             if beta != "NA":
                 try:
                     s = 1 if float(beta) >= 0 else -1
@@ -364,6 +373,7 @@ class _BETA_PVALUE_Scheme(_GWASLineScheme):
                 except Exception as e:
                     logging.log(9, "Error converting number: %s", str(e))
         collector.beta_z.append(z)
+        collector.beta.append(beta)
 
 class _BETA_SIGN_PVALUE_Scheme(_GWASLineScheme):
     def __call__(self, collector, row, file_format):
@@ -379,6 +389,10 @@ class _BETA_SIGN_PVALUE_Scheme(_GWASLineScheme):
                 s = 1.0 if sign == "+" else -1.0
                 z = abs_z * s
         collector.beta_z.append(z)
+        #nothing we can do, if we got the sign of beta, then there is probably no beta present
+        if collector.beta:
+            b = betaFromRow(file_format, row)
+            collector.beta.append(b)
 
 class GWASBetaLineCollector(object):
     def __init__(self, file_format, scheme):
@@ -391,7 +405,7 @@ class GWASBetaLineCollector(object):
 
     def reset(self):
         self.rsids = []
-        self.beta = [] if (self.file_format.BETA or self.file_format.OR) else None
+        self.beta = [] if (self.file_format.BETA or self.file_format.OR or self.file_format.BETA_ZSCORE) else None
         self.ses = [] if self.file_format.SE else None
         self.sigma = [] if ( self.file_format.FRQ ) else None #more coming soon
         self.OR = True if self.file_format.OR else None

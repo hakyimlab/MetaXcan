@@ -4,7 +4,7 @@ import logging
 import numpy
 import math
 import Exceptions
-
+import KeyedDataSet
 
 BETA_Z = "beta_z"
 BETA_Z_SIGMA_REF = "beta_z_and_ref"
@@ -27,7 +27,7 @@ def ZScoreScheme(name):
 
 class ZScoreCalculation(object):
     def __call__(self, gene, weights, beta_sets, covariance_matrix, valid_rsids):
-        raise Exception("Wrong!")
+        raise Exceptions.ReportableException("Wrong Zscore calculation scheme!")
         return  None, None, None
 
     def getValue(self, set, rsid):
@@ -42,17 +42,17 @@ class ZScoreCalculation(object):
         return value
 
     def get_beta_z(self, beta_sets, rsid):
-        b_z = beta_sets["beta_z"]
+        b_z = beta_sets["beta_z"] if "beta_z" in beta_sets else KeyedDataSet.EMPTY
         value = self.getValue(b_z, rsid)
         return value
 
     def get_beta(self, beta_sets, rsid):
-        betas = beta_sets["beta"]
+        betas = beta_sets["beta"] if "beta" in beta_sets else KeyedDataSet.EMPTY
         value = self.getValue(betas, rsid)
         return value
 
     def get_sigma_l(self, beta_sets, rsid):
-        sigma_l = beta_sets["sigma_l"]
+        sigma_l = beta_sets["sigma_l"] if "sigma_l" in beta_sets else KeyedDataSet.EMPTY
         value = self.getValue(sigma_l, rsid)
         return value
 
@@ -70,13 +70,15 @@ class _BetaZ(ZScoreCalculation):
         #So as to check for standard error in input sets if applicable
         weight_values, variances = preProcess(covariance_matrix, valid_rsids, weights, beta_sets, beta_z_validation)
 
-        pre_zscore = "NA"
+        effect_size="NA"
+        zscore = "NA"
         n = 0
         #dot_product is Var(g)
         dot_product = numpy.dot(numpy.dot(numpy.transpose(weight_values), covariance_matrix), weight_values)
         if dot_product > 0:
             denominator = math.sqrt(float(dot_product))
-            numerator_terms = []
+            zscore_numerator_terms = []
+            effect_size_numerator_terms = []
             for rsid in valid_rsids:
                 w = weights[rsid].weight
 
@@ -88,17 +90,27 @@ class _BetaZ(ZScoreCalculation):
                 if not s_l:
                     continue
 
-                term = w * b_z * s_l
-                numerator_terms.append(term)
+                z_term = w * b_z * s_l
+                zscore_numerator_terms.append(z_term)
 
-            n = len(numerator_terms)
+                #effect size
+                b = self.get_beta(beta_sets, rsid)
+                if not b:
+                    continue
+                e_term = w * b * s_l ** 2
+                effect_size_numerator_terms.append(e_term)
+
+            n = len(zscore_numerator_terms)
             if n > 0:
-                numerator = sum(numerator_terms)
-                pre_zscore = str(numerator/denominator)
+                numerator = sum(zscore_numerator_terms)
+                zscore = str(numerator/denominator)
+                if len(effect_size_numerator_terms):
+                    e_numerator = sum(effect_size_numerator_terms)
+                    effect_size = str(e_numerator/denominator)
             else:
                 logging.log(7,"No terms for %s ", gene)
 
-        return pre_zscore, str(n), str(dot_product)
+        return zscore, str(n), str(dot_product), effect_size
 
     def beta_z(self, beta_sets, rsid):
         return self.get_beta_z(beta_sets, rsid)
@@ -117,6 +129,7 @@ class _MetaXcan(ZScoreCalculation):
         weight_values, variances = preProcess(covariance_matrix, valid_rsids, weights, beta_sets, beta_validation)
 
         pre_zscore = "NA"
+        effect_size = "NA" # Stubbed out, proper approach in this scheme is not clear
         n = 0
         #dot_product is Var(g)
         dot_product = numpy.dot(numpy.dot(numpy.transpose(weight_values), covariance_matrix), weight_values)
@@ -144,7 +157,7 @@ class _MetaXcan(ZScoreCalculation):
             else:
                 logging.log(7, "No terms for %s ", gene)
 
-        return pre_zscore, str(n), str(dot_product)
+        return pre_zscore, str(n), str(dot_product), effect_size
 
     def sigma_l(self, beta_sets, variances, rsid):
         return self.get_sigma_l(beta_sets, rsid)

@@ -3,7 +3,9 @@
 data*
 intermediate*
 results*
+forensics*
 kk*
 support_data*
 build*
-.python-version
+
+_test

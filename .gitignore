@@ -23,4 +23,6 @@ setuptools*.zip
 # PyCharm project files
 *.idea
 
+#Pyenv
 .python-version
+

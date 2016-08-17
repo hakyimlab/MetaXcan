@@ -12,22 +12,21 @@ import metax.WeightDBUtilities as WeightDBUtilities
 
 class TestWeightDBUtilities(unittest.TestCase):
     def testGeneEntry(self):
-        entry = WeightDBUtilities.GeneEntry("a", "b", "c", "d")
+        entry = WeightDBUtilities.GeneEntry("a", "b", "c", "d", "e", "f")
         self.assertEqual(entry.gene, "a")
         self.assertEqual(entry.gene_name, "b")
-        self.assertEqual(entry.R2, "c")
-        self.assertEqual(entry.n_snp, "d")
+        self.assertEqual(entry.n_snps, "c")
+        self.assertEqual(entry.pred_perf_R2, "d")
+        self.assertEqual(entry.pred_perf_pval, "e")
+        self.assertEqual(entry.pred_perf_qval, "f")
 
     def testWeightDBEntry(self):
-        entry = WeightDBUtilities.WeightDBEntry("a", "b", "c", "d", "e", "f", "g", "h")
+        entry = WeightDBUtilities.WeightDBEntry("a", "b", "c", "d", "e")
         self.assertEqual(entry.rsid, "a")
         self.assertEqual(entry.gene, "b")
         self.assertEqual(entry.weight, "c")
         self.assertEqual(entry.ref_allele, "d")
         self.assertEqual(entry.eff_allele, "e")
-        self.assertEqual(entry.pval, "f")
-        self.assertEqual(entry.N, "g")
-        self.assertEqual(entry.cis, "h")
 
     def testWeightDBInvalidPath(self):
         weight_db = WeightDBUtilities.WeightDB("tests/kk.db")
@@ -139,9 +138,6 @@ class TestWeightDBUtilities(unittest.TestCase):
             self.assertEqual(actual.weight, e.weight)
             self.assertEqual(actual.ref_allele, e.ref_allele)
             self.assertEqual(actual.eff_allele, e.eff_allele)
-            self.assertEqual(actual.pval, e.pval)
-            self.assertEqual(actual.N, e.N)
-            self.assertEqual(actual.cis, e.cis)
 
     def assertExtra(self, extra, expected):
         self.assertEqual(len(extra), len(expected))
@@ -150,8 +146,10 @@ class TestWeightDBUtilities(unittest.TestCase):
             e = expected[i]
             self.assertEqual(e.gene, actual.gene)
             self.assertEqual(e.gene_name, actual.gene_name)
-            self.assertEqual(e.R2, actual.R2)
-            self.assertEqual(e.n_snp, actual.n_snp)
+            self.assertEqual(e.n_snps, actual.n_snps)
+            self.assertEqual(e.pred_perf_R2, actual.pred_perf_R2)
+            self.assertEqual(e.pred_perf_pval, actual.pred_perf_pval)
+            self.assertEqual(e.pred_perf_qval, actual.pred_perf_qval)
 
 def expected_weights_results():
     class DummyWeight(object):
@@ -159,18 +157,18 @@ def expected_weights_results():
 
     weights = []
     expected_data = [
-        ["rs1", "A", 0.2, "C", "T", 0.1, 3, 1],
-        ["rs2", "A", 0.1, "A", "G", 0.2, 3, 2],
-        ["rs3", "A", 0.05, "G", "A", 0.3, 3, 3],
-        ["rs4", "B", 0.4, "T", "C", 0.4, 2, 4],
-        ["rs5", "B", 0.3, "C", "T", 0.5, 2, 5],
-        ["rs6", "C", 0.5, "T", "C", 0.6, 1, 6],
-        ["rs1", "D", 0.6, "T", "C", 0.7, 1, 7]
+        ["rs1", "A", 0.2, "C", "T"],
+        ["rs2", "A", 0.1, "A", "G"],
+        ["rs3", "A", 0.05, "G", "A"],
+        ["rs4", "B", 0.4, "T", "C"],
+        ["rs5", "B", 0.3, "C", "T"],
+        ["rs6", "C", 0.5, "T", "C"],
+        ["rs1", "D", 0.6, "T", "C"]
     ]
 
     for e in expected_data:
         w = DummyWeight()
-        w.rsid, w.gene, w.weight, w.ref_allele, w.eff_allele, w.pval, w.N, w.cis  = e[0], e[1], e[2], e[3], e[4], e[5], e[6], e[7]
+        w.rsid, w.gene, w.weight, w.ref_allele, w.eff_allele = e[0], e[1], e[2], e[3], e[4]
         weights.append(w)
 
     return weights
@@ -182,15 +180,15 @@ def expected_extra_results():
     extra = []
 
     expected_data = [
-        ["A", "gene1", 0.9, 3],
-        ["B", "gene2", 0.8, 2],
-        ["C", "gene3", 0.7, 1],
-        ["D", "gene4", 0.6, 1]
+        ["A", "gene1", 3, 0.9, 0.09, 0.091],
+        ["B", "gene2", 2, 0.8, 0.08, 0.081],
+        ["C", "gene3", 1, 0.7, 0.07, 0.071],
+        ["D", "gene4", 1, 0.6, 0.06, 0.061]
     ]
 
     for e in expected_data:
         entry = DummyExtra()
-        entry.gene, entry.gene_name, entry.R2, entry.n_snp = e[0], e[1], e[2], e[3]
+        entry.gene, entry.gene_name, entry.n_snps, entry.pred_perf_R2, entry.pred_perf_pval, entry.pred_perf_qval = e[0], e[1], e[2], e[3], e[4], e[5]
         extra.append(entry)
 
     return extra

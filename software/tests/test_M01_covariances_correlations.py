@@ -29,6 +29,7 @@ def buildDummyArgs(root):
     dummy.input_format = Formats.PrediXcan
     dummy.min_maf_filter = None
     dummy.max_maf_filter = None
+    dummy.max_snps_in_gene = None
     return dummy
 
 def setupDataForArgs(args, root):

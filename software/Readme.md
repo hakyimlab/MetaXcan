@@ -30,11 +30,11 @@ is needed for some optional statistics and charts.
 MetaXcan is concerned with obtaining gene-level association tests from ordinary GWAS data.
 
 Ordinarily, a user would need to obtain/download support data sets comprising of:
-- A Transcriptome Prediction Model database (an example is [here](https://s3.amazonaws.com/imlab-open/Data/MetaXcan/1000G-WB/data/DGN-WB_0.5.db))
-- A file with the covariance matrices of the SNPs within each gene model (such as [this one](https://s3.amazonaws.com/imlab-open/Data/MetaXcan/1000G-WB/intermediate/covariance.txt.gz))
+- A Transcriptome Prediction Model database (an example is [here](https://s3.amazonaws.com/imlab-open/Data/MetaXcan/sample_data/DGN-WB_0.5.db))
+- A file with the covariance matrices of the SNPs within each gene model (such as [this one](https://s3.amazonaws.com/imlab-open/Data/MetaXcan/sample_data/covariance.DGN-WB_0.5.txt.gz))
 
 And use them to run MetaXcan analysis on:
-- GWAS results (such as [these](https://s3.amazonaws.com/imlab-open/Data/MetaXcan/1000G-WB/data/GWAS.tar.gz))
+- GWAS results (such as [these](https://s3.amazonaws.com/imlab-open/Data/MetaXcan/sample_data/GWAS.tar.gz), which are randomly generated)
 
 However, if you have access to interesting data,
 you can build your own Transcriptome Prediction Model database 
@@ -90,7 +90,7 @@ used at the covariance script step (**M01_covariances_correlations.py**).
 This script builds the covariance matrices needed at **M04_zscores.py**.
 You will run it once in a while, if ever.
 It takes input from **M00_prerequisites.py**'s output, and a genetic expression model database, such as
-[this one](https://s3.amazonaws.com/imlab-open/Data/MetaXcan/1000G-WB/data/DGN-WB_0.5.db).
+[this one](https://s3.amazonaws.com/imlab-open/Data/MetaXcan/sample_data/DGN-WB_0.5.db).
 
 It will build the correlation matrix between SNP's in a same gene's model, for each gene, and save them
 in a gzip-compressed text file.
@@ -136,7 +136,8 @@ MetaMany is a script that serially performs MetaXcan analysis on a GWAS data set
 
 ## Useful Data
 
-We make available several GTEx tissue models and 1000 Genomes covariances [here](https://app.box.com/s/gujt4m6njqjfqqc9tu0oqgtjvtz9860w).
+We make available several GTEx tissue models and 1000 Genomes covariances [here](http://predictdb.hakyimlab.org).
+<!-- old box https://app.box.com/s/gujt4m6njqjfqqc9tu0oqgtjvtz9860w  -->
 This files should be enough for running **M03_betas.py** and **M04_zscores.py** on practically any GWAS study.
 
 ## The Rest

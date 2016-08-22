@@ -21,6 +21,7 @@ __author__ = 'heroico, Eric Torstenson'
     * ? (probably others)
    """
 import metax
+import sys
 __version__ = metax.__version__
 import logging
 import metax.Logging as Logging
@@ -45,7 +46,21 @@ class MetaXcanProcess(object):
         output_folder = self.args.output_folder
         logging.info("Processing betas for %s" % (db_filename))
         self.args.weight_db_path = os.path.abspath(db_filename)
-        self.args.covariance = os.path.join(self.args.covariance_directory, filebase) + ".cov.txt.gz"
+        cov_directory = self.args.covariance_directory
+        if cov_directory.upper() == "SAME":
+            cov_directory = "/".join(self.args.weight_db_path.split("/")[0:-1])
+
+        extComponents = self.args.covariance_suffix.split("..")
+
+        if len(extComponents) > 1:
+            covext = "..".join(extComponents[0:-1])
+            dbext = extComponents[-1]
+            filebase = db_filename.replace(dbext, "")
+            self.args.covariance = "%s/%s%s" % (cov_directory, filebase.split("/")[-1], covext)
+        else:
+            self.args.covariance = "%s/%s%s" % (
+            cov_directory, filebase.strip("/")[-1], self.args.covariance_suffix)
+
         self.args.output_file = os.path.join(self.args.output_directory, filebase) + ".csv"
 
         logging.info("Loading weight model")
@@ -88,8 +103,20 @@ class MetaXcanProcess(object):
 
 if __name__ == "__main__":
     import argparse
-    parser = argparse.ArgumentParser(description='MetaXcan.py %s:  Will estimate MetaXcan results from a set of snp covariance matrices, a model database, and GWAS beta files.' % (__version__))
+    parser = argparse.ArgumentParser(description='MetaMany.py %s:  Automates the execution of MetaXcan over multiple tissues. ' % (__version__),
+                                     epilog="""
+MetaMany makes certain assumptions about the path relationships between the
+tissue databases and their corresponding covariance files. While the defaults
+are intended to relate to the current databases' organization and naming, it
+is possible that users will have to make changes if either the database file
+hierarchy is different (and newer) than this script, or when trying to use
+older versions (or perhaps those created by the end user which don't follow the
+same organization. In these cases, users should pay careful attention to the
+arguments --covariance_directory and --covariance_suffix. """)
 
+    parser.add_argument("-v", "--version", help="Report the version",
+                        action="store_true",
+                        default=False)
 #weight db model
     parser.add_argument('weight_dbs', metavar='DB', type=argparse.FileType('r'),
                         nargs='+', help="weight dbs to be used")
@@ -180,8 +207,12 @@ if __name__ == "__main__":
                         default="intermediate/filtered_1000GP_Phase3")
 
     parser.add_argument("--covariance_directory",
-                        help="directory where covariance files can be found",
+                        help="directory where covariance files can be found (or SAME if covariance sits beside the .db file",
                         default="intermediate/cov")
+
+    parser.add_argument("--covariance_suffix",
+                        help="Suffix associated with the covariate files. covext-dbext (where ..dbext is the portion of the db file to be replaced by the coviarance extention. )",
+                        default=".txt.gz.._0.5.db")
 
     parser.add_argument("--output_directory",
                         help="name of output file",
@@ -217,6 +248,9 @@ if __name__ == "__main__":
                         help="Throw exception on error",
                         default=False)
 
+    if "-v" in sys.argv or "--verbose" in sys.argv:
+        print metax.__version__
+        sys.exit(0)
     args = parser.parse_args()
 
     Logging.configureLogging(int(args.verbosity))

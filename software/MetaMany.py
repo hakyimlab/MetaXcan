@@ -208,7 +208,7 @@ arguments --covariance_directory and --covariance_suffix. """)
 
     parser.add_argument("--covariance_directory",
                         help="directory where covariance files can be found (or SAME if covariance sits beside the .db file",
-                        default="intermediate/cov")
+                        default="SAME")
 
     parser.add_argument("--covariance_suffix",
                         help="Suffix associated with the covariate files. covext-dbext (where ..dbext is the portion of the db file to be replaced by the coviarance extention. )",

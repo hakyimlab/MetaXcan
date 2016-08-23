@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#! /usr/bin/env python
 __author__ = 'heroico'
 
 import logging
@@ -21,7 +21,7 @@ class CalculateVariances(object):
         contents = Utilities.contentsWithPatternsFromFolder(self.data_folder_phase, ["gz"])
 
         if os.path.exists(self.output_file):
-            logging.info("Correlations output already exists, delete it if you want stuff to be figured out again")
+            logging.info("Variance output already exists, delete it if you want stuff to be figured out again")
             return
 
         dir = os.path.dirname(self.output_file)

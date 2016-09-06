@@ -408,7 +408,7 @@ class GWASBetaLineCollector(object):
         self.beta = [] if (self.file_format.BETA or self.file_format.OR or self.file_format.BETA_ZSCORE) else None
         self.ses = [] if self.file_format.SE else None
         self.sigma = [] if ( self.file_format.FRQ ) else None #more coming soon
-        self.OR = True if self.file_format.OR else None
+        #self.OR = True if self.file_format.OR else None
         self.file_format = self.file_format
         self.beta_z = []
 
@@ -484,6 +484,54 @@ class GWASWeightDBFilteredBetaLineCollector(GWASBetaLineCollector):
 
         super(GWASWeightDBFilteredBetaLineCollector, self).__call__(row)
 
+#convenience wrappers to output as we read
+def loadGWASAndStream(input_path, output_path, compressed=True, separator=None, skip_until_header=None, callback=None, file_format=None, scheme=None):
+    if not callback:
+        logging.info("Default Beta callback")
+        callback = GWASBetaLineCollector(file_format, scheme)
+
+    class OutputWrapper(object):
+        def __init__(self, collector, output_file):
+            self.collector = collector
+            self.output_file = output_file
+            self.writeHeader()
+            self.collected_anything = False
+
+        def writeHeader(self):
+            columns = ["rsid"]
+            if self.collector.beta is not None: columns.append("beta")
+            if self.collector.ses is not None: columns.append("beta_se")
+            if self.collector.sigma is not None: columns.append("sigma")
+            columns.append("beta_z")
+            header = "%s\n" % (" ".join(columns))
+            self.output_file.write(header)
+
+        def __call__(self, row):
+            self.collector(row)
+            if len(self.collector.rsids):
+                o = [self.collector.rsids[0]]
+                if self.collector.beta is not None: o.append(str(self.collector.beta[0]))
+                if self.collector.ses is not None: o.append(str(self.collector.ses[0]))
+                if self.collector.sigma is not None: o.append(str(self.collector.sigma[0]))
+                o.append(str(self.collector.beta_z[0]))
+                line = "%s\n" % (" ".join(o))
+                self.output_file.write(line)
+                self.collected_anything = True
+            self.collector.reset()
+
+    def do_output(callback, output_file, input_path,  compressed=True, separator=None, skip_until_header=None):
+        wrapper = OutputWrapper(callback, output_file)
+        file_iterator = GWASDosageFileIterator(input_path, compressed, separator, wrapper, skip_until_header)
+        file_iterator.iterateOverFile()
+        if not wrapper.collected_anything:
+            logging.info("No snps from the tissue model found in the GWAS file")
+
+    if compressed:
+        with gzip.open(output_path, "wb") as output_file:
+            do_output(callback, output_file, input_path, compressed, separator, skip_until_header)
+    else:
+        with open(output_path, "w") as output_file:
+            do_output(callback, output_file, input_path, compressed, separator, skip_until_header)
 
 class GWASDosageFileLoader(object):
     def __init__(self, path, compressed=True, separator=None, skip_until_header=None, callback=None, file_format=None, scheme=None):

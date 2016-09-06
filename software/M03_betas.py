@@ -25,8 +25,11 @@ class GetBetas(object):
             self.gwas_regexp = re.compile(args.gwas_file_pattern)
 
     def run(self):
-        logging.info("Loading weight model")
-        weight_db_logic = WeightDBUtilities.WeightDBEntryLogic(self.weight_db_path)
+        if self.args.weight_db_path:
+            logging.info("Loading weight model")
+            weight_db_logic = WeightDBUtilities.WeightDBEntryLogic(self.weight_db_path)
+        else:
+            weight_db_logic = None
 
         names = Utilities.contentsWithRegexpFromFolder(self.gwas_folder, self.gwas_regexp)
 
@@ -55,20 +58,21 @@ class GetBetas(object):
         input_path = os.path.join(self.gwas_folder, name)
         file_format = GWASUtilities.GWASFileFormat.fileFormatFromArgs(input_path, self.args)
 
-        scheme = MethodGuessing.chooseGWASProcessingScheme(file_format, weight_db_logic, self.args, input_path)
-
-        callback = GWASUtilities.GWASWeightDBFilteredBetaLineCollector(file_format, scheme, weight_db_logic)
-        dosage_loader = GWASUtilities.GWASDosageFileLoader(input_path, self.compressed, self.args.separator, self.args.skip_until_header, callback)
-        result_sets = dosage_loader.load()
-
-        # The following check is sort of redundant, as it exists in "saveSetsToCompressedFile".
-        # It exists merely to provide different logging
-        if len(result_sets):
-            KeyedDataSet.KeyedDataSetFileUtilities.saveSetsToCompressedFile(output_path, result_sets, "rsid")
+        scheme = MethodGuessing.chooseGWASProcessingScheme(self.args, input_path)
+        callback = MethodGuessing.chooseGWASCallback(file_format, scheme, weight_db_logic)
+        if not weight_db_logic:
+            GWASUtilities.loadGWASAndStream(input_path, output_path, self.compressed, self.args.separator, self.args.skip_until_header, callback)
         else:
-            logging.info("No snps from the tissue model found in the GWAS file")
-        logging.info("Successfully ran GWAS input processing")
+            dosage_loader = GWASUtilities.GWASDosageFileLoader(input_path, self.compressed, self.args.separator, self.args.skip_until_header, callback)
+            result_sets = dosage_loader.load()
 
+            # The following check is sort of redundant, as it exists in "saveSetsToCompressedFile".
+            # It exists merely to provide different logging
+            if len(result_sets):
+                KeyedDataSet.KeyedDataSetFileUtilities.saveSetsToCompressedFile(output_path, result_sets, "rsid")
+            else:
+                logging.info("No snps from the tissue model found in the GWAS file")
+        logging.info("Successfully ran GWAS input processing")
 
 def run(args):
     "Wrapper for common behavior for execution. "
@@ -81,8 +85,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='M03_betas.py %s: Build betas from GWAS data.' % (__version__))
 
     parser.add_argument("--weight_db_path",
-                        help="name of weight db in data folder",
-                        default="data/DGN-WB_0.5.db")
+                        help="Name of weight db in data folder. "
+                             "If supplied, will filter input GWAS snps that are not present; this script will not produce output if any error is encountered."
+                             "If not supplied, will convert the input GWASas found, one line at a atime, until finishing or encountering an error.",
+                        default=None)
 
     parser.add_argument("--gwas_folder",
                         help="name of folder containing GWAS data. All files in the folder are assumed to belong to a single study.",

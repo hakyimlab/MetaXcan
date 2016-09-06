@@ -1,3 +1,8 @@
+Version 0.3.1
+    * Various changes to MetaMany.py: 
+        * Better flexibility for database organization. 
+        * Result files are now named GWAS-TISSUE to make them easier to identify
+        * Betas are stored inside the output directory 
 Version 0.3
     * New Transcriptome Model (Weight DBs) format support. Formalized Metaxcan output handling, added new fields to output (effect size, model prediction qvalue, etc)
 Version 0.2.6

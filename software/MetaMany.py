@@ -1,5 +1,17 @@
 #! /usr/bin/env python
 
+import metax
+import sys
+__version__ = "1.0x" + metax.__version__
+import logging
+import metax.Logging as Logging
+import M03_betas
+import M04_zscores
+import metax.Exceptions as Exceptions
+import os
+import metax.WeightDBUtilities as WeightDBUtilities
+import metax.Utilities as Utilities
+import re
 __author__ = 'heroico, Eric Torstenson'
 
 """This modified version of MetaXcan provides support for analyzing multiple
@@ -19,18 +31,26 @@ __author__ = 'heroico, Eric Torstenson'
       named identically to the database files, except for extension and
       path.
     * ? (probably others)
+
+   Changes in 1.0.0.3
+    * Added a version prefix to disambiguate changes in the script to the
+      underlying library.
+    * To provide more flexibility with tissue database structure, the command
+      line interface has changed slightly. For the August 2016 release,
+      the default values should work fine. So, you won't need to provide
+      --covariance_directory (or if you want to explicitly provide defaults
+      for documentation in your scripts, set it to be SAME instead of a
+      PATH name)
+    * Betas are now written into a subdirectory inside the output directory
+      (these are written inside directories named after the tissues) Results
+      are written directly inside the output directory and are prefixed as
+      follows:
+        GWAS-Tissue.csv[.gz]
+      Where GWAS is the first gwas filename found inside the gwas directory
+      Tissue is the tissue for which the zscores are calculated
+      and the optional .gz is there if the --compressed option is set
    """
-import metax
-__version__ = metax.__version__
-import logging
-import metax.Logging as Logging
-import M03_betas
-import M04_zscores
-import metax.Exceptions as Exceptions
-import os
-import metax.WeightDBUtilities as WeightDBUtilities
-import metax.Utilities as Utilities
-import re
+
 
 class MetaXcanProcess(object):
     def __init__(self, args):
@@ -39,14 +59,31 @@ class MetaXcanProcess(object):
         if args.gwas_file_pattern:
             self.gwas_regexp = re.compile(args.gwas_file_pattern)
 
-
     def buildBetas(self, db_filename):
         filebase = os.path.basename(db_filename).replace(".db", "")
-        output_folder = self.args.output_folder
+        output_folder = os.path.abspath(self.args.output_directory)
+
         logging.info("Processing betas for %s" % (db_filename))
         self.args.weight_db_path = os.path.abspath(db_filename)
-        self.args.covariance = os.path.join(self.args.covariance_directory, filebase) + ".cov.txt.gz"
-        self.args.output_file = os.path.join(self.args.output_directory, filebase) + ".csv"
+        cov_directory = self.args.covariance_directory
+        if cov_directory.upper() == "SAME":
+            cov_directory = "/".join(self.args.weight_db_path.split("/")[0:-1])
+
+        extComponents = self.args.covariance_suffix.split("..")
+
+        if len(extComponents) > 1:
+            covext = "..".join(extComponents[0:-1])
+            dbext = extComponents[-1]
+            filebase = db_filename.replace(dbext, "")
+            self.args.covariance = "%s/%s%s" % (cov_directory, filebase.split("/")[-1], covext)
+        else:
+            self.args.covariance = "%s/%s%s" % (
+            cov_directory, filebase.strip("/")[-1], self.args.covariance_suffix)
+        file_prefix = filebase.split("/")[-1].split(".")[0]
+        beta_output = os.path.join(output_folder, file_prefix)
+        logging.info("Writing betas to %s" % (beta_output))
+
+        self.args.output_folder = beta_output
 
         logging.info("Loading weight model")
         weight_db_logic = WeightDBUtilities.WeightDBEntryLogic(self.args.weight_db_path)
@@ -54,22 +91,30 @@ class MetaXcanProcess(object):
         betaScript = M03_betas.GetBetas(self.args)
         names = Utilities.contentsWithRegexpFromFolder(self.args.gwas_folder, betaScript.gwas_regexp)
 
-        if not os.path.exists(self.args.output_folder):
-            os.makedirs(self.args.output_folder)
-        betaScript.output_folder = os.path.join(output_folder, filebase)
+        if not os.path.exists(beta_output):
+            os.makedirs(beta_output)
+        betaScript.output_folder = beta_output              #os.path.join(output_folder, filebase)
         if not os.path.exists(betaScript.output_folder):
             os.makedirs(betaScript.output_folder)
 
+        report_prefix = None
         for name in names:
+            if report_prefix is None:
+                report_prefix = name.split("/")[-1].split(".")[0]
             try:
                 betaScript.buildBetas(weight_db_logic,name)
-
 
             # This just means that there is some extra stuff inside that directory,
             # so I'm thinking we want to ignore it.
             except Exceptions.BadFilename as e:
                 logging.info("Wrong file name: %s, skipping", e.msg)
                 pass
+
+        suffix = ".csv"
+        if args.compressed:
+            suffix += ".gz"
+        self.args.output_file = os.path.join(output_folder,
+                                             report_prefix + "-" + file_prefix + suffix)  # output_folder       #os.path.join(output_folder, file_prefix) + ".csv"
 
         # ZScores
         logging.info("Calculating ZScores for %s" % (filebase))
@@ -88,8 +133,20 @@ class MetaXcanProcess(object):
 
 if __name__ == "__main__":
     import argparse
-    parser = argparse.ArgumentParser(description='MetaXcan.py %s:  Will estimate MetaXcan results from a set of snp covariance matrices, a model database, and GWAS beta files.' % (__version__))
+    parser = argparse.ArgumentParser(description='MetaMany.py %s:  Automates the execution of MetaXcan over multiple tissues. ' % (__version__),
+                                     epilog="""
+MetaMany makes certain assumptions about the path relationships between the
+tissue databases and their corresponding covariance files. While the defaults
+are intended to relate to the current databases' organization and naming, it
+is possible that users will have to make changes if either the database file
+hierarchy is different (and newer) than this script, or when trying to use
+older versions (or perhaps those created by the end user which don't follow the
+same organization. In these cases, users should pay careful attention to the
+arguments --covariance_directory and --covariance_suffix. """)
 
+    parser.add_argument("-v", "--version", help="Report the version",
+                        action="store_true",
+                        default=False)
 #weight db model
     parser.add_argument('weight_dbs', metavar='DB', type=argparse.FileType('r'),
                         nargs='+', help="weight dbs to be used")
@@ -180,8 +237,12 @@ if __name__ == "__main__":
                         default="intermediate/filtered_1000GP_Phase3")
 
     parser.add_argument("--covariance_directory",
-                        help="directory where covariance files can be found",
-                        default="intermediate/cov")
+                        help="directory where covariance files can be found (or SAME if covariance sits beside the .db file",
+                        default="SAME")
+
+    parser.add_argument("--covariance_suffix",
+                        help="Suffix associated with the covariate files. covext-dbext (where ..dbext is the portion of the db file to be replaced by the coviarance extention. )",
+                        default=".txt.gz.._0.5.db")
 
     parser.add_argument("--output_directory",
                         help="name of output file",
@@ -217,6 +278,9 @@ if __name__ == "__main__":
                         help="Throw exception on error",
                         default=False)
 
+    if "-v" in sys.argv or "--verbose" in sys.argv:
+        print metax.__version__
+        sys.exit(0)
     args = parser.parse_args()
 
     Logging.configureLogging(int(args.verbosity))

@@ -41,6 +41,9 @@ class GWASDosageFileIterator(object):
             def __call__(self, i, line):
                 comps = line.split(self.separator) if self.separator else line.split()
                 line =  " ".join(comps)
+                if len(line) == 1:
+                    logging.log(8, "Found GWAS row with one component. Is your file ok?")
+                    return
                 row = line.split()
                 self.callback(row)
 

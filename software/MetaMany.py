@@ -1,5 +1,17 @@
 #! /usr/bin/env python
 
+import metax
+import sys
+__version__ = "1.0x" + metax.__version__
+import logging
+import metax.Logging as Logging
+import M03_betas
+import M04_zscores
+import metax.Exceptions as Exceptions
+import os
+import metax.WeightDBUtilities as WeightDBUtilities
+import metax.Utilities as Utilities
+import re
 __author__ = 'heroico, Eric Torstenson'
 
 """This modified version of MetaXcan provides support for analyzing multiple
@@ -19,19 +31,26 @@ __author__ = 'heroico, Eric Torstenson'
       named identically to the database files, except for extension and
       path.
     * ? (probably others)
+
+   Changes in 1.0.0.3
+    * Added a version prefix to disambiguate changes in the script to the
+      underlying library.
+    * To provide more flexibility with tissue database structure, the command
+      line interface has changed slightly. For the August 2016 release,
+      the default values should work fine. So, you won't need to provide
+      --covariance_directory (or if you want to explicitly provide defaults
+      for documentation in your scripts, set it to be SAME instead of a
+      PATH name)
+    * Betas are now written into a subdirectory inside the output directory
+      (these are written inside directories named after the tissues) Results
+      are written directly inside the output directory and are prefixed as
+      follows:
+        GWAS-Tissue.csv[.gz]
+      Where GWAS is the first gwas filename found inside the gwas directory
+      Tissue is the tissue for which the zscores are calculated
+      and the optional .gz is there if the --compressed option is set
    """
-import metax
-import sys
-__version__ = metax.__version__
-import logging
-import metax.Logging as Logging
-import M03_betas
-import M04_zscores
-import metax.Exceptions as Exceptions
-import os
-import metax.WeightDBUtilities as WeightDBUtilities
-import metax.Utilities as Utilities
-import re
+
 
 class MetaXcanProcess(object):
     def __init__(self, args):
@@ -40,10 +59,10 @@ class MetaXcanProcess(object):
         if args.gwas_file_pattern:
             self.gwas_regexp = re.compile(args.gwas_file_pattern)
 
-
     def buildBetas(self, db_filename):
         filebase = os.path.basename(db_filename).replace(".db", "")
-        output_folder = self.args.output_folder
+        output_folder = os.path.abspath(self.args.output_directory)
+
         logging.info("Processing betas for %s" % (db_filename))
         self.args.weight_db_path = os.path.abspath(db_filename)
         cov_directory = self.args.covariance_directory
@@ -60,8 +79,11 @@ class MetaXcanProcess(object):
         else:
             self.args.covariance = "%s/%s%s" % (
             cov_directory, filebase.strip("/")[-1], self.args.covariance_suffix)
+        file_prefix = filebase.split("/")[-1].split(".")[0]
+        beta_output = os.path.join(output_folder, file_prefix)
+        logging.info("Writing betas to %s" % (beta_output))
 
-        self.args.output_file = os.path.join(self.args.output_directory, filebase) + ".csv"
+        self.args.output_folder = beta_output
 
         logging.info("Loading weight model")
         weight_db_logic = WeightDBUtilities.WeightDBEntryLogic(self.args.weight_db_path)
@@ -69,22 +91,30 @@ class MetaXcanProcess(object):
         betaScript = M03_betas.GetBetas(self.args)
         names = Utilities.contentsWithRegexpFromFolder(self.args.gwas_folder, betaScript.gwas_regexp)
 
-        if not os.path.exists(self.args.output_folder):
-            os.makedirs(self.args.output_folder)
-        betaScript.output_folder = os.path.join(output_folder, filebase)
+        if not os.path.exists(beta_output):
+            os.makedirs(beta_output)
+        betaScript.output_folder = beta_output              #os.path.join(output_folder, filebase)
         if not os.path.exists(betaScript.output_folder):
             os.makedirs(betaScript.output_folder)
 
+        report_prefix = None
         for name in names:
+            if report_prefix is None:
+                report_prefix = name.split("/")[-1].split(".")[0]
             try:
                 betaScript.buildBetas(weight_db_logic,name)
-
 
             # This just means that there is some extra stuff inside that directory,
             # so I'm thinking we want to ignore it.
             except Exceptions.BadFilename as e:
                 logging.info("Wrong file name: %s, skipping", e.msg)
                 pass
+
+        suffix = ".csv"
+        if args.compressed:
+            suffix += ".gz"
+        self.args.output_file = os.path.join(output_folder,
+                                             report_prefix + "-" + file_prefix + suffix)  # output_folder       #os.path.join(output_folder, file_prefix) + ".csv"
 
         # ZScores
         logging.info("Calculating ZScores for %s" % (filebase))

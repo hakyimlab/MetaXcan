@@ -41,6 +41,9 @@ class GWASDosageFileIterator(object):
             def __call__(self, i, line):
                 comps = line.split(self.separator) if self.separator else line.split()
                 line =  " ".join(comps)
+                if len(line) == 1:
+                    logging.log(8, "Found GWAS row with one component. Is your file ok?")
+                    return
                 row = line.split()
                 self.callback(row)
 
@@ -254,6 +257,9 @@ def _scheme(scheme, file_format):
 class _GWASLineScheme(object):
     def __call__(self, collector, row, file_format):
         collector.rsids.append(snpFromRow(file_format, row))
+        if collector.gather_alleles:
+            collector.ref_allele.append(row[file_format.A1])
+            collector.eff_allele.append(row[file_format.A2])
 
         sigma = "NA"
         if collector.file_format.FRQ:
@@ -395,9 +401,10 @@ class _BETA_SIGN_PVALUE_Scheme(_GWASLineScheme):
             collector.beta.append(b)
 
 class GWASBetaLineCollector(object):
-    def __init__(self, file_format, scheme):
+    def __init__(self, file_format, scheme, gather_alleles=False):
         self.file_format = file_format
         self.scheme = _scheme(scheme, file_format)
+        self.gather_alleles = gather_alleles
         self.reset()
 
     def __call__(self, row):
@@ -408,13 +415,15 @@ class GWASBetaLineCollector(object):
         self.beta = [] if (self.file_format.BETA or self.file_format.OR or self.file_format.BETA_ZSCORE) else None
         self.ses = [] if self.file_format.SE else None
         self.sigma = [] if ( self.file_format.FRQ ) else None #more coming soon
-        self.OR = True if self.file_format.OR else None
+        #self.OR = True if self.file_format.OR else None
         self.file_format = self.file_format
         self.beta_z = []
+        self.ref_allele = [] if self.gather_alleles else None
+        self.eff_allele = [] if self.gather_alleles else None
 
 class GWASWeightDBFilteredBetaLineCollector(GWASBetaLineCollector):
-    def __init__(self, file_format, scheme, weight_db_logic=None):
-        super(GWASWeightDBFilteredBetaLineCollector, self).__init__(file_format, scheme)
+    def __init__(self, file_format, scheme, weight_db_logic=None, gather_alleles=False):
+        super(GWASWeightDBFilteredBetaLineCollector, self).__init__(file_format, scheme, gather_alleles)
         self.weight_db_logic = weight_db_logic
 
     def __call__(self, row):
@@ -484,6 +493,58 @@ class GWASWeightDBFilteredBetaLineCollector(GWASBetaLineCollector):
 
         super(GWASWeightDBFilteredBetaLineCollector, self).__call__(row)
 
+#convenience wrappers to output as we read
+def loadGWASAndStream(input_path, output_path, compressed=True, separator=None, skip_until_header=None, callback=None, file_format=None, scheme=None):
+    if not callback:
+        logging.info("Default Beta callback")
+        callback = GWASBetaLineCollector(file_format, scheme)
+
+    class OutputWrapper(object):
+        def __init__(self, collector, output_file):
+            self.collector = collector
+            self.output_file = output_file
+            self.writeHeader()
+            self.collected_anything = False
+
+        def writeHeader(self):
+            columns = ["rsid"]
+            if self.collector.ref_allele is not None: columns.append("ref_allele")
+            if self.collector.eff_allele is not None: columns.append("eff_allele")
+            if self.collector.beta is not None: columns.append("beta")
+            if self.collector.ses is not None: columns.append("beta_se")
+            if self.collector.sigma is not None: columns.append("sigma")
+            columns.append("beta_z")
+            header = "%s\n" % (" ".join(columns))
+            self.output_file.write(header)
+
+        def __call__(self, row):
+            self.collector(row)
+            if len(self.collector.rsids):
+                o = [self.collector.rsids[0]]
+                if self.collector.ref_allele is not None: o.append(self.collector.ref_allele[0])
+                if self.collector.eff_allele is not None: o.append(self.collector.eff_allele[0])
+                if self.collector.beta is not None: o.append(str(self.collector.beta[0]))
+                if self.collector.ses is not None: o.append(str(self.collector.ses[0]))
+                if self.collector.sigma is not None: o.append(str(self.collector.sigma[0]))
+                o.append(str(self.collector.beta_z[0]))
+                line = "%s\n" % (" ".join(o))
+                self.output_file.write(line)
+                self.collected_anything = True
+            self.collector.reset()
+
+    def do_output(callback, output_file, input_path,  compressed=True, separator=None, skip_until_header=None):
+        wrapper = OutputWrapper(callback, output_file)
+        file_iterator = GWASDosageFileIterator(input_path, compressed, separator, wrapper, skip_until_header)
+        file_iterator.iterateOverFile()
+        if not wrapper.collected_anything:
+            logging.info("No snps from the tissue model found in the GWAS file")
+
+    if compressed:
+        with gzip.open(output_path, "wb") as output_file:
+            do_output(callback, output_file, input_path, compressed, separator, skip_until_header)
+    else:
+        with open(output_path, "w") as output_file:
+            do_output(callback, output_file, input_path, compressed, separator, skip_until_header)
 
 class GWASDosageFileLoader(object):
     def __init__(self, path, compressed=True, separator=None, skip_until_header=None, callback=None, file_format=None, scheme=None):

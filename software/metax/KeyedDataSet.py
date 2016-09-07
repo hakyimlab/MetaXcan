@@ -9,11 +9,8 @@ class KeyedDataSet(DataSet):
         super(KeyedDataSet, self).__init__(name, index, data)
         self.keys = keys
         self.values_by_key = {}
-        if keys:
-            for i in xrange(0, len(keys)):
-                key = keys[i]
-                value = data[i]
-                self.values_by_key[key] = value
+        if len(keys):
+            self.values_by_key = {keys[i]:data[i] for i in xrange(0, len(keys))}
 
 EMPTY = KeyedDataSet()
 

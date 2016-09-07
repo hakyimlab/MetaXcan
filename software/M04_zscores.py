@@ -83,7 +83,7 @@ class CalculateZScores(object):
     def resultsFromCovarianceFile(self, weight_db_logic):
         results = {}
 
-        logging.info("Loading covariance file")
+        logging.info("Loading covariance file from %s", self.covariance)
         covariance_contents = MatrixUtilities.loadMatrixFromFile(self.covariance)
 
         beta_contents = Utilities.contentsWithPatternsFromFolder(self.folder_beta, [])
@@ -103,6 +103,11 @@ class CalculateZScores(object):
             normalization.update(beta_sets)
 
             for gene, entry in covariance_contents.iteritems():
+                #So, new covariance files might actually have more genes than those in the database
+                if not gene in weight_db_logic.weights_by_gene:
+                    logging.log(8, "Gene %s not in weights", gene)
+                    continue
+
                 weights = weight_db_logic.weights_by_gene[gene]
                 process = False
                 for rsid, weight in weights.iteritems():
@@ -167,6 +172,11 @@ class CalculateZScores(object):
         for gene, entry in entries.iteritems():
             if gene in results:
                 continue
+
+            if not gene in weight_db_logic.weights_by_gene:
+                logging.log(8, "Gene %s not in weights", gene)
+                continue
+
             weights = weight_db_logic.weights_by_gene[gene]
             covariance_matrix = entry[0]
             valid_rsids = entry[1]

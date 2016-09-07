@@ -257,6 +257,9 @@ def _scheme(scheme, file_format):
 class _GWASLineScheme(object):
     def __call__(self, collector, row, file_format):
         collector.rsids.append(snpFromRow(file_format, row))
+        if collector.gather_alleles:
+            collector.ref_allele.append(row[file_format.A1])
+            collector.eff_allele.append(row[file_format.A2])
 
         sigma = "NA"
         if collector.file_format.FRQ:
@@ -398,9 +401,10 @@ class _BETA_SIGN_PVALUE_Scheme(_GWASLineScheme):
             collector.beta.append(b)
 
 class GWASBetaLineCollector(object):
-    def __init__(self, file_format, scheme):
+    def __init__(self, file_format, scheme, gather_alleles):
         self.file_format = file_format
         self.scheme = _scheme(scheme, file_format)
+        self.gather_alleles = gather_alleles
         self.reset()
 
     def __call__(self, row):
@@ -414,6 +418,8 @@ class GWASBetaLineCollector(object):
         #self.OR = True if self.file_format.OR else None
         self.file_format = self.file_format
         self.beta_z = []
+        self.ref_allele = [] if self.gather_alleles else None
+        self.eff_allele = [] if self.gather_alleles else None
 
 class GWASWeightDBFilteredBetaLineCollector(GWASBetaLineCollector):
     def __init__(self, file_format, scheme, weight_db_logic=None):
@@ -502,6 +508,8 @@ def loadGWASAndStream(input_path, output_path, compressed=True, separator=None, 
 
         def writeHeader(self):
             columns = ["rsid"]
+            if self.collector.ref_allele is not None: columns.append("ref_allele")
+            if self.collector.eff_allele is not None: columns.append("eff_allele")
             if self.collector.beta is not None: columns.append("beta")
             if self.collector.ses is not None: columns.append("beta_se")
             if self.collector.sigma is not None: columns.append("sigma")
@@ -513,6 +521,8 @@ def loadGWASAndStream(input_path, output_path, compressed=True, separator=None, 
             self.collector(row)
             if len(self.collector.rsids):
                 o = [self.collector.rsids[0]]
+                if self.collector.ref_allele is not None: o.append(self.collector.ref_allele[0])
+                if self.collector.eff_allele is not None: o.append(self.collector.eff_allele[0])
                 if self.collector.beta is not None: o.append(str(self.collector.beta[0]))
                 if self.collector.ses is not None: o.append(str(self.collector.ses[0]))
                 if self.collector.sigma is not None: o.append(str(self.collector.sigma[0]))

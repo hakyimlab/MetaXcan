@@ -66,7 +66,7 @@ def chooseGWASProcessingScheme(args, input_path):
 
 def chooseGWASCallback(file_format, scheme, weight_db_logic):
     if weight_db_logic:
-        callback = GWASUtilities.GWASWeightDBFilteredBetaLineCollector(file_format, scheme, weight_db_logic)
+        callback = GWASUtilities.GWASWeightDBFilteredBetaLineCollector(file_format, scheme, weight_db_logic=weight_db_logic)
     else:
         callback = GWASUtilities.GWASBetaLineCollector(file_format, scheme, gather_alleles=True)
     return callback

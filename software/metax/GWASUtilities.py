@@ -401,7 +401,7 @@ class _BETA_SIGN_PVALUE_Scheme(_GWASLineScheme):
             collector.beta.append(b)
 
 class GWASBetaLineCollector(object):
-    def __init__(self, file_format, scheme, gather_alleles):
+    def __init__(self, file_format, scheme, gather_alleles=False):
         self.file_format = file_format
         self.scheme = _scheme(scheme, file_format)
         self.gather_alleles = gather_alleles
@@ -422,8 +422,8 @@ class GWASBetaLineCollector(object):
         self.eff_allele = [] if self.gather_alleles else None
 
 class GWASWeightDBFilteredBetaLineCollector(GWASBetaLineCollector):
-    def __init__(self, file_format, scheme, weight_db_logic=None):
-        super(GWASWeightDBFilteredBetaLineCollector, self).__init__(file_format, scheme)
+    def __init__(self, file_format, scheme, weight_db_logic=None, gather_alleles=False):
+        super(GWASWeightDBFilteredBetaLineCollector, self).__init__(file_format, scheme, gather_alleles)
         self.weight_db_logic = weight_db_logic
 
     def __call__(self, row):

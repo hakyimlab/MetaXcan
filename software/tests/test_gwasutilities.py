@@ -61,8 +61,8 @@ class TestGWASUtilities(unittest.TestCase):
         gwff = GWASUtilities.GWASFileFormat(self.filename, compressed=False)
         gwff.addSNPColumn("Marker")
         gwff.addSEColumn("StdErr")
-        gwff.addA1Column("Allele1")
-        gwff.addA2Column("Allele2")
+        gwff.addOtherAlleleColumn("Allele2")
+        gwff.addEffectAlleleColumn("Allele1")
         gwff.addPValueColumn("P-value")
         gwff.addFrequencyColumn("Freq1")
         gwff.addORColumn("OddsRatio")
@@ -70,8 +70,8 @@ class TestGWASUtilities(unittest.TestCase):
         gwff.addBetaSignColumn("BetaSign")
         gwff.addBetaZScoreColumn("BetaZscore")
         self.assertEqual(gwff.SNP, 1)
-        self.assertEqual(gwff.A1, 2)
-        self.assertEqual(gwff.A2, 3)
+        self.assertEqual(gwff.OTHER_ALLELE, 3)
+        self.assertEqual(gwff.EFFECT_ALLELE, 2)
         self.assertEqual(gwff.SE, 4)
         self.assertEqual(gwff.P, 5)
         self.assertEqual(gwff.FRQ, 6)
@@ -83,8 +83,8 @@ class TestGWASUtilities(unittest.TestCase):
         gwff = GWASUtilities.GWASFileFormat("%s.gz" % self.filename, compressed=True)
         gwff.addSNPColumn("Marker")
         gwff.addSEColumn("StdErr")
-        gwff.addA1Column("Allele1")
-        gwff.addA2Column("Allele2")
+        gwff.addOtherAlleleColumn("Allele2")
+        gwff.addEffectAlleleColumn("Allele1")
         gwff.addPValueColumn("P-value")
         gwff.addFrequencyColumn("Freq1")
         gwff.addORColumn("OddsRatio")
@@ -92,8 +92,8 @@ class TestGWASUtilities(unittest.TestCase):
         gwff.addBetaSignColumn("BetaSign")
         gwff.addBetaZScoreColumn("BetaZscore")
         self.assertEqual(gwff.SNP, 1)
-        self.assertEqual(gwff.A1, 2)
-        self.assertEqual(gwff.A2, 3)
+        self.assertEqual(gwff.OTHER_ALLELE, 3)
+        self.assertEqual(gwff.EFFECT_ALLELE, 2)
         self.assertEqual(gwff.SE, 4)
         self.assertEqual(gwff.P, 5)
         self.assertEqual(gwff.FRQ, 6)
@@ -116,11 +116,11 @@ class TestGWASUtilities(unittest.TestCase):
         self.assertEqual(("%s column name -%s- not found in file '%s'. Is the file compressed?" % ("SE", "StdErrzz", filename)), fnexcpt.exception.msg)
 
         with self.assertRaises(Exceptions.ReportableException) as fnexcpt:
-            gwff.addA1Column("all1")
-        self.assertEqual(("%s column name -%s- not found in file '%s'. Is the file compressed?" % ("A1", "all1", filename)), fnexcpt.exception.msg)
+            gwff.addOtherAlleleColumn("all2")
+        self.assertEqual(("%s column name -%s- not found in file '%s'. Is the file compressed?" % ("-other allele-", "all2", filename)), fnexcpt.exception.msg)
         with self.assertRaises(Exceptions.ReportableException) as fnexcpt:
-            gwff.addA2Column("all2")
-        self.assertEqual(("%s column name -%s- not found in file '%s'. Is the file compressed?" % ("A2", "all2", filename)), fnexcpt.exception.msg)
+            gwff.addEffectAlleleColumn("all1")
+        self.assertEqual(("%s column name -%s- not found in file '%s'. Is the file compressed?" % ("-effect allele-", "all1", filename)), fnexcpt.exception.msg)
 
         with self.assertRaises(Exceptions.ReportableException) as fnexcpt:
             gwff.addFrequencyColumn("F")
@@ -155,11 +155,11 @@ class TestGWASUtilities(unittest.TestCase):
         self.assertEqual(("%s column name -%s- not found in file '%s'. Is the file compressed?" % ("SE", "StdErrzz", self.filename)), fnexcpt.exception.msg)
 
         with self.assertRaises(Exceptions.ReportableException) as fnexcpt:
-            gwff.addA1Column("all1")
-        self.assertEqual(("%s column name -%s- not found in file '%s'. Is the file compressed?" % ("A1", "all1", self.filename)), fnexcpt.exception.msg)
+            gwff.addOtherAlleleColumn("all2")
+        self.assertEqual(("%s column name -%s- not found in file '%s'. Is the file compressed?" % ("-other allele-", "all2", self.filename)), fnexcpt.exception.msg)
         with self.assertRaises(Exceptions.ReportableException) as fnexcpt:
-            gwff.addA2Column("all2")
-        self.assertEqual(("%s column name -%s- not found in file '%s'. Is the file compressed?" % ("A2", "all2", self.filename)), fnexcpt.exception.msg)
+            gwff.addEffectAlleleColumn("all1")
+        self.assertEqual(("%s column name -%s- not found in file '%s'. Is the file compressed?" % ("-effect allele-", "all1", self.filename)), fnexcpt.exception.msg)
 
         with self.assertRaises(Exceptions.ReportableException) as fnexcpt:
             gwff.addFrequencyColumn("F")

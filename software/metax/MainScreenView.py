@@ -111,18 +111,18 @@ class MainScreenView(Frame):
         self.addToDisabable(self.snp_entry)
 
         #
-        a1_label = Label(column_frame, text=TS("Reference Allele"))
-        a1_label.grid(row=1, column=0, sticky=W)
-        self.a1_entry = Entry(column_frame, textvariable=controller.a1_value)
-        self.a1_entry.grid(row=1, column=1)
-        self.addToDisabable(self.a1_entry)
+        other_allele_label = Label(column_frame, text=TS("Other Allele"))
+        other_allele_label.grid(row=1, column=0, sticky=W)
+        self.other_allele_entry = Entry(column_frame, textvariable=controller.other_allele_value)
+        self.other_allele_entry.grid(row=1, column=1)
+        self.addToDisabable(self.other_allele_entry)
 
         #
-        a2_label = Label(column_frame, text=TS("Effect Allele"))
-        a2_label.grid(row=2, column=0, sticky=W)
-        self.a2_entry = Entry(column_frame, textvariable=controller.a2_value)
-        self.a2_entry.grid(row=2, column=1)
-        self.addToDisabable(self.a2_entry)
+        effect_allele_label = Label(column_frame, text=TS("Effect Allele"))
+        effect_allele_label.grid(row=2, column=0, sticky=W)
+        self.effect_allele_entry = Entry(column_frame, textvariable=controller.effect_allele_value)
+        self.effect_allele_entry.grid(row=2, column=1)
+        self.addToDisabable(self.effect_allele_entry)
 
         # the following three are mutually exclusive
         or_on = controller.or_on

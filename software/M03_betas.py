@@ -139,13 +139,13 @@ if __name__ == "__main__":
                     help="Name of column containing frequency in input file",
                     default=None)
 
-    parser.add_argument("--a1_column",
-                    help="Name of column containing allele 1 in input file (reference allele, following PrediXcan format, and plink --dosage format philosophy)",
-                    default="A1")
-
-    parser.add_argument("--a2_column",
-                    help="Name of column containing allele 2 in input file (dosage/effect allele)",
+    parser.add_argument("--other_allele_column",
+                    help="Name of column containing non-effect allele in input file ('reference allele', if following PrediXcan format, and plink --dosage format philosophy)",
                     default="A2")
+
+    parser.add_argument("--effect_allele_column",
+                    help="Name of column containing effect (or dosage) allele in input file (dosage/effect allele)",
+                    default="A1")
 
     parser.add_argument("--snp_column",
                     help="Name of column containing snp in input file",

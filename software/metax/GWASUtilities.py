@@ -13,8 +13,8 @@ import os
 class GWASTF(object):
     """GWAS file format"""
     SNP = 0
-    A1 = 1
-    A2 = 2
+    EFFECT_ALLELE = 1
+    OTHER_ALLELE = 2
     FRQ = 3
     INFO = 4
     OR_BETA = 5
@@ -73,8 +73,8 @@ class GWASFileFormat(object):
             raise Exception("Couldn't process input file. Please check for compressed status, or data field separator.")
         self.header_comps = [x for x in comps if x is not ""]
         self.SNP = None
-        self.A1 = None
-        self.A2 = None
+        self.OTHER_ALLELE = None
+        self.EFFECT_ALLELE = None
         self.FRQ = None
         self.INFO = None
         self.OR = None
@@ -96,17 +96,17 @@ class GWASFileFormat(object):
 
         self.SE = self.header_comps.index(se_column_name)
 
-    def addA1Column(self, A1_column_name):
-        if not A1_column_name in self.header_comps:
-            raise ReportableException("A1 column name -%s- not found in file '%s'. Is the file compressed?" % (A1_column_name, self.file_path))
+    def addOtherAlleleColumn(self, oa_column_name):
+        if not oa_column_name in self.header_comps:
+            raise ReportableException("-other allele- column name -%s- not found in file '%s'. Is the file compressed?" % (oa_column_name, self.file_path))
 
-        self.A1 = self.header_comps.index(A1_column_name)
+        self.OTHER_ALLELE = self.header_comps.index(oa_column_name)
 
-    def addA2Column(self, A2_column_name):
+    def addEffectAlleleColumn(self, A2_column_name):
         if not A2_column_name in self.header_comps:
-            raise ReportableException("A2 column name -%s- not found in file '%s'. Is the file compressed?" % (A2_column_name, self.file_path))
+            raise ReportableException("-effect allele- column name -%s- not found in file '%s'. Is the file compressed?" % (A2_column_name, self.file_path))
 
-        self.A2 = self.header_comps.index(A2_column_name)
+        self.EFFECT_ALLELE = self.header_comps.index(A2_column_name)
 
     def addFrequencyColumn(self, frequency_column_name):
         if not frequency_column_name in self.header_comps:
@@ -151,10 +151,10 @@ class GWASFileFormat(object):
             file_format.addORColumn(args.or_column)
         if args.beta_column:
             file_format.addBetaColumn(args.beta_column)
-        if args.a1_column:
-            file_format.addA1Column(args.a1_column)
-        if args.a2_column:
-            file_format.addA2Column(args.a2_column)
+        if args.other_allele_column:
+            file_format.addOtherAlleleColumn(args.other_allele_column)
+        if args.effect_allele_column:
+            file_format.addEffectAlleleColumn(args.effect_allele_column)
         if args.snp_column:
             file_format.addSNPColumn(args.snp_column)
         if args.frequency_column:
@@ -434,17 +434,17 @@ class GWASWeightDBFilteredBetaLineCollector(GWASBetaLineCollector):
                 logging.log(6, "%s not in weight db", rsid)
                 return
 
-            a1 = row[file_format.A1].upper()
-            a2 = row[file_format.A2].upper()
-            if not a1 in GWASTF.VALID_ALLELES or \
-                not a2 in GWASTF.VALID_ALLELES:
-                logging.log(6,"invalid alleles %s %s", a1, a2)
+            other_allele = row[file_format.OTHER_ALLELE].upper()
+            effect_allele = row[file_format.EFFECT_ALLELE].upper()
+            if not other_allele in GWASTF.VALID_ALLELES or \
+                not effect_allele in GWASTF.VALID_ALLELES:
+                logging.log(6,"invalid alleles %s %s", effect_allele, other_allele)
                 return
 
             # The following works but is inappropriate. All entries for a given SNP have the same ref allele.
             # but bear in mind that we are using any entry.
             entry = self.weight_db_logic.anEntryWithRSID(rsid)
-            if entry.ref_allele == a2 and entry.eff_allele == a1:
+            if entry.ref_allele == effect_allele and entry.eff_allele == other_allele:
                 logging.log(7, "alleles are flipped for rsid %s", rsid)
 
                 if file_format.BETA_ZSCORE:
@@ -487,8 +487,8 @@ class GWASWeightDBFilteredBetaLineCollector(GWASBetaLineCollector):
                     except Exception as e:
                         logging.log(9, "error flipping allele %s: %s", rsid, str(e))
                         row[file_format.BETA_SIGN] = "NA"
-            elif not entry.ref_allele == a1 or not entry.eff_allele == a2:
-                logging.log(6, "%s alleles dont match:(%s, %s)(%s, %s)",rsid, entry.ref_allele, entry.eff_allele, a1, a2)
+            elif not entry.ref_allele == other_allele or not entry.eff_allele == effect_allele:
+                logging.log(6, "%s alleles dont match:(%s, %s)(%s, %s)",rsid, entry.ref_allele, entry.eff_allele, other_allele, effect_allele)
                 return
 
         super(GWASWeightDBFilteredBetaLineCollector, self).__call__(row)

@@ -3,6 +3,7 @@ __author__ = 'heroico'
 import metax
 __version__ = metax.__version__
 import logging
+import gzip
 import os
 import re
 import metax.KeyedDataSet as KeyedDataSet
@@ -50,6 +51,8 @@ class GetBetas(object):
 
     def buildBetas(self, weight_db_logic, name):
         output_path = os.path.join(self.output_folder, name)
+        if not ".gz" in output_path:
+            output_path += ".gz"
         if os.path.exists(output_path):
             logging.info("%s already exists, delete it if you want it to be done again", output_path)
             return
@@ -64,12 +67,22 @@ class GetBetas(object):
             GWASUtilities.loadGWASAndStream(input_path, output_path, self.compressed, self.args.separator, self.args.skip_until_header, callback)
         else:
             dosage_loader = GWASUtilities.GWASDosageFileLoader(input_path, self.compressed, self.args.separator, self.args.skip_until_header, callback)
-            result_sets = dosage_loader.load()
+            results, column_order = dosage_loader.load()
 
             # The following check is sort of redundant, as it exists in "saveSetsToCompressedFile".
             # It exists merely to provide different logging
-            if len(result_sets):
-                KeyedDataSet.KeyedDataSetFileUtilities.saveSetsToCompressedFile(output_path, result_sets, "rsid")
+            if len(results):
+                def do_output(file, results, column_order):
+                    file.write("\t".join(column_order)+"\n")
+                    first = results[column_order[0]]
+                    n = len(first)
+                    for i in xrange(0,n):
+                        line_comps = [str(results[c][i]) for c in column_order]
+                        line = "%s\n" % "\t".join(line_comps)
+                        file.write(line)
+
+                with gzip.open(output_path, "wb") as file:
+                    do_output(file, results, column_order)
             else:
                 logging.info("No snps from the tissue model found in the GWAS file")
         logging.info("Successfully ran GWAS input processing")

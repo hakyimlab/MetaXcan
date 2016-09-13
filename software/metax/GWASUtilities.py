@@ -183,32 +183,6 @@ def fileHeader( file, skip_until_header):
         header = file.readline().strip()
     return header
 
-class GWASSNPInfoLineCollector(object):
-    A1=0
-    A2=1
-    OR_BETA=2
-    FREQ=3
-
-    def __init__(self, rsids=[], values=[]):
-        self.rsids = rsids
-        self.values = values
-        self.beta = None
-        self.ses = None
-        self.beta_z = None
-        self.sigma = None
-
-    def __call__(self, row):
-        a1 = row[GWASTF.A1].upper()
-        a2 = row[GWASTF.A2].upper()
-        OR_BETA = row[GWASTF.OR_BETA]
-        freq=row[GWASTF.FRQ]
-        self.rsids.append(row[GWASTF.SNP])
-        self.values.append((a1,a2,OR_BETA, freq))
-
-    def reset(self):
-        self.rsids = []
-        self.values = []
-
 BETA = "beta"
 BETA_SE = "beta_se"
 BETA_SE_TO_Z = "beta_se_to_z"
@@ -546,6 +520,12 @@ def loadGWASAndStream(input_path, output_path, compressed=True, separator=None, 
         with open(output_path, "w") as output_file:
             do_output(callback, output_file, input_path, compressed, separator, skip_until_header)
 
+RSID="rsid"
+BETA="beta"
+BETA_SE="se"
+BETA_Z="beta_z"
+SIGMA_l="sigma_l"
+
 class GWASDosageFileLoader(object):
     def __init__(self, path, compressed=True, separator=None, skip_until_header=None, callback=None, file_format=None, scheme=None):
         self.path = path
@@ -565,26 +545,25 @@ class GWASDosageFileLoader(object):
         file_iterator = GWASDosageFileIterator(self.path, self.compressed, self.separator, callback, self.skip_until_header)
         file_iterator.iterateOverFile()
 
-        results = []
+        if callback.rsids:
+            results = {RSID:callback.rsids}
+            column_order = [RSID]
+
         if callback.beta:
-            beta = KeyedDataSet.KeyedDataSet(name="beta", data=callback.beta, keys=callback.rsids)
-            results.append(beta)
+            results[BETA] = callback.beta
+            column_order.append(BETA)
 
         if callback.ses:
-            se = KeyedDataSet.KeyedDataSet(name="se", data=callback.ses, keys=callback.rsids)
-            results.append(se)
+            results[BETA_SE] = callback.ses
+            column_order.append(BETA_SE)
 
         if callback.beta_z:
-            beta_z = KeyedDataSet.KeyedDataSet(name="beta_z", data=callback.beta_z, keys=callback.rsids)
-            results.append(beta_z)
+            results[BETA_Z] = callback.beta_z
+            column_order.append(BETA_Z)
 
         if callback.sigma:
-            freq = KeyedDataSet.KeyedDataSet(name="sigma_l", data=callback.sigma, keys=callback.rsids)
-            results.append(freq)
-
-        if type(callback) is GWASSNPInfoLineCollector:
-            values = KeyedDataSet.KeyedDataSet(name="values", data=callback.values, keys=callback.rsids)
-            results.append(values)
+            results[SIGMA_l] = callback.sigma
+            column_order.append(SIGMA_l)
 
         callback.reset()
-        return results
+        return results, column_order

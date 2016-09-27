@@ -99,6 +99,7 @@ class MetaXcanProcess(object):
 
         report_prefix = None
         for name in names:
+            name = name + ".gz"
             if report_prefix is None:
                 report_prefix = name.split("/")[-1].split(".")[0]
             try:

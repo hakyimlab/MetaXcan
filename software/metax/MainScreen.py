@@ -62,8 +62,8 @@ class MainScreen(object):
         self.snp_value = Tkinter.StringVar()
         self.snp_value.set("SNP")
 
-        self.other_allele_value = Tkinter.StringVar()
-        self.other_allele_value.set("A2")
+        self.non_effect_allele_value = Tkinter.StringVar()
+        self.non_effect_allele_value.set("A2")
 
         self.effect_allele_value = Tkinter.StringVar()
         self.effect_allele_value.set("A1")
@@ -315,7 +315,7 @@ class MainScreen(object):
                 self.output_folder = source.beta_folder
 
                 self.snp_column = source.snp_value.get()
-                self.other_allele_column = source.other_allele_value.get()
+                self.non_effect_allele_column = source.non_effect_allele_value.get()
                 self.effect_allele_column = source.effect_allele_value.get()
 
                 self.or_column = source.or_value.get() if source.or_on.get() else None

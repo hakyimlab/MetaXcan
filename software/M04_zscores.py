@@ -123,8 +123,6 @@ class CalculateZScores(object):
                     logging.info("Gene %s already processed", gene)
                     continue
 
-                reporter.update(i, "%d %% of model's snp information found so far in the gwas study") #proxied by percenteage of genes
-
                 covariance_matrix = entry[0]
                 valid_rsids = entry[1]
 
@@ -133,6 +131,8 @@ class CalculateZScores(object):
                 pre_zscore, n, VAR_g, effect_size = zscore_calculation(gene, weights, beta_sets, covariance_matrix, valid_rsids)
                 results[gene] = self.buildEntry(gene, weight_db_logic, weights, pre_zscore, n, VAR_g, effect_size)
                 i+=1
+                reporter.update(i,
+                            "%d %% of model's snp information found so far in the gwas study")  # proxied by percenteage of genes
 
         #second pass, for genes not in any beta file
         self.fillBlanks(results, covariance_contents, weight_db_logic, zscore_calculation)

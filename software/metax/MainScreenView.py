@@ -111,11 +111,11 @@ class MainScreenView(Frame):
         self.addToDisabable(self.snp_entry)
 
         #
-        other_allele_label = Label(column_frame, text=TS("Other Allele"))
-        other_allele_label.grid(row=1, column=0, sticky=W)
-        self.other_allele_entry = Entry(column_frame, textvariable=controller.other_allele_value)
-        self.other_allele_entry.grid(row=1, column=1)
-        self.addToDisabable(self.other_allele_entry)
+        non_effect_allele_label = Label(column_frame, text=TS("Non Effect Allele"))
+        non_effect_allele_label.grid(row=1, column=0, sticky=W)
+        self.non_effect_allele_entry = Entry(column_frame, textvariable=controller.non_effect_allele_value)
+        self.non_effect_allele_entry.grid(row=1, column=1)
+        self.addToDisabable(self.non_effect_allele_entry)
 
         #
         effect_allele_label = Label(column_frame, text=TS("Effect Allele"))

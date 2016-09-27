@@ -14,7 +14,7 @@ class GWASTF(object):
     """GWAS file format"""
     SNP = 0
     EFFECT_ALLELE = 1
-    OTHER_ALLELE = 2
+    NON_EFFECT_ALLELE = 2
     FRQ = 3
     INFO = 4
     OR_BETA = 5
@@ -73,7 +73,7 @@ class GWASFileFormat(object):
             raise Exception("Couldn't process input file. Please check for compressed status, or data field separator.")
         self.header_comps = [x for x in comps if x is not ""]
         self.SNP = None
-        self.OTHER_ALLELE = None
+        self.NON_EFFECT_ALLELE = None
         self.EFFECT_ALLELE = None
         self.FRQ = None
         self.INFO = None
@@ -96,17 +96,17 @@ class GWASFileFormat(object):
 
         self.SE = self.header_comps.index(se_column_name)
 
-    def addOtherAlleleColumn(self, oa_column_name):
-        if not oa_column_name in self.header_comps:
-            raise ReportableException("-other allele- column name -%s- not found in file '%s'. Is the file compressed?" % (oa_column_name, self.file_path))
+    def addNonEffectAlleleColumn(self, nea_column_name):
+        if not nea_column_name in self.header_comps:
+            raise ReportableException("-non effect allele- column name -%s- not found in file '%s'. Is the file compressed?" % (nea_column_name, self.file_path))
 
-        self.OTHER_ALLELE = self.header_comps.index(oa_column_name)
+        self.NON_EFFECT_ALLELE = self.header_comps.index(nea_column_name)
 
-    def addEffectAlleleColumn(self, A2_column_name):
-        if not A2_column_name in self.header_comps:
-            raise ReportableException("-effect allele- column name -%s- not found in file '%s'. Is the file compressed?" % (A2_column_name, self.file_path))
+    def addEffectAlleleColumn(self, ea_column_name):
+        if not ea_column_name in self.header_comps:
+            raise ReportableException("-effect allele- column name -%s- not found in file '%s'. Is the file compressed?" % (ea_column_name, self.file_path))
 
-        self.EFFECT_ALLELE = self.header_comps.index(A2_column_name)
+        self.EFFECT_ALLELE = self.header_comps.index(ea_column_name)
 
     def addFrequencyColumn(self, frequency_column_name):
         if not frequency_column_name in self.header_comps:
@@ -151,8 +151,8 @@ class GWASFileFormat(object):
             file_format.addORColumn(args.or_column)
         if args.beta_column:
             file_format.addBetaColumn(args.beta_column)
-        if args.other_allele_column:
-            file_format.addOtherAlleleColumn(args.other_allele_column)
+        if args.non_effect_allele_column:
+            file_format.addNonEffectAlleleColumn(args.non_effect_allele_column)
         if args.effect_allele_column:
             file_format.addEffectAlleleColumn(args.effect_allele_column)
         if args.snp_column:
@@ -232,8 +232,8 @@ class _GWASLineScheme(object):
     def __call__(self, collector, row, file_format):
         collector.rsids.append(snpFromRow(file_format, row))
         if collector.gather_alleles:
-            collector.ref_allele.append(row[file_format.A1])
-            collector.eff_allele.append(row[file_format.A2])
+            collector.non_eff_allele.append(row[file_format.NON_EFFECT_ALLELE])
+            collector.eff_allele.append(row[file_format.EFFECT_ALLELE])
 
         sigma = "NA"
         if collector.file_format.FRQ:
@@ -392,7 +392,7 @@ class GWASBetaLineCollector(object):
         #self.OR = True if self.file_format.OR else None
         self.file_format = self.file_format
         self.beta_z = []
-        self.ref_allele = [] if self.gather_alleles else None
+        self.non_eff_allele = [] if self.gather_alleles else None
         self.eff_allele = [] if self.gather_alleles else None
 
 class GWASWeightDBFilteredBetaLineCollector(GWASBetaLineCollector):
@@ -408,7 +408,7 @@ class GWASWeightDBFilteredBetaLineCollector(GWASBetaLineCollector):
                 logging.log(6, "%s not in weight db", rsid)
                 return
 
-            other_allele = row[file_format.OTHER_ALLELE].upper()
+            other_allele = row[file_format.NON_EFFECT_ALLELE].upper()
             effect_allele = row[file_format.EFFECT_ALLELE].upper()
             if not other_allele in GWASTF.VALID_ALLELES or \
                 not effect_allele in GWASTF.VALID_ALLELES:
@@ -482,7 +482,7 @@ def loadGWASAndStream(input_path, output_path, compressed=True, separator=None, 
 
         def writeHeader(self):
             columns = ["rsid"]
-            if self.collector.ref_allele is not None: columns.append("ref_allele")
+            if self.collector.non_eff_allele is not None: columns.append("non_eff_allele")
             if self.collector.eff_allele is not None: columns.append("eff_allele")
             if self.collector.beta is not None: columns.append("beta")
             if self.collector.ses is not None: columns.append("beta_se")
@@ -495,7 +495,7 @@ def loadGWASAndStream(input_path, output_path, compressed=True, separator=None, 
             self.collector(row)
             if len(self.collector.rsids):
                 o = [self.collector.rsids[0]]
-                if self.collector.ref_allele is not None: o.append(self.collector.ref_allele[0])
+                if self.collector.non_eff_allele is not None: o.append(self.collector.non_eff_allele[0])
                 if self.collector.eff_allele is not None: o.append(self.collector.eff_allele[0])
                 if self.collector.beta is not None: o.append(str(self.collector.beta[0]))
                 if self.collector.ses is not None: o.append(str(self.collector.ses[0]))
@@ -545,9 +545,11 @@ class GWASDosageFileLoader(object):
         file_iterator = GWASDosageFileIterator(self.path, self.compressed, self.separator, callback, self.skip_until_header)
         file_iterator.iterateOverFile()
 
+        results = {}
+        column_order = []
         if callback.rsids:
-            results = {RSID:callback.rsids}
-            column_order = [RSID]
+            results[RSID] = callback.rsids
+            column_order.append(RSID)
 
         if callback.beta:
             results[BETA] = callback.beta

@@ -70,19 +70,19 @@ class KeyedDataSetFileUtilities(object):
 
 #LOAD
     @classmethod
-    def loadFromFile(cls, file_path, sep= " ", col = 1, header=None):
+    def loadFromFile(cls, file_path, sep= None, col = 1, header=None):
         with open(file_path, 'r') as file:
             keyed_data_set = cls.loadContents(file, file_path, sep, col, header)
             return keyed_data_set
 
     @classmethod
-    def loadFromCompressedFile(cls, file_path, sep= " ", col = 1, header=None):
+    def loadFromCompressedFile(cls, file_path, sep= None, col = 1, header=None):
         with gzip.open(file_path, 'rb') as file:
             keyed_data_set = cls.loadContents(file, file_path, sep, col, header)
             return keyed_data_set
 
     @classmethod
-    def loadContents(cls, file, file_path, separator=" ", col=1, header=None):
+    def loadContents(cls, file, file_path, separator=None, col=1, header=None):
         if header is not None:
             file_header = file.readline().strip()
             if len(header):
@@ -93,7 +93,7 @@ class KeyedDataSetFileUtilities(object):
         keys = []
         values = []
         for line in file:
-            comps = line.strip().split(separator)
+            comps = line.strip().split(separator) if separator else line.strip().split()
             keys.append(comps[0])
             values.append(comps[col])
 
@@ -102,25 +102,25 @@ class KeyedDataSetFileUtilities(object):
 
 #LOAD SEVERAL DATA SETS FROM A FILE AT ONCE
     @classmethod
-    def loadDataSetsFromFile(cls, file_path, sep= " ", cols = [], header=None):
+    def loadDataSetsFromFile(cls, file_path, sep= None, cols = [], header=None):
         with open(file_path, 'r') as file:
-            sets = cls.loadDataSetsContent(file, file_path, sep, cols, header)
+            sets = cls.loadDataSetsContent(file, sep, cols, header)
             return sets
 
     @classmethod
-    def loadDataSetsFromCompressedFile(cls, file_path, sep= " ", cols = [], header=None):
+    def loadDataSetsFromCompressedFile(cls, file_path, sep= None, cols = [], header=None):
         with gzip.open(file_path, 'rb') as file:
-            sets = cls.loadDataSetsContent(file, file_path, sep, cols, header)
+            sets = cls.loadDataSetsContent(file, sep, cols, header)
             return sets
 
     @classmethod
-    def loadDataSetsContent(cls, file, file_path, separator=" ", cols=[], header=None):
+    def loadDataSetsContent(cls, file, separator=None, cols=[], header=None):
         names = None
         if header is not None:
             line = file.readline().strip("\n")
             if len(header):
                 assert header == line
-            names = line.split(" ")
+            names = line.split(separator) if separator else line.split()
 
         if len(cols) == 0:
             for i in xrange(0, len(names)):
@@ -132,7 +132,7 @@ class KeyedDataSetFileUtilities(object):
 
         keys = []
         for line in file:
-            comps = line.strip().split(separator)
+            comps = line.strip().split(separator) if separator else line.strip().split()
             keys.append(comps[0])
             for i,col in enumerate(cols):
                 value_set = value_sets[i]

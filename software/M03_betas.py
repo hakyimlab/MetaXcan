@@ -152,7 +152,7 @@ if __name__ == "__main__":
                     help="Name of column containing frequency in input file",
                     default=None)
 
-    parser.add_argument("--other_allele_column",
+    parser.add_argument("--non_effect_allele_column",
                     help="Name of column containing non-effect allele in input file ('reference allele', if following PrediXcan format, and plink --dosage format philosophy)",
                     default="A2")
 
@@ -195,7 +195,7 @@ if __name__ == "__main__":
     else:
         try:
             run(args)
-        except NameError as e:
+        except Exception as e:
             logging.info("Unexpected error: %s" % str(e))
             exit(1)
         except Exceptions.ReportableException, e:

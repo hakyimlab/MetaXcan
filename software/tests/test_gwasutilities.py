@@ -78,7 +78,7 @@ class TestGWASUtilities(unittest.TestCase):
 #Expectation utilities
     def expectFileFormat(self, f):
         self.assertEqual(f.SNP, 1)
-        self.assertEqual(f.OTHER_ALLELE, 3)
+        self.assertEqual(f.NON_EFFECT_ALLELE, 3)
         self.assertEqual(f.EFFECT_ALLELE, 2)
         self.assertEqual(f.SE, 4)
         self.assertEqual(f.P, 5)
@@ -93,7 +93,7 @@ class TestGWASUtilities(unittest.TestCase):
         gwff = GWASUtilities.GWASFileFormat(file_name, compressed=compressed, separator=separator)
         gwff.addSNPColumn("Marker")
         gwff.addSEColumn("StdErr")
-        gwff.addOtherAlleleColumn("Allele2")
+        gwff.addNonEffectAlleleColumn("Allele2")
         gwff.addEffectAlleleColumn("Allele1")
         gwff.addPValueColumn("P-value")
         gwff.addFrequencyColumn("Freq1")
@@ -136,8 +136,8 @@ class TestGWASUtilities(unittest.TestCase):
         self.assertEqual(("%s column name -%s- not found in file '%s'. Is the file compressed?" % ("SE", "StdErrzz", file_name)), fnexcpt.exception.msg)
 
         with self.assertRaises(Exceptions.ReportableException) as fnexcpt:
-            gwff.addOtherAlleleColumn("all2")
-        self.assertEqual(("%s column name -%s- not found in file '%s'. Is the file compressed?" % ("-other allele-", "all2", file_name)), fnexcpt.exception.msg)
+            gwff.addNonEffectAlleleColumn("all2")
+        self.assertEqual(("%s column name -%s- not found in file '%s'. Is the file compressed?" % ("-non effect allele-", "all2", file_name)), fnexcpt.exception.msg)
         with self.assertRaises(Exceptions.ReportableException) as fnexcpt:
             gwff.addEffectAlleleColumn("all1")
         self.assertEqual(("%s column name -%s- not found in file '%s'. Is the file compressed?" % ("-effect allele-", "all1", file_name)), fnexcpt.exception.msg)
@@ -193,7 +193,7 @@ class TestGWASUtilities(unittest.TestCase):
         args.snp_column="Marker"
         args.frequency_column = "Freq1"
         args.effect_allele_column = "Allele1"
-        args.other_allele_column = "Allele2"
+        args.non_effect_allele_column = "Allele2"
         args.pvalue_column = "P-value"
         args.or_column = "OddsRatio"
         args.frequency_column = "Freq1"

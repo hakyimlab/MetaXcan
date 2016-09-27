@@ -111,8 +111,6 @@ class MetaXcanProcess(object):
                 pass
 
         suffix = ".csv"
-        if args.compressed_gwas:
-            suffix += ".gz"
         self.args.output_file = os.path.join(output_folder,
                                              report_prefix + "-" + file_prefix + suffix)  # output_folder       #os.path.join(output_folder, file_prefix) + ".csv"
 

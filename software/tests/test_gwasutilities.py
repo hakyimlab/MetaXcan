@@ -182,7 +182,7 @@ class TestGWASUtilities(unittest.TestCase):
         with self.assertRaises(AttributeError) as fnexcpt:
             f = GWASUtilities.GWASFileFormat.fileFormatFromArgs(file_name, args)
 
-        args.compressed = compressed
+        args.compressed_gwas = compressed
         with self.assertRaises(AttributeError) as fnexcpt:
             f = GWASUtilities.GWASFileFormat.fileFormatFromArgs(file_name, args)
 

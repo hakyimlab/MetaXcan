@@ -95,8 +95,8 @@ if __name__ == "__main__":
                     help="Name of column containing snp in input file",
                     default="SNP")
 
-    parser.add_argument("--compressed",
-                    help="Wether input files are gzip compressed file",
+    parser.add_argument("--compressed_gwas",
+                    help="Wether input files are gzip compressed files",
                     action="store_true",
                     default=False)
 

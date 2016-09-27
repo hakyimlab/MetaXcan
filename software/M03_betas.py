@@ -19,7 +19,7 @@ class GetBetas(object):
         self.weight_db_path = args.weight_db_path
         self.gwas_folder = args.gwas_folder
         self.output_folder = args.output_folder
-        self.compressed = args.compressed
+        self.compressed_gwas = args.compressed_gwas
         self.args = args
         self.gwas_regexp = None
         if args.gwas_file_pattern:
@@ -64,9 +64,9 @@ class GetBetas(object):
         scheme = MethodGuessing.chooseGWASProcessingScheme(self.args, input_path)
         callback = MethodGuessing.chooseGWASCallback(file_format, scheme, weight_db_logic)
         if not weight_db_logic:
-            GWASUtilities.loadGWASAndStream(input_path, output_path, self.compressed, self.args.separator, self.args.skip_until_header, callback)
+            GWASUtilities.loadGWASAndStream(input_path, output_path, self.compressed_gwas, self.args.separator, self.args.skip_until_header, callback)
         else:
-            dosage_loader = GWASUtilities.GWASDosageFileLoader(input_path, self.compressed, self.args.separator, self.args.skip_until_header, callback)
+            dosage_loader = GWASUtilities.GWASDosageFileLoader(input_path, self.compressed_gwas, self.args.separator, self.args.skip_until_header, callback)
             results, column_order = dosage_loader.load()
 
             # The following check is sort of redundant, as it exists in "saveSetsToCompressedFile".
@@ -164,8 +164,8 @@ if __name__ == "__main__":
                     help="Name of column containing snp in input file",
                     default="SNP")
 
-    parser.add_argument("--compressed",
-                    help="Wether input files are gzip compressed file",
+    parser.add_argument("--compressed_gwas",
+                    help="Wether input files are gzip compressed files",
                     action="store_true",
                     default=False)
 

@@ -73,7 +73,7 @@ class MainScreenView(Frame):
         controller = self.controller()
 
         compressed_on = controller.compressed_on
-        self.compressed_check = Checkbutton(file_options_frame, text=TS('Compressed'), variable=compressed_on)
+        self.compressed_check = Checkbutton(file_options_frame, text=TS('Compressed GWAS'), variable=compressed_on)
         self.compressed_check.grid(row=0, column=0, sticky=W+E)
         self.addToDisabable(self.compressed_check)
 

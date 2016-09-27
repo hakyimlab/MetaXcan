@@ -146,7 +146,7 @@ class GWASFileFormat(object):
 
     @classmethod
     def fileFormatFromArgs(cls, file, args):
-        file_format = GWASFileFormat(file, args.compressed, args.separator, args.skip_until_header)
+        file_format = GWASFileFormat(file, args.compressed_gwas, args.separator, args.skip_until_header)
         if args.or_column:
             file_format.addORColumn(args.or_column)
         if args.beta_column:

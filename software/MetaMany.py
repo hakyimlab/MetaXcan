@@ -48,7 +48,7 @@ __author__ = 'heroico, Eric Torstenson'
         GWAS-Tissue.csv[.gz]
       Where GWAS is the first gwas filename found inside the gwas directory
       Tissue is the tissue for which the zscores are calculated
-      and the optional .gz is there if the --compressed option is set
+      and the optional .gz is there if the --compressed_gwas option is set
    """
 
 
@@ -111,7 +111,7 @@ class MetaXcanProcess(object):
                 pass
 
         suffix = ".csv"
-        if args.compressed:
+        if args.compressed_gwas:
             suffix += ".gz"
         self.args.output_file = os.path.join(output_folder,
                                              report_prefix + "-" + file_prefix + suffix)  # output_folder       #os.path.join(output_folder, file_prefix) + ".csv"
@@ -209,8 +209,8 @@ arguments --covariance_directory and --covariance_suffix. """)
                     help="Name of column containing snp in input file",
                     default="SNP")
 
-    parser.add_argument("--compressed",
-                    help="Wether input files are gzip compressed file",
+    parser.add_argument("--compressed_gwas",
+                    help="Wether input files are gzip compressed files",
                     action="store_true",
                     default=False)
 

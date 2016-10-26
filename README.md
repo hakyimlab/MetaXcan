@@ -10,10 +10,9 @@ and building processing pipelines as well.
 
 ## Prerequisites
 
-The software is developed and tested in Linux and Max OS environments. Should be mostly working on Windows.
+The software is developed and tested in Linux and Max OS environments. The main MetaXcan script is supported in Windows.
 
-You need [Python 2.7](https://www.python.org/) and [numpy](http://www.numpy.org/) to run MetaXcan.
-Some support scripts use [scipy](http://www.scipy.org/) too, and there is a GUI done in TKInter.
+You need [Python 2.7](https://www.python.org/), [numpy](http://www.numpy.org/), and [scipy](http://www.scipy.org/) to run MetaXcan, and there is a GUI done in TKInter.
 
 [R](https://www.r-project.org/) with [ggplot](http://ggplot2.org/) and [dplyr](https://cran.r-project.org/web/packages/dplyr/index.html) 
 is needed for some optional statistics and charts.
@@ -54,7 +53,7 @@ GTEx-based tissues and 1000 Genomes covariances precalculated data can be found 
 <!-- old box https://app.box.com/s/gujt4m6njqjfqqc9tu0oqgtjvtz9860w  -->
 (Please refer to **/software/Readme.md** for more detailed information)
 
-## Setup and Usage Example
+## Setup and Usage Example on a UNIX-like operating system
 
 1) Clone this repository.
 ```bash
@@ -138,6 +137,10 @@ Ensemble Id for some, while some others (mainly DGN Whole Blood) provide [Genqua
 MetaXcan supports a large amount of command line parameters.
 Check the Github's ' wiki for those that work best for your data,
 and interpreting the results.
+
+## MetaXcan on windows
+
+Please see the following [article](https://github.com/hakyimlab/MetaXcan/wiki/MetaXcan-on-Windows) in the wiki.
 
 ## Installation
 

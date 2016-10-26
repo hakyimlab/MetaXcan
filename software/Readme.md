@@ -19,8 +19,7 @@ Check the root [Readme](https://github.com/hakyimlab/MetaXcan) for a sample scri
 
 The software is developed and tested in Linux and Max OS environments. Should be mostly working on Windows.
 
-You need [Python 2.7](https://www.python.org/) and [numpy](http://www.numpy.org/) to run MetaXcan.
-Some support scripts use [scipy](http://www.scipy.org/) too.
+You need [Python 2.7](https://www.python.org/) and [numpy](http://www.numpy.org/) and [scipy](http://www.scipy.org/)  to run MetaXcan.
 
 [R](https://www.r-project.org/) with [ggplot](http://ggplot2.org/) and [dplyr](https://cran.r-project.org/web/packages/dplyr/index.html) 
 is needed for some optional statistics and charts.
@@ -34,7 +33,7 @@ Ordinarily, a user would need to obtain/download support data sets comprising of
 - A file with the covariance matrices of the SNPs within each gene model (such as [this one](https://s3.amazonaws.com/imlab-open/Data/MetaXcan/sample_data/covariance.DGN-WB_0.5.txt.gz))
 
 And use them to run MetaXcan analysis on:
-- GWAS results (such as [these](https://s3.amazonaws.com/imlab-open/Data/MetaXcan/sample_data/GWAS.tar.gz), which are randomly generated)
+- GWAS results (such as [these](https://s3.amazonaws.com/imlab-open/Data/MetaXcan/sample_data/GWAS.tar.gz), from  a randomly generated phenotype)
 
 However, if you have access to interesting data,
 you can build your own Transcriptome Prediction Model database 

@@ -10,6 +10,7 @@ from subprocess import call
 from threading import Thread
 import metax.MainScreenView as MainScreenView
 import metax.MetaXcanUITask as MetaXcanUITask
+import metax.Exceptions as Exceptions
 import M03_betas
 import M04_zscores
 import metax.Formats as Formats
@@ -61,11 +62,11 @@ class MainScreen(object):
         self.snp_value = Tkinter.StringVar()
         self.snp_value.set("SNP")
 
-        self.a1_value = Tkinter.StringVar()
-        self.a1_value.set("A1")
+        self.non_effect_allele_value = Tkinter.StringVar()
+        self.non_effect_allele_value.set("A2")
 
-        self.a2_value = Tkinter.StringVar()
-        self.a2_value.set("A2")
+        self.effect_allele_value = Tkinter.StringVar()
+        self.effect_allele_value.set("A1")
 
         self.or_on = Tkinter.BooleanVar()
         self.or_on.set(False)
@@ -100,7 +101,7 @@ class MainScreen(object):
         self.frequency_on = Tkinter.BooleanVar()
         self.frequency_on.set(True)
         self.frequency_value = Tkinter.StringVar()
-        self.frequency_value.set("FRQ")
+        self.frequency_value.set("")
 
         self.covariance_file = "."
         if os.path.exists(COVARIANCE_FILE):
@@ -314,8 +315,8 @@ class MainScreen(object):
                 self.output_folder = source.beta_folder
 
                 self.snp_column = source.snp_value.get()
-                self.a1_column = source.a1_value.get()
-                self.a2_column = source.a2_value.get()
+                self.non_effect_allele_column = source.non_effect_allele_value.get()
+                self.effect_allele_column = source.effect_allele_value.get()
 
                 self.or_column = source.or_value.get() if source.or_on.get() else None
                 self.beta_column = source.beta_value.get() if source.beta_on.get() else None
@@ -330,6 +331,7 @@ class MainScreen(object):
                 self.scheme = GWASUtilities.BETA_P
                 # TODO: implement this
                 self.skip_until_header = None
+                self.throw = True
 
         beta_args = BetaWorkArgs(source=self)
         beta_work = M03_betas.GetBetas(beta_args)
@@ -346,6 +348,7 @@ class MainScreen(object):
                 self.normalization_scheme = Normalization.NONE
                 self.input_format = Formats.FlatFile
                 self.selected_dosage_folder = "intermediate/filtered_1000GP_Phase3"
+                self.throw = True
 
         zscore_args = ZScoresWorkArgs(source=self)
         zscore_work = M04_zscores.CalculateZScores(zscore_args)
@@ -363,7 +366,8 @@ class MainScreen(object):
                         work = self.works[i]
                         work.run()
                         del self.works[i]
-
+                except Exceptions.ReportableException, e:
+                    logging.error(e.msg)
                 except Exception as e:
                     logging.info("Exception when running task: %s", str(e))
                 finally:

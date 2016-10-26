@@ -3,6 +3,7 @@ __author__ = 'heroico'
 import metax
 __version__ = metax.__version__
 import logging
+import gzip
 import os
 import re
 import metax.KeyedDataSet as KeyedDataSet
@@ -18,7 +19,7 @@ class GetBetas(object):
         self.weight_db_path = args.weight_db_path
         self.gwas_folder = args.gwas_folder
         self.output_folder = args.output_folder
-        self.compressed = args.compressed
+        self.compressed_gwas = args.compressed_gwas
         self.args = args
         self.gwas_regexp = None
         if args.gwas_file_pattern:
@@ -50,6 +51,8 @@ class GetBetas(object):
 
     def buildBetas(self, weight_db_logic, name):
         output_path = os.path.join(self.output_folder, name)
+        if not ".gz" in output_path:
+            output_path += ".gz"
         if os.path.exists(output_path):
             logging.info("%s already exists, delete it if you want it to be done again", output_path)
             return
@@ -61,15 +64,25 @@ class GetBetas(object):
         scheme = MethodGuessing.chooseGWASProcessingScheme(self.args, input_path)
         callback = MethodGuessing.chooseGWASCallback(file_format, scheme, weight_db_logic)
         if not weight_db_logic:
-            GWASUtilities.loadGWASAndStream(input_path, output_path, self.compressed, self.args.separator, self.args.skip_until_header, callback)
+            GWASUtilities.loadGWASAndStream(input_path, output_path, self.compressed_gwas, self.args.separator, self.args.skip_until_header, callback)
         else:
-            dosage_loader = GWASUtilities.GWASDosageFileLoader(input_path, self.compressed, self.args.separator, self.args.skip_until_header, callback)
-            result_sets = dosage_loader.load()
+            dosage_loader = GWASUtilities.GWASDosageFileLoader(input_path, self.compressed_gwas, self.args.separator, self.args.skip_until_header, callback)
+            results, column_order = dosage_loader.load()
 
             # The following check is sort of redundant, as it exists in "saveSetsToCompressedFile".
             # It exists merely to provide different logging
-            if len(result_sets):
-                KeyedDataSet.KeyedDataSetFileUtilities.saveSetsToCompressedFile(output_path, result_sets, "rsid")
+            if len(results):
+                def do_output(file, results, column_order):
+                    file.write("\t".join(column_order)+"\n")
+                    first = results[column_order[0]]
+                    n = len(first)
+                    for i in xrange(0,n):
+                        line_comps = [str(results[c][i]) for c in column_order]
+                        line = "%s\n" % "\t".join(line_comps)
+                        file.write(line)
+
+                with gzip.open(output_path, "wb") as file:
+                    do_output(file, results, column_order)
             else:
                 logging.info("No snps from the tissue model found in the GWAS file")
         logging.info("Successfully ran GWAS input processing")
@@ -139,20 +152,20 @@ if __name__ == "__main__":
                     help="Name of column containing frequency in input file",
                     default=None)
 
-    parser.add_argument("--a1_column",
-                    help="Name of column containing allele 1 in input file (reference allele, following PrediXcan format, and plink --dosage format philosophy)",
-                    default="A1")
-
-    parser.add_argument("--a2_column",
-                    help="Name of column containing allele 2 in input file (dosage/effect allele)",
+    parser.add_argument("--non_effect_allele_column",
+                    help="Name of column containing non-effect allele in input file ('reference allele', if following PrediXcan format, and plink --dosage format philosophy)",
                     default="A2")
+
+    parser.add_argument("--effect_allele_column",
+                    help="Name of column containing effect (or dosage) allele in input file (dosage/effect allele)",
+                    default="A1")
 
     parser.add_argument("--snp_column",
                     help="Name of column containing snp in input file",
                     default="SNP")
 
-    parser.add_argument("--compressed",
-                    help="Wether input files are gzip compressed file",
+    parser.add_argument("--compressed_gwas",
+                    help="Wether input files are gzip compressed files",
                     action="store_true",
                     default=False)
 
@@ -182,7 +195,7 @@ if __name__ == "__main__":
     else:
         try:
             run(args)
-        except NameError as e:
+        except Exception as e:
             logging.info("Unexpected error: %s" % str(e))
             exit(1)
         except Exceptions.ReportableException, e:

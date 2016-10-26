@@ -172,8 +172,7 @@ class TestKeyedDataset(unittest.TestCase):
 
         # Load the data back
         with open(filename, "r") as file:
-            kdses = KeyedDataSetFileUtilities.loadDataSetsContent(file,
-                        filename, header="K col1 col2 col3")
+            kdses = KeyedDataSetFileUtilities.loadDataSetsContent(file, header="K col1 col2 col3")
             self.assertEqual(len(kdses), 4)
             kds1, kds2, kds3 = kdses[1:]
             self.assertEqual(kds1.name, "col1")
@@ -210,8 +209,7 @@ class TestKeyedDataset(unittest.TestCase):
 
         # Load the data back
         with open(filename, "r") as file:
-            kdses = KeyedDataSetFileUtilities.loadDataSetsContent(file,
-                        filename, cols=[1,2,3])
+            kdses = KeyedDataSetFileUtilities.loadDataSetsContent(file, cols=[1,2,3])
             self.assertEqual(len(kdses), 3)
             kds1, kds2, kds3 = kdses
             self.assertEqual(kds1.name, None)

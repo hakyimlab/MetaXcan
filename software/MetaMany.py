@@ -48,7 +48,7 @@ __author__ = 'heroico, Eric Torstenson'
         GWAS-Tissue.csv[.gz]
       Where GWAS is the first gwas filename found inside the gwas directory
       Tissue is the tissue for which the zscores are calculated
-      and the optional .gz is there if the --compressed option is set
+      and the optional .gz is there if the --compressed_gwas option is set
    """
 
 
@@ -112,7 +112,6 @@ class MetaXcanProcess(object):
                 pass
 
         suffix = ".csv"
-
         self.args.output_file = os.path.join(output_folder,
                                              report_prefix + "-" + file_prefix + suffix)  # output_folder       #os.path.join(output_folder, file_prefix) + ".csv"
 
@@ -197,20 +196,20 @@ arguments --covariance_directory and --covariance_suffix. """)
                     help="Name of column containing frequency in input file",
                     default=None)
 
-    parser.add_argument("--a1_column",
-                    help="Name of column containing allele 1 in input file",
-                    default="A1")
-
-    parser.add_argument("--a2_column",
-                    help="Name of column containing allele 2 in input file",
+    parser.add_argument("--non_effect_allele_column",
+                    help="Name of column containing non-effect allele in input file ('reference allele', if following PrediXcan format, and plink --dosage format philosophy)",
                     default="A2")
+
+    parser.add_argument("--effect_allele_column",
+                    help="Name of column containing effect (or dosage) allele in input file (dosage/effect allele)",
+                    default="A1")
 
     parser.add_argument("--snp_column",
                     help="Name of column containing snp in input file",
                     default="SNP")
 
-    parser.add_argument("--compressed",
-                    help="Wether input files are gzip compressed file",
+    parser.add_argument("--compressed_gwas",
+                    help="Wether input files are gzip compressed files",
                     action="store_true",
                     default=False)
 

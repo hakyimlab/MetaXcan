@@ -1,3 +1,7 @@
+Version 0.3.3
+    * Refactor towards new feature development
+    * Changed parameter names for MetaXcan scripts, to be more explicit about effect allele, and compressed argument meaning.
+    * Expanded documentation with windows support example.
 Version 0.3.2
     * Fixed script that generates variances from Im Lab's dosage files.
     * Now M03_betas.py can work on inputs without specifying any transcriptome model. This will just produce the input GWAS data in a different format.

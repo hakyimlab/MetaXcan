@@ -55,6 +55,8 @@ GTEx-based tissues and 1000 Genomes covariances precalculated data can be found 
 
 ## Setup and Usage Example on a UNIX-like operating system
 
+The following example assumes that you have **python 2.7**, **numpy**, and **scipy** installed.
+
 1) Clone this repository.
 ```bash
 $ git clone https://github.com/hakyimlab/MetaXcan

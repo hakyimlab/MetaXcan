@@ -23,7 +23,7 @@ from Utilities import checkSubdirectorySanity
 
 GWAS_INPUT_DEFAULT = "data/GWAS"
 BETA_FOLDER = "intermediate/beta"
-COVARIANCE_FILE = "intermediate/cov/covariance.txt.gz"
+COVARIANCE_FILE = "data/covariance.DGN-WB_0.5.txt.gz"
 WEIGHT_DB_PATH = "data/DGN-WB_0.5.db"
 OUTPUT_PATH = "results/zscores.csv"
 
@@ -325,7 +325,7 @@ class MainScreen(object):
                 self.frequency_column = source.frequency_value.get() if source.frequency_on.get() else None
                 self.se_column = source.se_value.get() if source.se_on.get() else None
                 self.pvalue_column = source.p_value.get() if source.p_on.get() else None
-                self.compressed = source.compressed_on.get()
+                self.compressed_gwas = source.compressed_on.get()
                 self.gwas_file_pattern = source.gwas_file_pattern_value.get() if len(source.gwas_file_pattern_value.get()) else None
                 self.separator = source.separator_value.get() if len(source.separator_value.get()) else None
                 self.scheme = GWASUtilities.BETA_P

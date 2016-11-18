@@ -1,3 +1,5 @@
+Version 0.3.4
+    * Fixed formula for effect size output
 Version 0.3.3
     * Refactor towards new feature development
     * Changed parameter names for MetaXcan scripts, to be more explicit about effect allele, and compressed argument meaning.

@@ -97,7 +97,7 @@ class _BetaZ(ZScoreCalculation):
                 b = self.get_beta(beta_sets, rsid)
                 if not b:
                     continue
-                e_term = w * b * s_l ** 2
+                e_term = w * b * s_l**2
                 effect_size_numerator_terms.append(e_term)
 
             n = len(zscore_numerator_terms)
@@ -106,7 +106,7 @@ class _BetaZ(ZScoreCalculation):
                 zscore = str(numerator/denominator)
                 if len(effect_size_numerator_terms):
                     e_numerator = sum(effect_size_numerator_terms)
-                    effect_size = str(e_numerator/denominator)
+                    effect_size = str(e_numerator/dot_product)
             else:
                 logging.log(7,"No terms for %s ", gene)
 

@@ -57,7 +57,7 @@ class GetBetas(object):
             logging.info("%s already exists, delete it if you want it to be done again", output_path)
             return
 
-        logging.info("Building beta for %s and %s", name, self.weight_db_path)
+        logging.info("Building beta for %s and %s", name, self.weight_db_path if self.weight_db_path else "no database")
         input_path = os.path.join(self.gwas_folder, name)
         file_format = GWASUtilities.GWASFileFormat.fileFormatFromArgs(input_path, self.args)
 

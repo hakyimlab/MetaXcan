@@ -85,13 +85,15 @@ class CalculateZScores(object):
 
         logging.info("Loading covariance file from %s", self.covariance)
         covariance_contents = MatrixUtilities.loadMatrixFromFile(self.covariance)
+        #Keep only covariances present in gene models
+        covariance_contents = {k:v for k,v in covariance_contents.iteritems() if k in weight_db_logic.weights_by_gene}
 
         beta_contents = Utilities.contentsWithPatternsFromFolder(self.folder_beta, [])
         zscore_calculation, normalization = self.selectMethod(self.folder_beta, beta_contents, covariance_contents, weight_db_logic)
 
-        total_entries = len(covariance_contents)
+        total_entries = len(weight_db_logic.genes_for_an_rsid)
+        snps_found = set()
         reporter = Utilities.PercentReporter(logging.INFO, total_entries)
-        i=0
         for beta_name in beta_contents:
             logging.info("Processing %s", beta_name)
 
@@ -109,13 +111,8 @@ class CalculateZScores(object):
                     continue
 
                 weights = weight_db_logic.weights_by_gene[gene]
-                process = False
-                for rsid, weight in weights.iteritems():
-                    if rsid in check.values_by_key:
-                        process = True
-                        break
-
-                if not process:
+                present = [rsid for rsid,weight in weights.iteritems() if rsid in check.values_by_key]
+                if len(present) == 0:
                     logging.log(5, "No rsid in beta file for %s", gene)
                     continue
 
@@ -130,9 +127,9 @@ class CalculateZScores(object):
 
                 pre_zscore, n, VAR_g, effect_size = zscore_calculation(gene, weights, beta_sets, covariance_matrix, valid_rsids)
                 results[gene] = self.buildEntry(gene, weight_db_logic, weights, pre_zscore, n, VAR_g, effect_size)
-                i+=1
-                reporter.update(i,
-                            "%d %% of model's snp information found so far in the gwas study")  # proxied by percenteage of genes
+
+                snps_found.update(present)
+                reporter.update(len(snps_found), "%d %% of model's snps found so far in the gwas study")
 
         #second pass, for genes not in any beta file
         self.fillBlanks(results, covariance_contents, weight_db_logic, zscore_calculation)

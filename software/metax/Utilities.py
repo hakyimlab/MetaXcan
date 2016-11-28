@@ -140,7 +140,6 @@ class FileIterator(object):
                 if self.header in l:
                     skip = False
 
-
     def _processFile(self, file_object, callback):
         if callback is not None:
             for i,line in enumerate(file_object):

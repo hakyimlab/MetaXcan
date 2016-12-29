@@ -1,6 +1,7 @@
 __author__ = 'heroico'
 
 import os
+import json
 import Exceptions
 
 VALID_ALLELES = ["A", "T", "C", "G"]
@@ -99,6 +100,12 @@ class PercentReporter(object):
                 text = self.pattern
 
             logging.log(self.level, text, percent)
+
+def load_json(path):
+    d = None
+    with open(path) as file:
+        d = json.load(file)
+    return d
 
 import gzip
 class FileIterator(object):

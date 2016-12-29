@@ -170,3 +170,6 @@ if __name__ == "__main__":
         work.run()
     except Exceptions.ReportableException, e:
         logging.error(e.msg)
+    except Exception as e:
+        logging.info("Unexpected error: %s" % str(e))
+        exit(1)

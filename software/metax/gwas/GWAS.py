@@ -42,7 +42,7 @@ class GWASF(object):
     EFFECT_ALLELE=4
     ZSCORE=5
 
-def load_gwas(input_path, gwas_format):
+def load_gwas(input_path, gwas_format, strict=True):
     """
     Attempts to read a GWAS summary statistics file, and load it into a uniform format,
     in a pandas dataframe.
@@ -56,14 +56,17 @@ def load_gwas(input_path, gwas_format):
     d = pandas.read_table(input_path)
 
     logging.info("Processing input gwas")
-    #keep only rsids
-    d = d[d[gwas_format[COLUMN_SNP]].str.contains("rs")]
-
     d = _rename_columns(d, gwas_format)
 
-    d = _ensure_columns(d)
+    if not SNP in d:
+        raise Exceptions.ReportableException("A valid SNP column name must be provided")
 
-    d = _keep_gwas_columns(d)
+    #keep only rsids
+    d = d[d[SNP].str.contains("rs")]
+
+    if strict:
+        d = _ensure_columns(d)
+        d = _keep_gwas_columns(d)
 
     return d
 
@@ -76,19 +79,25 @@ def _keep_gwas_columns(d):
     if POSITION in d: keep_columns.append(POSITION)
     if BETA in d: keep_columns.append(BETA)
     if SE in d: keep_columns.append(SE)
+    if PVALUE in d: keep_columns.append(PVALUE)
     d = d[keep_columns]
     return d
 
 def _rename_columns(d, gwas_format):
-    d = d.rename(columns={gwas_format[COLUMN_SNP]: SNP,
-                          gwas_format[COLUMN_EFFECT_ALLELE]: EFFECT_ALLELE,
-                          gwas_format[COLUMN_NON_EFFECT_ALLELE]: NON_EFFECT_ALLELE})
-
     # List of columns to try to rename
-    cols = [(COLUMN_CHROMOSOME, CHROMOSOME), (COLUMN_POSITION, POSITION), (COLUMN_SE, SE),
-            (COLUMN_BETA, BETA), (COLUMN_BETA_SIGN, BETA_SIGN), (COLUMN_OR, OR), (COLUMN_ZSCORE, ZSCORE)]
+    cols = [ (COLUMN_SNP, SNP), (COLUMN_EFFECT_ALLELE, EFFECT_ALLELE), (COLUMN_NON_EFFECT_ALLELE, NON_EFFECT_ALLELE),
+        (COLUMN_CHROMOSOME, CHROMOSOME), (COLUMN_POSITION, POSITION), (COLUMN_SE, SE),
+        (COLUMN_BETA, BETA), (COLUMN_BETA_SIGN, BETA_SIGN), (COLUMN_OR, OR),
+        (COLUMN_ZSCORE, ZSCORE), (COLUMN_PVALUE, PVALUE)]
 
-    rename = {gwas_format[column]:name for column,name in cols if column in gwas_format}
+    rename = {}
+    for column, name in cols:
+        if column in gwas_format:
+            if gwas_format[column] in d:
+                rename[gwas_format[column]] = name
+            else:
+                logging.info("Reading GWAS: Column %s not found", gwas_format[column])
+
     if len(rename):
         d = d.rename(columns=rename)
 
@@ -138,8 +147,8 @@ def _beta_sign(d):
     elif BETA_SIGN in d:
         logging.log(9, "Acquiring sign")
         b = d[BETA_SIGN]
-        b = b.apply(lambda x: 1.0 if x =="+" else -1.0)
-    if b == None: raise Exceptions.ReportableException("No beta sign in GWAS")
+        b = b.apply(lambda x: 1.0 if (x =="+" or x==1.0) else -1.0)
+    if b is None: raise Exceptions.ReportableException("No beta sign in GWAS")
     return b
 
 def extract(gwas, snps):

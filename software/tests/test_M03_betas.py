@@ -12,7 +12,7 @@ if "DEBUG" in sys.argv:
     sys.path.insert(0, ".")
     sys.argv.remove("DEBUG")
 
-import M03_betas
+#import M03_betas
 
 class TestM03(unittest.TestCase):
     def testNoWeightDBMode(self):

@@ -1,5 +1,3 @@
-import sys
-
 import numpy
 import numpy.testing
 import pandas
@@ -157,11 +155,39 @@ class TestGWAS(unittest.TestCase):
         gwas = GWAS.load_gwas("tests/_td/GWAS/scz2.gwas.results.txt.gz", gwas_format)
         assert_gwas_zscore_pb(self, gwas)
 
+    def test_gwas_from_source(self):
+        #full format, OR+SE (which is like beta+se)
+        gwas_format = {
+            "column_snp":"SNPID",
+            "column_non_effect_allele":"A2",
+            "column_effect_allele":"A1",
+            "column_or":"OR",
+            "column_se":"SE",
+            "column_chromosome":"HG19CHRC",
+            "column_position":"BP"
+        }
+
+        source = GWASUtilities.gwas_filtered_source("tests/_td/GWAS/scz2.gwas.results.txt.gz")
+        gwas = GWAS.load_gwas(source, gwas_format)
+        assert_gwas_zscore_fbse(self, gwas)
+
+        source = GWASUtilities.gwas_filtered_source("tests/_td/GWAS/scz2.gwas.results.txt.gz", snps={"rs940550", "rs6650104", "rs61770173"}, snp_column_name="SNPID")
+        gwas = GWAS.load_gwas(source, gwas_format)
+
+        numpy.testing.assert_array_equal(gwas[SNP], pandas.Series(["rs940550", "rs6650104", "rs61770173", ], dtype=numpy.str))
+        numpy.testing.assert_array_equal(gwas[EFFECT_ALLELE], pandas.Series(["C", "T",  "A"], dtype=numpy.str))
+        numpy.testing.assert_array_equal(gwas[NON_EFFECT_ALLELE], pandas.Series(["G", "C", "C"], dtype=numpy.str))
+        numpy.testing.assert_array_equal(gwas[CHROMOSOME], pandas.Series(["chr1", "chr1",  "chr22"], dtype=numpy.str))
+        numpy.testing.assert_allclose(gwas[ZSCORE], pandas.Series([-1.254557, 0.974874, -0.232505],dtype=numpy.float32), rtol=0.001)
+        numpy.testing.assert_allclose(gwas[BETA], pandas.Series([-0.0217038334437866, 0.0193025022544974, -0.00369682484428976], dtype=numpy.float32), rtol=0.001)
+        numpy.testing.assert_allclose(gwas[SE], pandas.Series([0.0173, 0.0198,  0.0159], dtype=numpy.float32), rtol=0.001)
+
 
     def test_extract(self):
         gwas = GWASUtilities.gwas_from_data(SampleData.sample_gwas_data_3())
         g = GWAS.extract(gwas, ["rs3", "rs6", "rs7"])
         assert_gwas_extracted_from_data_3(self, g)
+
 
 if __name__ == "__main__":
     unittest.main()

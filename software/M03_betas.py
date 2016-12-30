@@ -1,104 +1,111 @@
 #! /usr/bin/env python
+"""
+This module contains high level code to parse GWAS/GWAMA summary statistics files and parse them into a standard format.
+You can use it as stand alone tool to align it to Predictdb Models or jus tconvert the format,
+or it can be called from another script to load the data into memory
+
+TODO:
+    Implement "streaming read" where the whole file is not read at once, and output as data is read from file.
+    (mostly meant to make the unfiltered operation of this script have less memory footprint)
+
+"""
 __author__ = 'heroico'
 import metax
 __version__ = metax.__version__
 import logging
-import gzip
 import os
 import re
-import metax.KeyedDataSet as KeyedDataSet
-import metax.WeightDBUtilities as WeightDBUtilities
-import metax.GWASUtilities as GWASUtilities
-import metax.MethodGuessing as MethodGuessing
+import pandas
+
+import metax.Constants as Constants
+import metax.gwas.GWAS as GWAS
+import metax.gwas.Utilities as GWASUtilities
+import metax.PredictionModel as PredictionModel
 import metax.Utilities as Utilities
 import metax.Logging as Logging
 import metax.Exceptions as Exceptions
 
-class GetBetas(object):
-    def __init__(self, args):
-        self.weight_db_path = args.weight_db_path
-        self.gwas_folder = args.gwas_folder
-        self.output_folder = args.output_folder
-        self.compressed_gwas = args.compressed_gwas
-        self.args = args
-        self.gwas_regexp = None
-        if args.gwas_file_pattern:
-            self.gwas_regexp = re.compile(args.gwas_file_pattern)
+def align_data_to_alleles(data, base, left_on, right_on):
+    EA, NEA = Constants.EFFECT_ALLELE, Constants.NON_EFFECT_ALLELE
+    EA_BASE, NEA_BASE = EA+"_BASE", NEA+"_BASE"
+    merged = pandas.merge(data, base, left_on=left_on, right_on=right_on, suffixes=("", "_BASE"))
 
-    def run(self):
-        if self.args.weight_db_path:
-            logging.info("Loading weight model")
-            weight_db_logic = WeightDBUtilities.WeightDBEntryLogic(self.weight_db_path)
-        else:
-            weight_db_logic = None
+    alleles_1 = pandas.Series([set(e) for e in zip(merged[EA], merged[NEA])])
+    alleles_2 = pandas.Series([set(e) for e in zip(merged[EA_BASE], merged[NEA_BASE])])
+    eq = alleles_1 == alleles_2
+    merged = merged[eq]
 
-        names = Utilities.contentsWithRegexpFromFolder(self.gwas_folder, self.gwas_regexp)
+    flipped = merged[EA] != merged[EA_BASE]
+    Z = Constants.ZSCORE
+    if Z in merged:
+        merged.loc[flipped, Z] = - merged.loc[flipped, Z]
+    B = Constants.BETA
+    if B in merged:
+        merged.loc[flipped, B] = - merged.loc[flipped, B]
 
-        if not os.path.exists(self.output_folder):
-            os.makedirs(self.output_folder)
+    merged.loc[flipped, EA] = merged.loc[flipped, EA_BASE]
+    merged.loc[flipped, NEA_BASE] = merged.loc[flipped, NEA_BASE]
 
-        if len(names) == 0:
-            raise Exceptions.ReportableException("No GWAS files found on %s with pattern %s" %(self.gwas_folder, self.gwas_regexp.pattern,))
+    return merged
 
-        for name in names:
-            try:
-                self.buildBetas(weight_db_logic,name)
-            # This just means that there is some extra stuff inside that directory,
-            # so I'm thinking we want to ignore it.
-            except Exceptions.BadFilename as e:
-                logging.info("Wrong file name: %s, skipping", e.msg)
-                pass
+def build_betas(args, model, gwas_format, name):
+    logging.info("Building beta for %s and %s", name, args.model_db_path if args.model_db_path else "no database")
+    load_from = os.path.join(args.gwas_folder, name)
+    if model or args.skip_until_header:
+        snps = model.snps() if model else None
+        snp_column_name = args.snp_column if model else None
+        load_from = GWASUtilities.gwas_filtered_source(load_from, snps=snps, snp_column_name=snp_column_name, skip_until_header=args.skip_until_header, separator=args.separator)
+    sep = '\s+' if args.separator is None else args.separator
+    b = GWAS.load_gwas(load_from, gwas_format, sep=sep)
 
-    def buildBetas(self, weight_db_logic, name):
-        output_path = os.path.join(self.output_folder, name)
-        if not ".gz" in output_path:
-            output_path += ".gz"
-        if os.path.exists(output_path):
-            logging.info("%s already exists, delete it if you want it to be done again", output_path)
-            return
+    if model is not None:
+        PF = PredictionModel.WDBQF
+        base = model.weights[[PF.K_RSID, PF.K_EFFECT_ALLELE, PF.K_NON_EFFECT_ALLELE]].drop_duplicates()
+        b = align_data_to_alleles(b, base, Constants.SNP, PF.K_RSID)
 
-        logging.info("Building beta for %s and %s", name, self.weight_db_path if self.weight_db_path else "no database")
-        input_path = os.path.join(self.gwas_folder, name)
-        file_format = GWASUtilities.GWASFileFormat.fileFormatFromArgs(input_path, self.args)
-
-        scheme = MethodGuessing.chooseGWASProcessingScheme(self.args, input_path)
-        callback = MethodGuessing.chooseGWASCallback(file_format, scheme, weight_db_logic)
-        if not weight_db_logic:
-            GWASUtilities.loadGWASAndStream(input_path, output_path, self.compressed_gwas, self.args.separator, self.args.skip_until_header, callback)
-        else:
-            dosage_loader = GWASUtilities.GWASDosageFileLoader(input_path, self.compressed_gwas, self.args.separator, self.args.skip_until_header, callback)
-            results, column_order = dosage_loader.load()
-
-            # The following check is sort of redundant, as it exists in "saveSetsToCompressedFile".
-            # It exists merely to provide different logging
-            if len(results):
-                def do_output(file, results, column_order):
-                    file.write("\t".join(column_order)+"\n")
-                    first = results[column_order[0]]
-                    n = len(first)
-                    for i in xrange(0,n):
-                        line_comps = [str(results[c][i]) for c in column_order]
-                        line = "%s\n" % "\t".join(line_comps)
-                        file.write(line)
-
-                with gzip.open(output_path, "wb") as file:
-                    do_output(file, results, column_order)
-            else:
-                logging.info("No snps from the tissue model found in the GWAS file")
-        logging.info("Successfully ran GWAS input processing")
+    b = b.fillna("NA")
+    b = b[[GWAS.SNP, GWAS.ZSCORE, GWAS.BETA]]
+    return b
 
 def run(args):
-    "Wrapper for common behavior for execution. "
+    regexp = re.compile(args.gwas_file_pattern) if args.gwas_file_pattern else  None
+    names = Utilities.contentsWithRegexpFromFolder(args.gwas_folder, regexp)
 
-    work = GetBetas(args)
-    work.run()
+    if len(names) == 0:
+        raise Exceptions.ReportableException("No GWAS files found on %s with pattern %s" % (args.gwas_folder, args.gwas_regexp.pattern,))
+
+    gwas_format = GWASUtilities.gwas_format_from_args(args)
+    model = PredictionModel.load_model(args.model_db_path) if args.model_db_path else None
+
+    if args.output_folder:
+        if not os.path.exists(args.output_folder):
+            os.makedirs(args.output_folder)
+
+        for name in names:
+            output_path = os.path.join(args.output_folder, name)
+            if not ".gz" in output_path:
+                output_path += ".gz"
+            if os.path.exists(output_path):
+                logging.info("%s already exists, delete it if you want it to be done again", output_path)
+                continue
+
+            b = build_betas(args, model, gwas_format, name)
+            b.to_csv(output_path, sep="\t", index=False)
+        logging.info("Successfully ran GWAS input processing")
+    else:
+        r = pandas.DataFrame()
+        for name in names:
+            b = build_betas(args, model, gwas_format, name)
+            r = pandas.concat([r,b])
+        logging.info("Successfully processed input gwas")
+        return r
 
 if __name__ == "__main__":
     import argparse
-    parser = argparse.ArgumentParser(description='M03_betas.py %s: Build betas from GWAS data.' % (__version__))
+    parser = argparse.ArgumentParser(description='M03_betas.py %s: Build betas from GWAS data as expected by MetaXcan.' % (__version__))
 
-    parser.add_argument("--weight_db_path",
-                        help="Name of weight db in data folder. "
+    parser.add_argument("--model_db_path",
+                        help="Name of model db in data folder. "
                              "If supplied, will filter input GWAS snps that are not present; this script will not produce output if any error is encountered."
                              "If not supplied, will convert the input GWASas found, one line at a atime, until finishing or encountering an error.",
                         default=None)
@@ -113,61 +120,10 @@ if __name__ == "__main__":
 
     parser.add_argument("--output_folder",
                         help="name of folder to put results in",
-                        default="intermediate/beta")
-
-    parser.add_argument("--scheme",
-                        help="Type of beta data preprocessing, optional. Options are: "
-                        "'beta' (provide (beta or OR));"
-                        "'beta_se' (provide (beta or OR) and standard error); "
-                        "'beta_se_to_z' (provide (beta or OR) and standard error), and Zscore of beta will be output;"
-                        "'z' (provide zscore of beta),"
-                        " 'beta_sign_p' (sign of beta, and pvalue); beta_p (beta and pvalue)",
                         default=None)
 
-    parser.add_argument("--or_column",
-                    help="Name of column containing Odd Ratios in input files. Either 'OR_column' or 'beta_column' must be provided",
-                    default=None)
-
-    parser.add_argument("--pvalue_column",
-                    help="Name of column containing p-value in input files.",
-                    default=None)
-
-    parser.add_argument("--beta_sign_column",
-                    help="Name of column containing sign of beta in input files.",
-                    default=None)
-
-    parser.add_argument("--beta_column",
-                    help="Name of column containing betas in input files. Either 'OR_column' or 'beta_column' must be provided",
-                    default=None)
-
-    parser.add_argument("--se_column",
-                    help="Name of column containing standard error in input file.",
-                    default=None)
-
-    parser.add_argument("--beta_zscore_column",
-                    help="Name of column containing beta's zscore in input file.",
-                    default=None)
-
-    parser.add_argument("--frequency_column",
-                    help="Name of column containing frequency in input file",
-                    default=None)
-
-    parser.add_argument("--non_effect_allele_column",
-                    help="Name of column containing non-effect allele in input file ('reference allele', if following PrediXcan format, and plink --dosage format philosophy)",
-                    default="A2")
-
-    parser.add_argument("--effect_allele_column",
-                    help="Name of column containing effect (or dosage) allele in input file (dosage/effect allele)",
-                    default="A1")
-
-    parser.add_argument("--snp_column",
-                    help="Name of column containing snp in input file",
-                    default="SNP")
-
-    parser.add_argument("--compressed_gwas",
-                    help="Wether input files are gzip compressed files",
-                    action="store_true",
-                    default=False)
+    GWASUtilities.add_gwas_arguments_to_parser(parser)
+    GWASUtilities.add_gwas_format_json_to_parser(parser)
 
     parser.add_argument("--separator",
                         help="Character or string separating fields in input file. Defaults to any whitespace.",

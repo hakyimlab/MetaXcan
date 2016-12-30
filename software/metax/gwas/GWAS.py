@@ -42,18 +42,22 @@ class GWASF(object):
     EFFECT_ALLELE=4
     ZSCORE=5
 
-def load_gwas(input_path, gwas_format, strict=True):
+def load_gwas(source, gwas_format, strict=True, sep='\s+'):
     """
     Attempts to read a GWAS summary statistics file, and load it into a uniform format,
     in a pandas dataframe.
 
-    :param input_path: path to file containing GWAS summary statistics.
+    :param source: Either a string with path to file containing GWAS summary statistics, or a generator.
     :param gwas_format: dictionary specifying GWAS format column mapping.
         For example
     :return:
     """
-    logging.info("Reading input gwas: %s", input_path)
-    d = pandas.read_table(input_path)
+    if isinstance(source, str):
+        logging.info("Reading input gwas: %s", source)
+        d = pandas.read_table(source, sep)
+    else:
+        logging.info("Reading input gwas from source")
+        d = pandas.DataFrame(source)
 
     logging.info("Processing input gwas")
     d = _rename_columns(d, gwas_format)
@@ -104,6 +108,7 @@ def _rename_columns(d, gwas_format):
     return d
 
 def _ensure_columns(d):
+
     if OR in d:
         logging.log(9, "Calculating beta from odds ratio")
         beta = _or_to_beta(d[OR])

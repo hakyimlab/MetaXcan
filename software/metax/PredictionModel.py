@@ -112,6 +112,10 @@ class Model(object):
         self.weights = pandas.DataFrame({key:weights[order] for key,order in WDBQF.ORDER})
         self.extra = pandas.DataFrame({key:extra[order] for key,order in WDBEQF.ORDER})
 
+    def snps(self):
+        snps = self.weights.rsid.values
+        return set(snps)
+
 def load_model(path):
     db = ModelDB(path)
     weights, extra = db.load_weights(), db.load_extra()

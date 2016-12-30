@@ -1,23 +1,26 @@
 import logging
+import gzip
 import pandas
 import numpy
-
+from collections import namedtuple
 import GWAS
+from .. import Exceptions
 from .. import Constants
 from .. import Utilities as BUtilities
 
 def add_gwas_arguments_to_parser(parser):
-    parser.add_argument("--snp_column", help="Name of snp column", default=None)
-    parser.add_argument("--effect_allele_column", help="Name of effect allele column", default=None)
-    parser.add_argument("--non_effect_allele_column", help="Name of alternative (non effect) allele column", default=None)
-    parser.add_argument("--chromosome_column", help="Name of chromosome column", default=None)
-    parser.add_argument("--position_column", help="Name of base position column", default=None)
-    parser.add_argument("--freq_column", help="Name of frequency column", default=None)
-    parser.add_argument("--beta_column", help="Name of snp beta column", default=None)
-    parser.add_argument("--se_column", help="Name of snp beta standard error column", default=None)
-    parser.add_argument("--or_column", help="Name of snp Odds ratio column", default=None)
-    parser.add_argument("--zscore_column", help="Name of snp Z-Score ratio column", default=None)
-    parser.add_argument("--pvalue_column", help="Name of snp p-value column", default=None)
+    parser.add_argument("--snp_column", help="Name of -snp column- in GWAS input file", default="SNP")
+    parser.add_argument("--effect_allele_column", help="Name of -effect allele column- in GWAS input file", default="A1")
+    parser.add_argument("--non_effect_allele_column", help="Name of -non effect allele column- in GWAS input file", default="A2")
+    parser.add_argument("--chromosome_column", help="Name of -chromosome column- in GWAS input file", default=None)
+    parser.add_argument("--position_column", help="Name of -base position column- in GWAS input file", default=None)
+    parser.add_argument("--freq_column", help="Name of -frequency column- in GWAS input file", default=None)
+    parser.add_argument("--beta_column", help="Name of snp association's -beta column- in GWAS input file", default=None)
+    parser.add_argument("--beta_sign_column", help="Name of snp association's -sign of beta column- in GWAS input file", default=None)
+    parser.add_argument("--or_column", help="Name of snp association's -odds ratio column- in GWAS input file", default=None)
+    parser.add_argument("--se_column", help="Name of snp association's -beta standard error- column in GWAS input file", default=None)
+    parser.add_argument("--zscore_column", help="Name of snp association's -Z-Score ratio column- in GWAS input file", default=None)
+    parser.add_argument("--pvalue_column", help="Name of snp association's -p-value column- in GWAS input file", default=None)
 
 def add_gwas_format_json_to_parser(parser):
     parser.add_argument("--input_gwas_format_json",
@@ -26,9 +29,9 @@ def add_gwas_format_json_to_parser(parser):
 def override_gwas_format_dict_from_parameters(dict, parameters):
     if parameters.snp_column: dict[GWAS.COLUMN_SNP] = parameters.snp_column
 
-    if parameters.effect_allele_column: dict[GWAS.COLUMN_EFFECT_ALLELE] = parameters.eff_allele_column
+    if parameters.effect_allele_column: dict[GWAS.COLUMN_EFFECT_ALLELE] = parameters.effect_allele_column
 
-    if parameters.non_effect_allele_column: dict[GWAS.COLUMN_NON_EFFECT_ALLELE] = parameters.non_eff_allele_column
+    if parameters.non_effect_allele_column: dict[GWAS.COLUMN_NON_EFFECT_ALLELE] = parameters.non_effect_allele_column
 
     if parameters.chromosome_column: dict[GWAS.COLUMN_CHROMOSOME] = parameters.chromosome_column
 
@@ -46,7 +49,7 @@ def override_gwas_format_dict_from_parameters(dict, parameters):
 
     if parameters.pvalue_column: dict[GWAS.COLUMN_PVALUE] = parameters.pvalue_column
 
-def gwas_parameters_from_args(args):
+def gwas_format_from_args(args):
     gwas_format = {}
     if args.input_gwas_format_json:
         logging.info("Reading GWAS input from json file: %s", args.input_gwas_format_json)
@@ -55,6 +58,41 @@ def gwas_parameters_from_args(args):
     logging.info("Processing GWAS command line parameters")
     override_gwas_format_dict_from_parameters(gwas_format, args)
     return gwas_format
+
+def gwas_filtered_source(path, snps=None, snp_column_name=None, skip_until_header=None, separator=None):
+    s = {}
+    o = gzip.open if ".gz" in path else open
+    with o(path) as file:
+        header = None
+        if skip_until_header:
+            for line in file:
+                if skip_until_header in line:
+                    header = line
+                    break
+            if header is None: raise Exceptions.ReportableException("Did not find specified header")
+        else:
+            header = file.readline()
+
+        header_comps = header.strip().split(separator)
+        s = {c:[] for c in header_comps}
+        index = -1
+        if snp_column_name:
+            if not snp_column_name in header_comps: raise Exceptions.ReportableException("Did not find snp colum name")
+            index = header_comps.index(snp_column_name)
+
+        for line in file:
+            comps = line.strip().split(separator)
+            if snps and not comps[index] in snps:
+                continue
+            for i,c in enumerate(comps):
+                c = c if c!="NA" else None
+                s[header_comps[i]].append(c)
+
+        for c in header_comps:
+            s[c] = numpy.array(pandas.to_numeric(s[c], errors='ignore'))
+
+    return s
+
 
 def gwas_from_data(data, extra_columns=None):
     """"Data should be a list of tuples as in [(snp, chromosome, non_effect_allele, effect_allele, zscore)]"""

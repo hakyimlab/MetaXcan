@@ -108,6 +108,8 @@ def load_gwas(source, gwas_format, strict=True, sep='\s+'):
     return d
 
 def _or_to_beta(odd):
+    if numpy.any(numpy.where(odd <= 0)):
+        raise Exceptions.InvalidArguments("Odd Ratios include negative values.")
     return numpy.log(odd)
 
 def _keep_gwas_columns(d):

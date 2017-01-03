@@ -64,7 +64,9 @@ def build_betas(args, model, gwas_format, name):
         b = align_data_to_alleles(b, base, Constants.SNP, PF.K_RSID)
 
     b = b.fillna("NA")
-    b = b[[GWAS.SNP, GWAS.ZSCORE, GWAS.BETA]]
+    keep = [GWAS.SNP, GWAS.ZSCORE]
+    if GWAS.BETA in b: keep.append(GWAS.BETA)
+    b = b[keep]
     return b
 
 def validate(args):
@@ -74,6 +76,7 @@ def run(args):
     validate(args)
     regexp = re.compile(args.gwas_file_pattern) if args.gwas_file_pattern else  None
     names = Utilities.contentsWithRegexpFromFolder(args.gwas_folder, regexp)
+    names.sort() #cosmetic, because different filesystems/OS yield folders in different order
 
     if len(names) == 0:
         raise Exceptions.ReportableException("No GWAS files found on %s with pattern %s" % (args.gwas_folder, args.gwas_regexp.pattern,))
@@ -96,7 +99,8 @@ def run(args):
                 continue
 
             b = build_betas(args, model, gwas_format, name)
-            b.to_csv(output_path, sep="\t", index=False)
+            c = "gzip" if ".gz" in name else None
+            b.to_csv(output_path, sep="\t", index=False, compression=c)
         logging.info("Successfully ran GWAS input processing")
     else:
         r = pandas.DataFrame()

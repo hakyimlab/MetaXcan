@@ -69,7 +69,9 @@ def gwas_filtered_source(path, snps=None, snp_column_name=None, skip_until_heade
         if skip_until_header:
             for line in file:
                 if skip_until_header in line:
-                    header = line
+                    header = skip_until_header
+                    c = line.split(skip_until_header)
+                    if len(c) > 1: header += c[1]
                     break
             if header is None: raise Exceptions.ReportableException("Did not find specified header")
         else:

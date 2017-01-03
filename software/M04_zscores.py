@@ -273,7 +273,7 @@ if __name__ == "__main__":
         try:
             run(args)
         except Exceptions.ReportableException as e:
-            logging.error(e.msg)
+            logging.error("Error:%s", e.msg)
         except Exception as e:
             logging.info("Unexpected error: %s" % str(e))
             exit(1)

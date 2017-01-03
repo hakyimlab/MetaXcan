@@ -67,7 +67,11 @@ def build_betas(args, model, gwas_format, name):
     b = b[[GWAS.SNP, GWAS.ZSCORE, GWAS.BETA]]
     return b
 
+def validate(args):
+    if not args.gwas_folder: raise Exceptions.InvalidArguments("You need to provide an input folder containing GWAS files")
+
 def run(args):
+    validate(args)
     regexp = re.compile(args.gwas_file_pattern) if args.gwas_file_pattern else  None
     names = Utilities.contentsWithRegexpFromFolder(args.gwas_folder, regexp)
 
@@ -75,6 +79,8 @@ def run(args):
         raise Exceptions.ReportableException("No GWAS files found on %s with pattern %s" % (args.gwas_folder, args.gwas_regexp.pattern,))
 
     gwas_format = GWASUtilities.gwas_format_from_args(args)
+    GWAS.validate_format_basic(gwas_format)
+    GWAS.validate_format_for_strict(gwas_format)
     model = PredictionModel.load_model(args.model_db_path) if args.model_db_path else None
 
     if args.output_folder:
@@ -123,7 +129,6 @@ if __name__ == "__main__":
                         default=None)
 
     GWASUtilities.add_gwas_arguments_to_parser(parser)
-    GWASUtilities.add_gwas_format_json_to_parser(parser)
 
     parser.add_argument("--separator",
                         help="Character or string separating fields in input file. Defaults to any whitespace.",
@@ -152,7 +157,7 @@ if __name__ == "__main__":
         try:
             run(args)
         except Exceptions.ReportableException as e:
-            logging.error(e.msg)
+            logging.error("Error:%s", e.msg)
         except Exception as e:
             logging.info("Unexpected error: %s" % str(e))
             exit(1)

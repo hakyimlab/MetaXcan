@@ -4,6 +4,8 @@ import pandas
 
 import unittest
 
+from metax import Exceptions
+
 from metax.gwas import GWAS
 from metax.gwas import Utilities as GWASUtilities
 
@@ -79,6 +81,19 @@ def assert_gwas_extracted_from_data_3(unit_test, gwas):
     expected_chromosome = pandas.Series(["chr1", "chr1", "chr1"], dtype=numpy.str)
     numpy.testing.assert_array_equal(gwas[CHROMOSOME], expected_chromosome)
 
+def _add_basic_to_format(format):
+    format[GWAS.COLUMN_SNP] = "_snp"
+    format[GWAS.COLUMN_EFFECT_ALLELE] = "_effect_allele"
+    format[GWAS.COLUMN_NON_EFFECT_ALLELE] = "_non_effect_allele"
+
+def _add_extra_to_format(format):
+    format[GWAS.COLUMN_ZSCORE] = "_zscore"
+    format[GWAS.COLUMN_BETA] = "_beta"
+    format[GWAS.COLUMN_BETA_SIGN] = "_beta_sign"
+    format[GWAS.COLUMN_OR] = "_or"
+    format[GWAS.COLUMN_SE] = "_se"
+    format[GWAS.COLUMN_PVALUE] = "_pvalue"
+
 class TestGWAS(unittest.TestCase):
 
     def test_load_gwas(self):
@@ -87,7 +102,7 @@ class TestGWAS(unittest.TestCase):
             "column_non_effect_allele":"A2",
             "column_effect_allele":"A1",
         }
-        gwas = GWAS.load_gwas("tests/_td/GWAS/scz2.gwas.results.txt.gz", gwas_format, strict=False)
+        gwas = GWAS.load_gwas("tests/_td/GWAS/scz2/scz2.gwas.results.txt.gz", gwas_format, strict=False)
         assert_basic_gwas(self, gwas)
 
         #full format, OR+SE (which is like beta+se)
@@ -100,7 +115,7 @@ class TestGWAS(unittest.TestCase):
             "column_chromosome":"HG19CHRC",
             "column_position":"BP"
         }
-        gwas = GWAS.load_gwas("tests/_td/GWAS/scz2.gwas.results.txt.gz", gwas_format)
+        gwas = GWAS.load_gwas("tests/_td/GWAS/scz2/scz2.gwas.results.txt.gz", gwas_format)
         assert_gwas_zscore_fbse(self, gwas)
 
         # full format, beta+SE
@@ -113,7 +128,7 @@ class TestGWAS(unittest.TestCase):
             "column_chromosome":"HG19CHRC",
             "column_position":"BP"
         }
-        gwas = GWAS.load_gwas("tests/_td/GWAS/scz2.gwas.results.txt.gz", gwas_format)
+        gwas = GWAS.load_gwas("tests/_td/GWAS/scz2/scz2.gwas.results.txt.gz", gwas_format)
         assert_gwas_zscore_fbse(self, gwas)
 
         # full format, pvalue+beta
@@ -126,7 +141,7 @@ class TestGWAS(unittest.TestCase):
             "column_chromosome":"HG19CHRC",
             "column_position":"BP"
         }
-        gwas = GWAS.load_gwas("tests/_td/GWAS/scz2.gwas.results.txt.gz", gwas_format)
+        gwas = GWAS.load_gwas("tests/_td/GWAS/scz2/scz2.gwas.results.txt.gz", gwas_format)
         assert_gwas_zscore_pb(self, gwas)
 
         # full format, pvalue+beta_sign
@@ -139,7 +154,7 @@ class TestGWAS(unittest.TestCase):
             "column_chromosome":"HG19CHRC",
             "column_position":"BP"
         }
-        gwas = GWAS.load_gwas("tests/_td/GWAS/scz2.gwas.results.txt.gz", gwas_format)
+        gwas = GWAS.load_gwas("tests/_td/GWAS/scz2/scz2.gwas.results.txt.gz", gwas_format)
         assert_gwas_zscore_pb(self, gwas)
 
         # full format, pvalue+or
@@ -152,7 +167,7 @@ class TestGWAS(unittest.TestCase):
             "column_chromosome":"HG19CHRC",
             "column_position":"BP"
         }
-        gwas = GWAS.load_gwas("tests/_td/GWAS/scz2.gwas.results.txt.gz", gwas_format)
+        gwas = GWAS.load_gwas("tests/_td/GWAS/scz2/scz2.gwas.results.txt.gz", gwas_format)
         assert_gwas_zscore_pb(self, gwas)
 
     def test_gwas_from_source(self):
@@ -167,11 +182,11 @@ class TestGWAS(unittest.TestCase):
             "column_position":"BP"
         }
 
-        source = GWASUtilities.gwas_filtered_source("tests/_td/GWAS/scz2.gwas.results.txt.gz")
+        source = GWASUtilities.gwas_filtered_source("tests/_td/GWAS/scz2/scz2.gwas.results.txt.gz")
         gwas = GWAS.load_gwas(source, gwas_format)
         assert_gwas_zscore_fbse(self, gwas)
 
-        source = GWASUtilities.gwas_filtered_source("tests/_td/GWAS/scz2.gwas.results.txt.gz", snps={"rs940550", "rs6650104", "rs61770173"}, snp_column_name="SNPID")
+        source = GWASUtilities.gwas_filtered_source("tests/_td/GWAS/scz2/scz2.gwas.results.txt.gz", snps={"rs940550", "rs6650104", "rs61770173"}, snp_column_name="SNPID")
         gwas = GWAS.load_gwas(source, gwas_format)
 
         numpy.testing.assert_array_equal(gwas[SNP], pandas.Series(["rs940550", "rs6650104", "rs61770173", ], dtype=numpy.str))
@@ -188,6 +203,90 @@ class TestGWAS(unittest.TestCase):
         g = GWAS.extract(gwas, ["rs3", "rs6", "rs7"])
         assert_gwas_extracted_from_data_3(self, g)
 
+    def test_format(self):
+        format = {}
+        self.assertIsNone(GWAS._f_snp(format))
+        self.assertIsNone(GWAS._f_effect_allele_column(format))
+        self.assertIsNone(GWAS._f_non_effect_allele_column(format))
+        self.assertIsNone(GWAS._f_pvalue(format))
+        self.assertIsNone(GWAS._f_zscore(format))
+        self.assertIsNone(GWAS._f_beta(format))
+        self.assertIsNone(GWAS._f_beta_sign(format))
+        self.assertIsNone(GWAS._f_or(format))
+        self.assertIsNone(GWAS._f_se(format))
+
+        _add_basic_to_format(format)
+        _add_extra_to_format(format)
+
+        self.assertEqual(GWAS._f_snp(format), "_snp")
+        self.assertEqual(GWAS._f_effect_allele_column(format), "_effect_allele")
+        self.assertEqual(GWAS._f_non_effect_allele_column(format), "_non_effect_allele")
+        self.assertEqual(GWAS._f_pvalue(format), "_pvalue")
+        self.assertEqual(GWAS._f_zscore(format), "_zscore")
+        self.assertEqual(GWAS._f_beta(format), "_beta")
+        self.assertEqual(GWAS._f_beta_sign(format), "_beta_sign")
+        self.assertEqual(GWAS._f_or(format), "_or")
+        self.assertEqual(GWAS._f_se(format), "_se")
+
+    def test_format_validation(self):
+        format = {}
+        with self.assertRaises(Exceptions.InvalidArguments): GWAS.validate_format_basic(format)
+        with self.assertRaises(Exceptions.InvalidArguments): GWAS.validate_format_for_strict(format)
+
+        _add_basic_to_format(format)
+        GWAS.validate_format_basic(format)
+        with self.assertRaises(Exceptions.InvalidArguments): GWAS.validate_format_for_strict(format)
+
+        format[GWAS.COLUMN_PVALUE] = "_p"
+        format[GWAS.COLUMN_SE] = "_se"
+        with self.assertRaises(Exceptions.InvalidArguments): GWAS.validate_format_for_strict(format)
+
+        #
+        format = {}
+        _add_basic_to_format(format)
+        format[GWAS.COLUMN_ZSCORE] = "_z"
+        GWAS.validate_format_for_strict(format)
+
+        #
+        format = {}
+        _add_basic_to_format(format)
+        format[GWAS.COLUMN_PVALUE] = "_p"
+        format[GWAS.COLUMN_BETA] = "_beta"
+        GWAS.validate_format_for_strict(format)
+
+        #
+        format = {}
+        _add_basic_to_format(format)
+        format[GWAS.COLUMN_PVALUE] = "_p"
+        format[GWAS.COLUMN_BETA] = "_beta_sign"
+        GWAS.validate_format_for_strict(format)
+
+        #
+        format = {}
+        _add_basic_to_format(format)
+        format[GWAS.COLUMN_PVALUE] = "_p"
+        format[GWAS.COLUMN_OR] = "_or"
+        GWAS.validate_format_for_strict(format)
+
+        #
+        format = {}
+        _add_basic_to_format(format)
+        format[GWAS.COLUMN_SE] = "se"
+        with self.assertRaises(Exceptions.InvalidArguments): GWAS.validate_format_for_strict(format)
+
+        #
+        format = {}
+        _add_basic_to_format(format)
+        format[GWAS.COLUMN_SE] = "se"
+        format[GWAS.COLUMN_OR] = "or"
+        GWAS.validate_format_for_strict(format)
+
+        #
+        format = {}
+        _add_basic_to_format(format)
+        format[GWAS.COLUMN_SE] = "se"
+        format[GWAS.COLUMN_OR] = "beta"
+        GWAS.validate_format_for_strict(format)
 
 if __name__ == "__main__":
     unittest.main()

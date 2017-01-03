@@ -42,6 +42,39 @@ class GWASF(object):
     EFFECT_ALLELE=4
     ZSCORE=5
 
+def _f_snp(format): return format[COLUMN_SNP] if COLUMN_SNP in format else None
+def _f_effect_allele_column(format): return format[COLUMN_EFFECT_ALLELE] if COLUMN_EFFECT_ALLELE in format else None
+def _f_non_effect_allele_column(format): return format[COLUMN_NON_EFFECT_ALLELE] if COLUMN_NON_EFFECT_ALLELE in format else None
+def _f_zscore(format): return format[COLUMN_ZSCORE] if COLUMN_ZSCORE in format else None
+def _f_pvalue(format): return format[COLUMN_PVALUE] if COLUMN_PVALUE in format else None
+def _f_beta(format): return format[COLUMN_BETA] if COLUMN_BETA in format else None
+def _f_beta_sign(format): return format[COLUMN_BETA_SIGN] if COLUMN_BETA_SIGN in format else None
+def _f_or(format): return format[COLUMN_OR] if COLUMN_OR in format else None
+def _f_se(format): return format[COLUMN_SE] if COLUMN_SE in format else None
+
+def validate_format_basic(format):
+    if not _f_snp(format): raise Exceptions.InvalidArguments("Need to provide a SNP column")
+    if not _f_effect_allele_column(format): raise Exceptions.InvalidArguments("Need to provide an -effect allele- column")
+    if not _f_non_effect_allele_column(format): raise Exceptions.InvalidArguments("Need to provide a -non effect allele- column")
+
+def validate_format_for_strict(format):
+    ok = False
+    if _f_zscore(format):
+        ok = True
+    elif _f_pvalue(format):
+        if _f_beta(format) or _f_or(format) or _f_beta_sign(format):
+            ok = True
+        else:
+            raise Exceptions.InvalidArguments("If providing pvalue, you must provide either -beta-, -sign of beta-, or -odd ratio-")
+    elif _f_se(format):
+        if _f_beta(format) or _f_or(format):
+            ok = True
+        else:
+            raise Exceptions.InvalidArguments("If providing standard error, you must provide either -beta- or -odd ratio-")
+
+    if not ok:
+        raise Exceptions.InvalidArguments("Arguments missing. Either -zscore-, -pvalue and one in [beta,beta sign,or]-, or -standard error and one in [beta, or]- must be provided")
+
 def load_gwas(source, gwas_format, strict=True, sep='\s+'):
     """
     Attempts to read a GWAS summary statistics file, and load it into a uniform format,
@@ -63,7 +96,7 @@ def load_gwas(source, gwas_format, strict=True, sep='\s+'):
     d = _rename_columns(d, gwas_format)
 
     if not SNP in d:
-        raise Exceptions.ReportableException("A valid SNP column name must be provided")
+        raise Exceptions.ReportableException("A valid SNP column name must be provided in the format")
 
     #keep only rsids
     d = d[d[SNP].str.contains("rs")]

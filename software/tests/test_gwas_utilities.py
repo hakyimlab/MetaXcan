@@ -5,7 +5,6 @@ import numpy.testing
 import pandas
 
 import unittest
-
 from metax.gwas import Utilities as GWASUtilities
 #
 from metax.Constants import SNP

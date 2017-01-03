@@ -2,7 +2,7 @@ import logging
 import gzip
 import pandas
 import numpy
-from collections import namedtuple
+
 import GWAS
 from .. import Exceptions
 from .. import Constants
@@ -39,6 +39,8 @@ def override_gwas_format_dict_from_parameters(dict, parameters):
 
     if parameters.beta_column: dict[GWAS.COLUMN_BETA] = parameters.beta_column
 
+    if parameters.beta_sign_column: dict[GWAS.COLUMN_BETA_SIGN] = parameters.beta_sign_column
+
     if parameters.se_column: dict[GWAS.COLUMN_SE] = parameters.se_column
 
     if parameters.or_column: dict[GWAS.COLUMN_OR] = parameters.or_column
@@ -51,7 +53,7 @@ def override_gwas_format_dict_from_parameters(dict, parameters):
 
 def gwas_format_from_args(args):
     gwas_format = {}
-    if args.input_gwas_format_json:
+    if hasattr(args, "input_gwas_format_json") and args.input_gwas_format_json:
         logging.info("Reading GWAS input from json file: %s", args.input_gwas_format_json)
         gwas_format = BUtilities.load_json(args.input_gwas_format_json)
 

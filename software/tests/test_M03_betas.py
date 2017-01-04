@@ -1,10 +1,7 @@
 #!/usr/bin/env python
 import unittest
-import sys
 import shutil
 import os
-import re
-import gzip
 
 import logging
 import numpy
@@ -12,8 +9,6 @@ import numpy.testing
 import pandas
 
 from mock import patch
-from mock import Mock
-from mock import call
 
 from metax.Constants import SNP
 from metax.Constants import BETA

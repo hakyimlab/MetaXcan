@@ -17,13 +17,13 @@ import os
 import re
 import pandas
 
-import metax.Constants as Constants
-import metax.gwas.GWAS as GWAS
-import metax.gwas.Utilities as GWASUtilities
-import metax.PredictionModel as PredictionModel
-import metax.Utilities as Utilities
-import metax.Logging as Logging
-import metax.Exceptions as Exceptions
+from metax import Constants
+from metax.gwas import GWAS
+from metax.gwas import Utilities as GWASUtilities
+from metax import PredictionModel
+from metax import Utilities
+from metax import Logging
+from metax import Exceptions
 
 def align_data_to_alleles(data, base, left_on, right_on):
     EA, NEA = Constants.EFFECT_ALLELE, Constants.NON_EFFECT_ALLELE
@@ -107,7 +107,7 @@ def run(args):
         for name in names:
             b = build_betas(args, model, gwas_format, name)
             r = pandas.concat([r,b])
-        logging.info("Successfully processed input gwas")
+        logging.info("Successfully parsed input gwas")
         return r
 
 if __name__ == "__main__":

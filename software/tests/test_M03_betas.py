@@ -84,12 +84,12 @@ class TestM03(unittest.TestCase):
         with self.assertRaises(Exception) as c: M03_betas.run(args)
 
         args.gwas_folder = "tests/_td/GWAS/scz2"
-        patch_validate_basic.side_effect = Exception()
-        with self.assertRaises(Exception) as c: M03_betas.run(args)
+        patch_validate_basic.side_effect = RuntimeError("k")
+        with self.assertRaises(RuntimeError) as c: M03_betas.run(args)
 
         patch_validate_basic.side_effect = None
-        patch_validate_strict.side_effect = Exception()
-        with self.assertRaises(Exception) as c: M03_betas.run(args)
+        patch_validate_strict.side_effect = RuntimeError()
+        with self.assertRaises(RuntimeError) as c: M03_betas.run(args)
 
     def test_run(self):
         args = base_args()
@@ -203,6 +203,9 @@ class TestM03(unittest.TestCase):
 
         assert_beta_pb(self, r)
         shutil.rmtree(op)
+
+    def test_align(self):
+        pass
 
 if __name__ == "__main__":
     unittest.main()

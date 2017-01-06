@@ -222,12 +222,6 @@ arguments --covariance_directory and --covariance_suffix. """)
                              " Specify this option (string value) to identify a header up to which file contents should be skipped.",
                         default=None)
 
-#both
-
-    parser.add_argument("--beta_folder",
-                        help="name of folder to put beta parsing results in",
-                        #default="intermediate/beta")
-                        default="intermediate/beta")
 
 # ZScore calculation
     parser.add_argument("--selected_dosage_folder",

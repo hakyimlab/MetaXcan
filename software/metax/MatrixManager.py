@@ -8,19 +8,27 @@ RSID2="RSID2"
 VALUE="VALUE"
 
 class MatrixManager(object):
-    def __init__(self, path):
-        d = pandas.read_table(path, sep="\s+")
-        _validate(d, path)
+    def __init__(self, source):
+        d = pandas.read_table(source, sep="\s+") if type(source) == str else source
+        _validate(d, source)
+        d = pandas.DataFrame(d)
+        d.GENE = pandas.Categorical(d.GENE, d.GENE.drop_duplicates()) #speed things up!
         self.data = d
 
     def get(self, gene, snps=None):
         return _get(self.data, gene, snps)
 
+    def n_snps(self,gene):
+        d = self.data
+        d = d[d[GENE] == gene]
+        d = d.dropna()
+        snps = set(d[RSID1])
+        return len(snps)
 
 def _get(d, gene, snps_whitelist=None):
     d = d[d[GENE] == gene]
 
-    if snps_whitelist:
+    if snps_whitelist is not None:
         snps = set(d[RSID1])
         snps_whitelist = pandas.Series(snps_whitelist)
         extra = ~ snps_whitelist.isin(snps)
@@ -53,19 +61,20 @@ def _get(d, gene, snps_whitelist=None):
     covariance_matrix = numpy.matrix(rows)
     return snps, covariance_matrix
 
-
-
-def _validate(d, path):
+def _validate(d, source):
     processed_genes = set()
     last_gene = None
     genes = d[GENE]
     for g in genes:
         if g != last_gene:
             if g in processed_genes:
-                msg = "Snp Matrix Entries for genes must be contiguous but %s was found in two different places in the file %s." % (g, path)
+                msg = "Snp Matrix Entries for genes must be contiguous but %s was found in two different places" % (g)
+                if type(source) == str: msg += " at file %s"%source
                 raise Exceptions.InvalidInputFormat(msg)
             processed_genes.add(g)
             last_gene = g
 
     if numpy.any(d.duplicated()):
-        raise Exceptions.InvalidInputFormat("Duplicated SNP entries found at %s"%path)
+        msg = "Duplicated SNP entries found"
+        if type(source) == str: msg += " at file %s"%(source)
+        raise Exceptions.InvalidInputFormat(msg)

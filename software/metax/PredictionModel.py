@@ -31,7 +31,7 @@ class WDBEQF(object):
 
     K_GENE="gene"
     K_GENE_NAME="gene_name"
-    K_N_SNP_IN_MODEL="n_snp_in_model"
+    K_N_SNP_IN_MODEL="n_snps_in_model"
     K_PRED_PERF_R2="pred_perf_r2"
     K_PRED_PERF_PVAL="pred_perf_pval"
     K_PRED_PERF_QVAL="pred_perf_qval"
@@ -109,15 +109,27 @@ def query_helper(query, gene_key=None):
 
 class Model(object):
     def __init__(self, weights, extra):
-        self.weights = pandas.DataFrame({key:weights[order] for key,order in WDBQF.ORDER})
-        self.extra = pandas.DataFrame({key:extra[order] for key,order in WDBEQF.ORDER})
+        self.weights = weights
+        self.extra = extra
 
     def snps(self):
         snps = self.weights.rsid.values
         return set(snps)
 
+def dataframe_from_weight_data(w):
+    weights = pandas.DataFrame({key: w[order] for key, order in WDBQF.ORDER})
+    weights = weights[[key for key,order in WDBQF.ORDER]]
+    return weights
+
+def dataframe_from_extra_data(e):
+    extra = pandas.DataFrame({key: e[order] for key, order in WDBEQF.ORDER})
+    extra = extra[[key for key, order in WDBEQF.ORDER]]
+    return extra
+
 def load_model(path):
     db = ModelDB(path)
     weights, extra = db.load_weights(), db.load_extra()
+    weights = dataframe_from_weight_data(weights)
+    extra = dataframe_from_extra_data(extra)
     model = Model(weights, extra)
     return model

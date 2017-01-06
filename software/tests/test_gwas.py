@@ -144,7 +144,7 @@ class TestGWAS(unittest.TestCase):
             "column_snp":"SNPID",
             "column_non_effect_allele":"A2",
             "column_effect_allele":"A1",
-            "column_beta_sign":"BETA_SIGN",
+            "column_or":"OR",
             "column_pvalue":"P",
             "column_chromosome":"HG19CHRC",
             "column_position":"BP"

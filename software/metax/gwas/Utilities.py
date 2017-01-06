@@ -33,9 +33,11 @@ def override_gwas_format_dict_from_parameters(dict, parameters):
 
     if parameters.non_effect_allele_column: dict[GWAS.COLUMN_NON_EFFECT_ALLELE] = parameters.non_effect_allele_column
 
-    if parameters.chromosome_column: dict[GWAS.COLUMN_CHROMOSOME] = parameters.chromosome_column
+    if hasattr(parameters, 'chromosome_column') and parameters.chromosome_column: dict[GWAS.COLUMN_CHROMOSOME] = parameters.chromosome_column
 
-    if parameters.position_column: dict[GWAS.COLUMN_POSITION] = parameters.position_column
+    if hasattr(parameters, 'position_column') and parameters.position_column: dict[GWAS.COLUMN_POSITION] = parameters.position_column
+
+    if hasattr(parameters, 'freq_column') and parameters.freq_column: dict[GWAS.COLUMN_FREQ] = parameters.freq_column
 
     if parameters.beta_column: dict[GWAS.COLUMN_BETA] = parameters.beta_column
 
@@ -46,8 +48,6 @@ def override_gwas_format_dict_from_parameters(dict, parameters):
     if parameters.or_column: dict[GWAS.COLUMN_OR] = parameters.or_column
 
     if parameters.zscore_column: dict[GWAS.COLUMN_ZSCORE] = parameters.zscore_column
-
-    if parameters.freq_column: dict[GWAS.COLUMN_FREQ] = parameters.freq_column
 
     if parameters.pvalue_column: dict[GWAS.COLUMN_PVALUE] = parameters.pvalue_column
 

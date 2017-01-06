@@ -5,37 +5,32 @@ __author__ = 'heroico'
 import metax
 __version__ = metax.__version__
 import logging
-import metax.Logging as Logging
+
+from metax import Logging
+import os
 import M03_betas
 import M04_zscores
 import metax.Exceptions as Exceptions
 
-class MetaXcanProcess(object):
-    def __init__(self, args):
-        self.args = args
-
-    def run(self):
-        self.buildBetas()
-        self.buildZScores()
-
-    def buildBetas(self):
-        logging.info("Processing betas!")
-        self.args.output_folder = args.beta_folder
-        M03_betas.run(self.args)
-
-    def buildZScores(self):
-        logging.info("Calculating ZScores!")
-        M04_zscores.run(self.args)
-
+def run(self):
+    if os.path.exists(args.output_file):
+        logging.info("%s already exists, move it or delete it if you want it done again")
+        return
+    if not args.model_db_path:
+        logging.info("Need to provide a model database file path")
+        return
+    args.output_folder = None
+    g = M03_betas.run(args)
+    M04_zscores.run(args, g)
 
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description='MetaXcan.py %s:  Will estimate MetaXcan results from a set of snp covariance matrices, a model database, and GWAS beta files.' % (__version__))
 
 #weight db model
-    parser.add_argument("--weight_db_path",
-                        help="name of weight db in data folder",
-                        default="data/DGN-WB_0.5.db")
+    parser.add_argument("--model_db_path",
+                        help="name of model db in data folder",
+                        default=None)
 
 #GWAS betas
     parser.add_argument("--gwas_folder",
@@ -75,7 +70,7 @@ if __name__ == "__main__":
                     help="Name of column containing standard error in input file",
                     default=None)
 
-    parser.add_argument("--beta_zscore_column",
+    parser.add_argument("--zscore_column",
                     help="Name of column containing beta's zscore in input file.",
                     default=None)
 
@@ -108,13 +103,6 @@ if __name__ == "__main__":
                         help="Some files may be malformed and contain unespecified bytes in the beggining."
                              " Specify this option (string value) to identify a header up to which file contents should be skipped.",
                         default=None)
-
-#both
-
-    parser.add_argument("--beta_folder",
-                        help="name of folder to put beta parsing results in",
-                        #default="intermediate/beta")
-                        default="intermediate/beta")
 
 # ZScore calculation
     parser.add_argument("--selected_dosage_folder",
@@ -165,11 +153,13 @@ if __name__ == "__main__":
 
     Logging.configureLogging(int(args.verbosity))
 
-    try:
-        work = MetaXcanProcess(args)
-        work.run()
-    except Exceptions.ReportableException, e:
-        logging.error(e.msg)
-    except Exception as e:
-        logging.info("Unexpected error: %s" % str(e))
-        exit(1)
+    if args.throw:
+        run(args)
+    else:
+        try:
+            run(args)
+        except Exceptions.ReportableException, e:
+            logging.error(e.msg)
+        except Exception as e:
+            logging.info("Unexpected error: %s" % str(e))
+            exit(1)

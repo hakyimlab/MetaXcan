@@ -93,7 +93,8 @@ class PercentReporter(object):
 
     def update(self, i, text=None):
         percent = int(i*100.0/self.total)
-        if percent == self.last_reported + self.increment:
+
+        if percent >= self.last_reported + self.increment:
             self.last_reported = percent
 
             if not text:

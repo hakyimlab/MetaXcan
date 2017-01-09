@@ -24,6 +24,20 @@ class ARF(object):
 
     order=[(GENE,K_GENE), (ZSCORE,K_ZSCORE), (EFFECT_SIZE,K_EFFECT_SIZE), (N_SNPS_IN_MODEL, K_N_SNPS_IN_MODEL), (N_SNPS_IN_COV, K_N_SNPS_IN_COV), (N_SNPS_USED,K_N_SNPS_USED)]
 
+def prepare_gwas(gwas):
+    #If zscore is numeric, then everything is fine with us.
+    # if not, try to remove "NA" strings.
+    try:
+        gwas = gwas[gwas.zscore != "NA"]
+    except Exception as e:
+        pass
+    return gwas
+
+def prepare_model(model):
+    K = WDBQF.K_GENE
+    g = model.weights[K]
+    model.weights[K] = pandas.Categorical(g, g.drop_duplicates())
+    return model
 
 class Context(object):
     def __init__(self, gwas=None, prediction_model=None, covariance_manager=None):
@@ -42,16 +56,14 @@ def association(gene, context):
     model = context.prediction_model
     covariance = context.covariance_manager
     gwas = context.gwas
-
+    #from IPython import embed; embed()
     # Select and align data for gene
     w = model.weights[model.weights.gene == gene]
     i = pandas.merge(w, gwas, left_on="rsid", right_on="snp")
     if not Constants.BETA in i: i[Constants.BETA] = None
     i = i[[Constants.SNP, WDBQF.K_WEIGHT, Constants.ZSCORE, Constants.BETA]]
-    i = i.dropna()
-    i = i[i.zscore != "NA"]
     snps, cov = covariance.get(gene, i[Constants.SNP].values)
-    i = i[i.snp.isin(snps)]
+    i = i[i.snp.isin(set(snps))]
     i.snp = pandas.Categorical(i.snp, snps)
     i = i.sort_values(by='snp')
 

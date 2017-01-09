@@ -14,28 +14,6 @@ from metax import Utilities
 from metax import Exceptions
 from metax.metaxcan import AssociationCalculation
 
-class MResult(object):
-    def __init__(self):
-        self.gene = None,
-        self.gene_name = None
-        self.zscore = None
-        self.effect_size = None
-        self.p = None
-        self.VAR_g = None
-        self.n = None
-        self.n_cov = None
-        self.n_model = None
-        self.gene_R2 = None
-        self.gene_p = None
-        self.gene_q = None
-
-    HEADER="gene,gene_name,zscore,effect_size,pvalue,VAR_g,pred_perf_R2,pred_perf_p,pred_perf_q,n_snps_used,n_snps_in_cov,n_snps_in_model\n"
-
-    def toCSVLine(self):
-        line = "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n" % \
-               (self.gene, self.gene_name, self.zscore, self.effect_size, self.p, self.VAR_g, self.gene_R2, self.gene_p, self.gene_q, self.n, self.n_cov, self.n_model)
-        return line
-
 def _beta_loader(args):
     beta_contents = Utilities.contentsWithPatternsFromFolder(args.beta_folder, [])
     for beta_name in beta_contents:
@@ -48,17 +26,19 @@ def _gwas_wrapper(gwas):
     logging.info("Processing input gwas")
     yield gwas
 
+
 def run(args, _gwas=None):
     if os.path.exists(args.output_file):
-        logging.info("%s already exists, move it or delete it if you want it done again")
+        logging.info("%s already exists, move it or delete it if you want it done again", args.output_file)
         return
     logging.info("Started metaxcan association")
 
     logging.info("Loading model from: %s", args.model_db_path)
     model = PredictionModel.load_model(args.model_db_path)
+    model = AssociationCalculation.prepare_model(model)
 
     logging.info("Loading covariance data from: %s", args.covariance)
-    covariance_manager = MatrixManager.MatrixManager(args.covariance)
+    covariance_manager = MatrixManager.load_matrix_manager(args.covariance)
 
     total_snps = len(set(model.weights.rsid))
     snps_found=set()
@@ -67,6 +47,7 @@ def run(args, _gwas=None):
     results = []
     gwas_gen = _gwas_wrapper(_gwas) if _gwas is not None else _beta_loader(args)
     for gwas in gwas_gen:
+        gwas = AssociationCalculation.sanitize_gwas(gwas)
         context = AssociationCalculation.Context(gwas, model, covariance_manager)
         i_genes, i_snps = AssociationCalculation.intersection_d(model, gwas)
         snps_found.update(i_snps)
@@ -74,7 +55,8 @@ def run(args, _gwas=None):
             r = AssociationCalculation.association(gene, context)
             results.append(r)
         reporter.update(len(snps_found), "%d %% of model's snps found so far in the gwas study")
-    results = AssociationCalculation.dataframe_from_results(results)
+
+    results = AssociationCalculation.dataframe_from_results(zip(*results))
     results.to_csv(args.output_file, index=False)
 
 if __name__ == "__main__":

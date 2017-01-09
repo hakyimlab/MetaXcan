@@ -47,7 +47,7 @@ def run(args, _gwas=None):
     results = []
     gwas_gen = _gwas_wrapper(_gwas) if _gwas is not None else _beta_loader(args)
     for gwas in gwas_gen:
-        gwas = AssociationCalculation.sanitize_gwas(gwas)
+        gwas = AssociationCalculation.prepare_gwas(gwas)
         context = AssociationCalculation.Context(gwas, model, covariance_manager)
         i_genes, i_snps = AssociationCalculation.intersection_d(model, gwas)
         snps_found.update(i_snps)

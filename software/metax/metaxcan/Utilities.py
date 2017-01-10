@@ -16,7 +16,7 @@ class SimpleContext(object):
 
     def get_weights(self, gene):
         w = self.model.weights
-        w = w.where(w.gene == gene)
+        w = w[w.gene == gene]
         return w
 
     def get_covariance(self, gene, snps):
@@ -27,7 +27,7 @@ class SimpleContext(object):
 
     def get_gwas(self, snps):
         g = self.gwas
-        g = g.where(g[Constants.SNP].isin(snps))
+        g = g[g[Constants.SNP].isin(snps)]
         return g
 
     def get_model_snps(self):

@@ -5,9 +5,14 @@ import unittest
 import SampleData
 from metax import PredictionModel
 from metax import MatrixManager
-from metax.gwas import GWAS
+
+from metax.metaxcan import Utilities
 from metax.metaxcan import AssociationCalculation
 
+def _gwas():
+    gwas = SampleData.dataframe_from_gwas(SampleData.sample_gwas_data_4())
+    gwas = gwas.drop(12) #simulate discarding of mismatching alleles
+    return gwas
 
 def _prediction_model():
     e = SampleData.dataframe_from_extra(SampleData.sample_extra_1())
@@ -16,12 +21,11 @@ def _prediction_model():
     return p
 
 def _context():
-    gwas = SampleData.dataframe_from_gwas(SampleData.sample_gwas_data_4())
-    gwas = gwas.drop(12) #simulate discarding of mismatching alleles
-    p = _prediction_model()
+    gwas = _gwas()
+    model = _prediction_model()
     s = SampleData.dataframe_from_covariance(SampleData.sample_covariance_s_1())
-    m = MatrixManager.MatrixManager(s)
-    c = AssociationCalculation.Context(gwas, p, m)
+    covariance = MatrixManager.MatrixManager(s)
+    c = Utilities._build_context(model, covariance, gwas)
     return c
 
 class TestAssociationCalculation(unittest.TestCase):

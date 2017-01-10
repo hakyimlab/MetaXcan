@@ -7,12 +7,11 @@ import logging
 import pandas
 import os
 
-from metax import PredictionModel
-from metax import MatrixManager
 from metax import Logging
 from metax import Utilities
 from metax import Exceptions
 from metax.metaxcan import AssociationCalculation
+from metax.metaxcan import Utilities as MetaxcanUtilities
 
 def _beta_loader(args):
     beta_contents = Utilities.contentsWithPatternsFromFolder(args.beta_folder, [])
@@ -33,27 +32,19 @@ def run(args, _gwas=None):
         return
     logging.info("Started metaxcan association")
 
-    logging.info("Loading model from: %s", args.model_db_path)
-    model = PredictionModel.load_model(args.model_db_path)
-    model = AssociationCalculation.prepare_model(model)
+    context = MetaxcanUtilities.build_context(args, _gwas)
 
-    logging.info("Loading covariance data from: %s", args.covariance)
-    covariance_manager = MatrixManager.load_matrix_manager(args.covariance)
-
-    total_snps = len(set(model.weights.rsid))
+    model_snps = context.get_model_snps()
+    total_snps = len(model_snps)
     snps_found=set()
     reporter = Utilities.PercentReporter(logging.INFO, total_snps)
 
+    i_genes, i_snps = context.get_data_intersection()
+    snps_found.update(i_snps)
     results = []
-    gwas_gen = _gwas_wrapper(_gwas) if _gwas is not None else _beta_loader(args)
-    for gwas in gwas_gen:
-        gwas = AssociationCalculation.prepare_gwas(gwas)
-        context = AssociationCalculation.Context(gwas, model, covariance_manager)
-        i_genes, i_snps = AssociationCalculation.intersection_d(model, gwas)
-        snps_found.update(i_snps)
-        for gene in i_genes:
-            r = AssociationCalculation.association(gene, context)
-            results.append(r)
+    for gene in i_genes:
+        r = AssociationCalculation.association(gene, context)
+        results.append(r)
         reporter.update(len(snps_found), "%d %% of model's snps found so far in the gwas study")
 
     results = AssociationCalculation.dataframe_from_results(zip(*results))

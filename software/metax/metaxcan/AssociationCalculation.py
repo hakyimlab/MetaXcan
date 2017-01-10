@@ -3,8 +3,10 @@ import pandas
 import numpy
 from numpy import dot as d
 
-from ..PredictionModel import WDBEQF, WDBQF
 from .. import Constants
+from .. import Exceptions
+
+from ..PredictionModel import WDBEQF, WDBQF
 
 class ARF(object):
     """Association result format"""
@@ -24,45 +26,25 @@ class ARF(object):
 
     order=[(GENE,K_GENE), (ZSCORE,K_ZSCORE), (EFFECT_SIZE,K_EFFECT_SIZE), (N_SNPS_IN_MODEL, K_N_SNPS_IN_MODEL), (N_SNPS_IN_COV, K_N_SNPS_IN_COV), (N_SNPS_USED,K_N_SNPS_USED)]
 
-def prepare_gwas(gwas):
-    #If zscore is numeric, then everything is fine with us.
-    # if not, try to remove "NA" strings.
-    try:
-        gwas = gwas[gwas.zscore != "NA"]
-    except Exception as e:
-        pass
-    return gwas
-
-def prepare_model(model):
-    K = WDBQF.K_GENE
-    g = model.weights[K]
-    model.weights[K] = pandas.Categorical(g, g.drop_duplicates())
-    return model
-
 class Context(object):
-    def __init__(self, gwas=None, prediction_model=None, covariance_manager=None):
-        self.gwas = gwas
-        self.prediction_model = prediction_model
-        self.covariance_manager = covariance_manager
-
-def intersection_d(prediction_model, gwas):
-    k = pandas.merge(prediction_model.weights, gwas, how='inner', left_on="rsid", right_on="snp")
-    genes = k.gene.drop_duplicates().values
-    snps = k.rsid.drop_duplicates().values
-    return genes, snps
+    def __init__(self): raise Exceptions.ReportableException("Tried to instantiate abstract context")
+    def get_weights(self, gene): pass
+    def get_covariance(self, gene, snps): pass
+    def get_n_in_covariance(self, gene): pass
+    def get_gwas(self, snps): pass
+    def get_model_snps(self): pass
+    def get_data_intersection(self): pass
 
 def association(gene, context):
     #capture context
-    model = context.prediction_model
-    covariance = context.covariance_manager
-    gwas = context.gwas
-    #from IPython import embed; embed()
+
     # Select and align data for gene
-    w = model.weights[model.weights.gene == gene]
+    w = context.get_weights(gene)
+    gwas = context.get_gwas(w[WDBQF.K_RSID].values)
     i = pandas.merge(w, gwas, left_on="rsid", right_on="snp")
     if not Constants.BETA in i: i[Constants.BETA] = None
     i = i[[Constants.SNP, WDBQF.K_WEIGHT, Constants.ZSCORE, Constants.BETA]]
-    snps, cov = covariance.get(gene, i[Constants.SNP].values)
+    snps, cov = context.get_covariance(gene, i[Constants.SNP].values)
     i = i[i.snp.isin(set(snps))]
     i.snp = pandas.Categorical(i.snp, snps)
     i = i.sort_values(by='snp')
@@ -70,7 +52,7 @@ def association(gene, context):
     #some stats
     n_snps_in_model = len(w.effect_allele)
     n_snps_used = len(i.weight)
-    n_snps_in_cov = covariance.n_snps(gene)
+    n_snps_in_cov = context.get_n_in_covariance(gene)
 
     zscore = None
     effect_size = None

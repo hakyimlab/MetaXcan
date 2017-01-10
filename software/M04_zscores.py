@@ -38,6 +38,7 @@ def run(args, _gwas=None):
         snps_found.update(snps)
         reporter.update(len(snps_found), "%d %% of model's snps found so far in the gwas study")
 
+    reporter.update(len(snps_found), "%d %% of model's snps used", force=True)
     results = AssociationCalculation.dataframe_from_results(zip(*results))
     results.to_csv(args.output_file, index=False)
     end = timer()

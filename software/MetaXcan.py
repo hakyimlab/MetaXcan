@@ -5,6 +5,9 @@ __author__ = 'heroico'
 import metax
 __version__ = metax.__version__
 import logging
+
+from timeit import default_timer as timer
+
 import metax.Logging as Logging
 import M03_betas
 import M04_zscores
@@ -15,8 +18,11 @@ class MetaXcanProcess(object):
         self.args = args
 
     def run(self):
+        start = timer()
         self.buildBetas()
         self.buildZScores()
+        end = timer()
+        logging.info("Total running %s seconds", str(end-start))
 
     def buildBetas(self):
         logging.info("Processing betas!")

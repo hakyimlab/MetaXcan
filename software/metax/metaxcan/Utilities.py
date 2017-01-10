@@ -1,13 +1,12 @@
 import logging
 import pandas
 import os
-
-import AssociationCalculation
+import numpy
 
 from .. import Constants
 from .. import Utilities
 from .. import MatrixManager
-from ..PredictionModel import WDBQF, load_model
+from ..PredictionModel import WDBQF, load_model, dataframe_from_weight_data
 
 class SimpleContext(object):
     def __init__(self, gwas, model, covariance):
@@ -17,7 +16,7 @@ class SimpleContext(object):
 
     def get_weights(self, gene):
         w = self.model.weights
-        w = w[w.gene == gene]
+        w = w.where(w.gene == gene)
         return w
 
     def get_covariance(self, gene, snps):
@@ -28,7 +27,7 @@ class SimpleContext(object):
 
     def get_gwas(self, snps):
         g = self.gwas
-        g = g[g[Constants.SNP].isin(snps)]
+        g = g.where(g[Constants.SNP].isin(snps))
         return g
 
     def get_model_snps(self):
@@ -37,11 +36,47 @@ class SimpleContext(object):
     def get_data_intersection(self):
         return _data_intersection(self.model, self.gwas)
 
+class OptimizedContext(SimpleContext):
+    def __init__(self, gwas, model, covariance):
+        self.covariance = covariance
+        self.weight_data, self.snps_in_model = _prepare_weight_data(model)
+        self.gwas_data = _prepare_gwas_data(gwas)
+
+    def get_weights(self, gene):
+        w = self.weight_data[gene]
+        w = dataframe_from_weight_data(zip(*w))
+        return w
+
+    def get_model_snps(self):
+        return set(self.snps_in_model)
+
+    def get_gwas(self, snps):
+        snps = set(snps)
+        g = self.gwas_data
+        g = [g[x] for x in snps if x in g]
+        g = zip(*g)
+        g = pandas.DataFrame({Constants.SNP:g[0], Constants.ZSCORE:g[1], Constants.BETA:g[2]})
+        return g
+
+    def get_data_intersection(self):
+        return _data_intersection_2(self.weight_data, self.gwas_data)
+
 def _data_intersection(model, gwas):
     weights = model.weights
     k = pandas.merge(weights, gwas, how='inner', left_on="rsid", right_on="snp")
     genes = k.gene.drop_duplicates().values
     snps = k.rsid.drop_duplicates().values
+    return genes, snps
+
+def _data_intersection_2(weight_data, gwas_data):
+    genes = set()
+    snps = set()
+    for gene, entries in weight_data.iteritems():
+        gs = zip(*entries)[WDBQF.RSID]
+        for s in gs:
+            if s in gwas_data:
+                genes.add(gene)
+                snps.add(s)
     return genes, snps
 
 def _prepare_gwas(gwas):
@@ -52,13 +87,36 @@ def _prepare_gwas(gwas):
     except Exception as e:
         logging.log(9, "Unexpected issue preparing gwas... %s", str(e))
         pass
+
+    if not Constants.BETA in gwas:
+        gwas[Constants.BETA] = numpy.nan
+
     return gwas
+
+def _prepare_gwas_data(gwas):
+    gwas = gwas[[Constants.SNP, Constants.ZSCORE, Constants.BETA]]
+    data = {}
+    for x in gwas.values:
+        data[x[0]] = x
+    return data
 
 def _prepare_model(model):
     K = WDBQF.K_GENE
     g = model.weights[K]
     model.weights[K] = pandas.Categorical(g, g.drop_duplicates())
     return model
+
+def _prepare_weight_data(model):
+    d = {}
+    snps = set()
+    for x in model.weights.values:
+        gene = x[WDBQF.GENE]
+        if not gene in d:
+            d[gene] = []
+        entries = d[gene]
+        entries.append(x)
+        snps.add(x[WDBQF.RSID])
+    return d, snps
 
 def _beta_loader(args):
     beta_contents = Utilities.contentsWithPatternsFromFolder(args.beta_folder, [])
@@ -86,9 +144,13 @@ def build_context(args, gwas):
     return context
 
 def _build_context(model, covariance_manager, gwas):
+    gwas = _prepare_gwas(gwas)
+    context = OptimizedContext(gwas, model, covariance_manager)
+    return context
+
+def _build_simple_context(model, covariance_manager, gwas):
     model = _prepare_model(model)
     gwas = _prepare_gwas(gwas)
     context = SimpleContext(gwas, model, covariance_manager)
     return context
-
 

@@ -15,19 +15,6 @@ from metax import Exceptions
 from metax.metaxcan import AssociationCalculation
 from metax.metaxcan import Utilities as MetaxcanUtilities
 
-def _beta_loader(args):
-    beta_contents = Utilities.contentsWithPatternsFromFolder(args.beta_folder, [])
-    for beta_name in beta_contents:
-        logging.info("Processing %s", beta_name)
-        beta_path = os.path.join(args.beta_folder, beta_name)
-        b = pandas.read_table(beta_path)
-        yield b
-
-def _gwas_wrapper(gwas):
-    logging.info("Processing input gwas")
-    yield gwas
-
-
 def run(args, _gwas=None):
     start = timer()
     if os.path.exists(args.output_file):
@@ -104,7 +91,6 @@ if __name__ == "__main__":
                         action="store_true",
                         help="Throw exception on error",
                         default=False)
-
 
     args = parser.parse_args()
 

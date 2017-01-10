@@ -49,7 +49,7 @@ def association(gene, context, return_snps=False):
 
     snps, cov = context.get_covariance(gene, i[Constants.SNP].values)
     if snps is None:
-        r = (gene, numpy.nan, numpy.nan, len(w.effect_allele), 0, 0)
+        r = (gene, numpy.nan, numpy.nan, numpy.nan, len(w.effect_allele), 0, 0)
         if return_snps:
             return r, set(i.snp)
         else:

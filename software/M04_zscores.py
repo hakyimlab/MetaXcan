@@ -7,6 +7,8 @@ import logging
 import pandas
 import os
 
+from timeit import default_timer as timer
+
 from metax import Logging
 from metax import Utilities
 from metax import Exceptions
@@ -27,6 +29,7 @@ def _gwas_wrapper(gwas):
 
 
 def run(args, _gwas=None):
+    start = timer()
     if os.path.exists(args.output_file):
         logging.info("%s already exists, move it or delete it if you want it done again", args.output_file)
         return
@@ -40,15 +43,18 @@ def run(args, _gwas=None):
     reporter = Utilities.PercentReporter(logging.INFO, total_snps)
 
     i_genes, i_snps = context.get_data_intersection()
-    snps_found.update(i_snps)
+    #snps_found.update(i_snps)
     results = []
     for gene in i_genes:
-        r = AssociationCalculation.association(gene, context)
+        r, snps = AssociationCalculation.association(gene, context, return_snps=True)
         results.append(r)
+        snps_found.update(snps)
         reporter.update(len(snps_found), "%d %% of model's snps found so far in the gwas study")
 
     results = AssociationCalculation.dataframe_from_results(zip(*results))
     results.to_csv(args.output_file, index=False)
+    end = timer()
+    logging.info("Sucessfully processed metaxcan association in %s seconds"%(str(end - start)))
 
 if __name__ == "__main__":
     import argparse

@@ -17,6 +17,8 @@ import os
 import re
 import pandas
 
+from timeit import default_timer as timer
+
 from metax import Constants
 from metax.gwas import GWAS
 from metax.gwas import Utilities as GWASUtilities
@@ -73,6 +75,7 @@ def validate(args):
     if not args.gwas_folder: raise Exceptions.InvalidArguments("You need to provide an input folder containing GWAS files")
 
 def run(args):
+    start = timer()
     validate(args)
     regexp = re.compile(args.gwas_file_pattern) if args.gwas_file_pattern else  None
     names = Utilities.contentsWithRegexpFromFolder(args.gwas_folder, regexp)
@@ -101,13 +104,15 @@ def run(args):
             b = build_betas(args, model, gwas_format, name)
             c = "gzip" if ".gz" in name else None
             b.to_csv(output_path, sep="\t", index=False, compression=c)
-        logging.info("Successfully ran GWAS input processing")
+        end = timer()
+        logging.info("Successfully ran GWAS input processing in %s seconds" %(str(end - start)))
     else:
         r = pandas.DataFrame()
         for name in names:
             b = build_betas(args, model, gwas_format, name)
             r = pandas.concat([r,b])
-        logging.info("Successfully parsed input gwas")
+        end = timer()
+        logging.info("Successfully parsed input gwas in %s seconds"%(str(end-start)))
         return r
 
 if __name__ == "__main__":

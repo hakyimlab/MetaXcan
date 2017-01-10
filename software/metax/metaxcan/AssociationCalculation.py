@@ -35,7 +35,7 @@ class Context(object):
     def get_model_snps(self): pass
     def get_data_intersection(self): pass
 
-def association(gene, context):
+def association(gene, context, return_snps=False):
     #capture context
 
     # Select and align data for gene
@@ -71,7 +71,11 @@ def association(gene, context):
             except Exception as e:
                 logging.log(9, "Unexpected exception when calculating zscore: %s, %s", gene, str(e))
 
-    return gene, zscore, effect_size, n_snps_in_model, n_snps_in_cov, n_snps_used
+    r = (gene, zscore, effect_size, n_snps_in_model, n_snps_in_cov, n_snps_used)
+    if return_snps:
+        return r, set(i.snp)
+    else:
+        return r
 
 def dataframe_from_results(results):
     r = pandas.DataFrame({key: results[order] for order, key in ARF.order})

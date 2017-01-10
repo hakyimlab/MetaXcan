@@ -33,12 +33,12 @@ class TestAssociationCalculation(unittest.TestCase):
     def test_intersection_d(self):
         gwas = SampleData.dataframe_from_gwas(SampleData.sample_gwas_data_4())
         p = _prediction_model()
-        g, s = AssociationCalculation.intersection_d(p, gwas)
+        g, s = Utilities._data_intersection(p, gwas)
         self.assertEqual(set(s), set(['rs1666', 'rs1', 'rs2', 'rs3', 'rs6', 'rs7', 'rs7666', 'rs8', 'rs9','rs100', 'rs101', 'rs102']))
         self.assertEqual(set(g), set(["A","B","C"]))
 
         t_gwas = gwas[3:10]
-        g, s = AssociationCalculation.intersection_d(p, t_gwas)
+        g, s = Utilities._data_intersection(p, t_gwas)
         self.assertEqual(set(s), set(['rs3', 'rs6', 'rs7', 'rs7666', 'rs8', 'rs9']))
         self.assertEqual(set(g), set(["B"]))
 

@@ -35,11 +35,14 @@ class SimpleContext(object):
         return set(self.model.weights.rsid)
 
     def get_data_intersection(self):
-        weights, gwas = self.model.weights, self.gwas
-        k = pandas.merge(weights, gwas, how='inner', left_on="rsid", right_on="snp")
-        genes = k.gene.drop_duplicates().values
-        snps = k.rsid.drop_duplicates().values
-        return genes, snps
+        return _data_intersection(self.model, self.gwas)
+
+def _data_intersection(model, gwas):
+    weights = model.weights
+    k = pandas.merge(weights, gwas, how='inner', left_on="rsid", right_on="snp")
+    genes = k.gene.drop_duplicates().values
+    snps = k.rsid.drop_duplicates().values
+    return genes, snps
 
 def _prepare_gwas(gwas):
     #If zscore is numeric, then everything is fine with us.

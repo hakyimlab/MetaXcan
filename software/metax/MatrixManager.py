@@ -13,8 +13,8 @@ class MatrixManager(object):
         _validate(d)
         self.data = _build_data(d)
 
-    def get(self, gene, snps=None):
-        return _get(self.data, gene, snps)
+    def get(self, gene, snps=None, strict=True):
+        return _get(self.data, gene, snps, strict)
 
     def n_snps(self,gene):
         snps = self.data[gene]
@@ -61,17 +61,21 @@ def _build_data(d):
         r[gene].append(t)
     return r
 
-def _get(d, gene, snps_whitelist=None):
+def _get(d, gene, snps_whitelist=None, strict=True):
+    if not gene in d:
+        return None,None
+
     d = d[gene]
 
     if snps_whitelist is not None:
         g, r1, r2, v = zip(*d)
         snps = set(r1)
         snps_whitelist = set(snps_whitelist)
-        extra = {x for x in snps_whitelist if not x in snps}
-        if len(extra):
-            msg = "SNPs in whitelist not in matrix:%s"%(extra)
-            raise Exceptions.InvalidArguments(msg)
+        if strict:
+            extra = {x for x in snps_whitelist if not x in snps}
+            if len(extra):
+                msg = "SNPs in whitelist not in matrix for %s:%s"%(gene,extra)
+                raise Exceptions.InvalidArguments(msg)
         d = [x for x in d if x[CDTF.RSID1] in snps_whitelist]
 
     _s = set()

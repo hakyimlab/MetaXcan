@@ -21,7 +21,7 @@ class SimpleContext(object):
         return w
 
     def get_covariance(self, gene, snps):
-        return self.covariance.get(gene, snps)
+        return self.covariance.get(gene, snps, strict=False)
 
     def get_n_in_covariance(self, gene):
         return self.covariance.n_snps(gene)

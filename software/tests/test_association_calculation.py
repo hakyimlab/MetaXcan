@@ -45,19 +45,19 @@ class TestAssociationCalculation(unittest.TestCase):
     def test_build_context(self):
         c = _context()
         r = AssociationCalculation.association("A", c)
-        self.assertEqual(r, ('A', 0.42313735862217716, 0.42845528455235105, 4, 4, 3))
+        self.assertEqual(r, ('A', 0.42313735862217716, 0.42845528455235105, 0.10250000000002803, 4, 4, 3))
 
         r = AssociationCalculation.association("B", c)
-        self.assertEqual(r, ('B', 1.904102672555114, 1.4285714285708686, 6, 6, 6))
+        self.assertEqual(r, ('B', 1.904102672555114, 1.4285714285708686, 0.16333333333323405, 6, 6, 6))
 
         r = AssociationCalculation.association("C", c)
-        self.assertEqual(r, ('C', 0.089999999999999983, 0.049999999999999989, 3, 2, 1))
+        self.assertEqual(r, ('C', 0.089999999999999983, 0.049999999999999989, 0.013333333333320003, 3, 2, 1))
 
     def test_dataframe_from_results(self):
         results = [
-            ('A', 0.42313735862217716, 0.42845528455235105, 4, 4, 3),
-            ('B', 1.904102672555114, 1.4285714285708686, 6, 6, 6),
-            ('C', 0.089999999999999983, 0.049999999999999989, 3, 2, 1)]
+            ('A', 0.42313735862217716, 0.42845528455235105, 0.10250000000002803, 4, 4, 3),
+            ('B', 1.904102672555114, 1.4285714285708686, 0.16333333333323405, 6, 6, 6),
+            ('C', 0.089999999999999983, 0.049999999999999989, 0.013333333333320003, 3, 2, 1)]
         results = zip(*results)
         d = AssociationCalculation.dataframe_from_results(results)
         A = AssociationCalculation.ARF

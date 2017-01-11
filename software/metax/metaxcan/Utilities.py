@@ -36,6 +36,28 @@ class SimpleContext(object):
     def get_data_intersection(self):
         return _data_intersection(self.model, self.gwas)
 
+    def provide_calculation(self, gene):
+        w = self.get_weights(gene)
+        gwas = self.get_gwas(w[WDBQF.K_RSID].values)
+
+        i = pandas.merge(w, gwas, left_on="rsid", right_on="snp")
+        if not Constants.BETA in i: i[Constants.BETA] = None
+        i = i[[Constants.SNP, WDBQF.K_WEIGHT, Constants.ZSCORE, Constants.BETA]]
+
+        snps, cov = self.get_covariance(gene, i[Constants.SNP].values)
+
+        # fast subsetting and aligning
+        d_columns = i.columns.values
+        if snps is not None and len(snps):
+            d = {x[0]: x for x in i.values}
+            d = [d[snp] for snp in snps]
+            d = zip(*d)
+            d = {d_columns[i]:d[i] for i in xrange(0, len(d_columns))}
+            i = pandas.DataFrame(d)
+        else:
+            i = pandas.DataFrame(columns=d_columns)
+        return w, i, cov, snps
+
 class OptimizedContext(SimpleContext):
     def __init__(self, gwas, model, covariance):
         self.covariance = covariance
@@ -54,8 +76,11 @@ class OptimizedContext(SimpleContext):
         snps = set(snps)
         g = self.gwas_data
         g = [g[x] for x in snps if x in g]
-        g = zip(*g)
-        g = pandas.DataFrame({Constants.SNP:g[0], Constants.ZSCORE:g[1], Constants.BETA:g[2]})
+        if len(g):
+            g = zip(*g)
+            g = pandas.DataFrame({Constants.SNP:g[0], Constants.ZSCORE:g[1], Constants.BETA:g[2]})
+        else:
+            g = pandas.DataFrame(columns=[Constants.SNP, Constants.ZSCORE, Constants.BETA])
         return g
 
     def get_data_intersection(self):

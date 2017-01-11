@@ -36,28 +36,11 @@ class Context(object):
     def get_gwas(self, snps): pass
     def get_model_snps(self): pass
     def get_data_intersection(self): pass
+    def provide_calculation(self, gene): pass
 
 def association(gene, context, return_snps=False):
     #capture context
-
-    # Select and align data for gene
-    w = context.get_weights(gene)
-    gwas = context.get_gwas(w[WDBQF.K_RSID].values)
-    i = pandas.merge(w, gwas, left_on="rsid", right_on="snp")
-    if not Constants.BETA in i: i[Constants.BETA] = None
-    i = i[[Constants.SNP, WDBQF.K_WEIGHT, Constants.ZSCORE, Constants.BETA]]
-
-    snps, cov = context.get_covariance(gene, i[Constants.SNP].values)
-    if snps is None:
-        r = (gene, numpy.nan, numpy.nan, numpy.nan, len(w.effect_allele), 0, 0)
-        if return_snps:
-            return r, set(i.snp)
-        else:
-            return r
-
-    i = i[i.snp.isin(set(snps))]
-    i.snp = pandas.Categorical(i.snp, snps)
-    i = i.sort_values(by='snp')
+    w, i, cov, snps = context.provide_calculation(gene)
 
     #some stats
     n_snps_in_model = len(w.effect_allele)
@@ -81,7 +64,10 @@ def association(gene, context, return_snps=False):
             except Exception as e:
                 logging.log(9, "Unexpected exception when calculating zscore: %s, %s", gene, str(e))
 
-    r = (gene, zscore, effect_size, sigma_g_2, n_snps_in_model, n_snps_in_cov, n_snps_used)
+        r = (gene, zscore, effect_size, sigma_g_2, n_snps_in_model, n_snps_in_cov, n_snps_used)
+    else:
+        r = (gene, numpy.nan, numpy.nan, numpy.nan, n_snps_in_model, n_snps_in_cov, n_snps_used)
+
     if return_snps:
         return r, set(i.snp)
     else:

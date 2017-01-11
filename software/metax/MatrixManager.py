@@ -17,6 +17,8 @@ class MatrixManager(object):
         return _get(self.data, gene, snps, strict)
 
     def n_snps(self,gene):
+        if not gene in self.data:
+            return numpy.nan
         snps = self.data[gene]
         snps = _non_na(snps)
         snps = {x[CDTF.RSID1] for x in snps}

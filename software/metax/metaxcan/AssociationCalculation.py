@@ -37,6 +37,7 @@ class Context(object):
     def get_model_snps(self): pass
     def get_data_intersection(self): pass
     def provide_calculation(self, gene): pass
+    def get_model_info(self): pass
 
 def association(gene, context, return_snps=False):
     #capture context

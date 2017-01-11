@@ -11,3 +11,6 @@ BETA="beta"
 BETA_SIGN="beta_sign"
 SE="se"
 PVALUE="pvalue"
+
+GENE="gene"
+GENE_NAME="gene_name"

@@ -5,12 +5,14 @@ __author__ = 'heroico'
 import metax
 __version__ = metax.__version__
 import logging
-
-from metax import Logging
 import os
+
+from metax import Exceptions
+from metax import Logging
+
 import M03_betas
 import M04_zscores
-import metax.Exceptions as Exceptions
+
 
 def run(self):
     if os.path.exists(args.output_file):

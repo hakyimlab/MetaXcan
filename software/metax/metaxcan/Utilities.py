@@ -2,13 +2,16 @@ import logging
 import pandas
 import os
 import numpy
+from scipy import stats
 
 from .. import Constants
 from .. import Utilities
 from .. import MatrixManager
-from ..PredictionModel import WDBQF, load_model, dataframe_from_weight_data
+from ..PredictionModel import WDBQF, WDBEQF, load_model, dataframe_from_weight_data
 
-class SimpleContext(object):
+import AssociationCalculation
+
+class SimpleContext(AssociationCalculation.Context):
     def __init__(self, gwas, model, covariance):
         self.gwas = gwas
         self.model = model
@@ -58,11 +61,15 @@ class SimpleContext(object):
             i = pandas.DataFrame(columns=d_columns)
         return len(w.weight), i, cov, snps
 
+    def get_model_info(self):
+        return self.model.extra
+
 class OptimizedContext(SimpleContext):
     def __init__(self, gwas, model, covariance):
         self.covariance = covariance
         self.weight_data, self.snps_in_model = _prepare_weight_data(model)
         self.gwas_data = _prepare_gwas_data(gwas)
+        self.extra = model.extra
 
     def _get_weights(self, gene):
         w = self.weight_data[gene]
@@ -118,6 +125,9 @@ class OptimizedContext(SimpleContext):
             d = {columns[i]:numpy.array([]) for i in xrange(0,len(columns))}
 
         return  len(w), d, cov, snps
+
+    def get_model_info(self):
+        return self.extra
 
 
 def _data_intersection(model, gwas):
@@ -213,3 +223,28 @@ def _build_simple_context(model, covariance_manager, gwas):
     context = SimpleContext(gwas, model, covariance_manager)
     return context
 
+def format_output(results, context):
+    results = results.drop("n_snps_in_model",1)
+    results[Constants.PVALUE] = 2 * stats.norm.cdf(-numpy.abs(results.zscore.values))
+    model_info = pandas.DataFrame(context.get_model_info())
+    merged = pandas.merge(results, model_info, how="inner", on="gene")
+    merged.gene = merged.gene.str.split(".").str.get(0)
+    merged = merged.sort_values(by=Constants.PVALUE)
+
+    K = Constants
+    AK = AssociationCalculation.ARF
+    column_order = [WDBQF.K_GENE,
+                    WDBEQF.K_GENE_NAME,
+                    K.ZSCORE,
+                    AK.K_EFFECT_SIZE,
+                    Constants.PVALUE,
+                    AK.K_VAR_G,
+                    WDBEQF.K_PRED_PERF_R2,
+                    WDBEQF.K_PRED_PERF_PVAL,
+                    WDBEQF.K_PRED_PERF_QVAL,
+                    AK.K_N_SNPS_USED,
+                    AK.K_N_SNPS_IN_COV,
+                    WDBEQF.K_N_SNP_IN_MODEL]
+
+    merged = merged[column_order]
+    return merged

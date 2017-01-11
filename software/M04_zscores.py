@@ -15,6 +15,8 @@ from metax import Exceptions
 from metax.metaxcan import AssociationCalculation
 from metax.metaxcan import Utilities as MetaxcanUtilities
 
+
+
 def run(args, _gwas=None):
     start = timer()
     if os.path.exists(args.output_file):
@@ -30,7 +32,7 @@ def run(args, _gwas=None):
     reporter = Utilities.PercentReporter(logging.INFO, total_snps)
 
     i_genes, i_snps = context.get_data_intersection()
-    #snps_found.update(i_snps)
+
     results = []
     for gene in i_genes:
         r, snps = AssociationCalculation.association(gene, context, return_snps=True)
@@ -38,8 +40,11 @@ def run(args, _gwas=None):
         snps_found.update(snps)
         reporter.update(len(snps_found), "%d %% of model's snps found so far in the gwas study")
 
+    Utilities.ensure_requisite_folders(args.output_file)
+
     reporter.update(len(snps_found), "%d %% of model's snps used", force=True)
     results = AssociationCalculation.dataframe_from_results(zip(*results))
+    results = MetaxcanUtilities.format_output(results, context)
     results.to_csv(args.output_file, index=False)
     end = timer()
     logging.info("Sucessfully processed metaxcan association in %s seconds"%(str(end - start)))

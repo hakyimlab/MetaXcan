@@ -1,5 +1,6 @@
 Version 0.5.0
-    * Overhauled logic, added more unit test coverage, switched to pandas for implementation
+    * Overhauled logic, added more unit test coverage, switched to pandas for implementation, performance improvements
+    * Header changed to lowercase
     * Parameters name change:
       beta_zscore_column to zscore_column
       weight_db_path to model_db_path

@@ -143,6 +143,8 @@ def _rename_columns(d, gwas_format):
     return d
 
 def _ensure_columns(d):
+    d[EFFECT_ALLELE] = d[EFFECT_ALLELE].str.upper()
+    d[NON_EFFECT_ALLELE] = d[NON_EFFECT_ALLELE].str.upper()
 
     if OR in d:
         logging.log(9, "Calculating beta from odds ratio")

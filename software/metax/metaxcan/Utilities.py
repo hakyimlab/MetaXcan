@@ -56,13 +56,18 @@ class SimpleContext(object):
             i = pandas.DataFrame(d)
         else:
             i = pandas.DataFrame(columns=d_columns)
-        return w, i, cov, snps
+        return len(w.weight), i, cov, snps
 
 class OptimizedContext(SimpleContext):
     def __init__(self, gwas, model, covariance):
         self.covariance = covariance
         self.weight_data, self.snps_in_model = _prepare_weight_data(model)
         self.gwas_data = _prepare_gwas_data(gwas)
+
+    def _get_weights(self, gene):
+        w = self.weight_data[gene]
+        w = {x[WDBQF.RSID]:x[WDBQF.WEIGHT] for x in w}
+        return w
 
     def get_weights(self, gene):
         w = self.weight_data[gene]
@@ -71,6 +76,13 @@ class OptimizedContext(SimpleContext):
 
     def get_model_snps(self):
         return set(self.snps_in_model)
+
+    def _get_gwas(self, snps):
+        snps = set(snps)
+        g = self.gwas_data
+        g = [g[x] for x in snps if x in g]
+        g = {x[0]:(x[1], x[2]) for x in g}
+        return g
 
     def get_gwas(self, snps):
         snps = set(snps)
@@ -85,6 +97,28 @@ class OptimizedContext(SimpleContext):
 
     def get_data_intersection(self):
         return _data_intersection_2(self.weight_data, self.gwas_data)
+
+    def provide_calculation(self, gene):
+        w = self._get_weights(gene)
+        gwas = self._get_gwas(w.keys())
+        type = [numpy.str, numpy.float64, numpy.float64, numpy.float64]
+        columns = [Constants.SNP, WDBQF.K_WEIGHT, Constants.ZSCORE, Constants.BETA]
+        d = {x: v for x, v in w.iteritems() if x in gwas}
+
+        snps, cov = self.get_covariance(gene, d.keys())
+        if snps is None:
+            d = pandas.DataFrame(columns=columns)
+            return len(w), d, cov, snps
+
+        d = [(x, w[x], gwas[x][0], gwas[x][1]) for x in snps]
+        d = zip(*d)
+        if len(d):
+            d = {columns[i]:numpy.array(d[i], dtype=type[i]) for i in xrange(0,len(columns))}
+        else:
+            d = {columns[i]:numpy.array([]) for i in xrange(0,len(columns))}
+
+        return  len(w), d, cov, snps
+
 
 def _data_intersection(model, gwas):
     weights = model.weights

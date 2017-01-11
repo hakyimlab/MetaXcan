@@ -14,7 +14,7 @@ import metax.Exceptions as Exceptions
 
 def run(self):
     if os.path.exists(args.output_file):
-        logging.info("%s already exists, move it or delete it if you want it done again")
+        logging.info("%s already exists, move it or delete it if you want it done again", args.output_file)
         return
     if not args.model_db_path:
         logging.info("Need to provide a model database file path")

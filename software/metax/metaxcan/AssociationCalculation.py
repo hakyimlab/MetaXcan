@@ -40,36 +40,39 @@ class Context(object):
 
 def association(gene, context, return_snps=False):
     #capture context
-    w, i, cov, snps = context.provide_calculation(gene)
+    n_snps_in_model, i, cov, snps = context.provide_calculation(gene)
 
     #some stats
-    n_snps_in_model = len(w.effect_allele)
-    n_snps_used = len(i.weight)
+    snps_used = i[Constants.SNP]
+    n_snps_used = len(snps_used)
     n_snps_in_cov = context.get_n_in_covariance(gene)
 
-    zscore = None
-    effect_size = None
-    sigma_g_2 = None
+
     if n_snps_used > 0:
-        # get sigma from reference
+        i_weight = i[WDBQF.K_WEIGHT]
+        i_zscore = i[Constants.ZSCORE]
+        i_beta = i[Constants.BETA]
+        # sigma from reference
         variances = numpy.diag(cov)
-        i['sigma_l'] = numpy.sqrt(variances)
+        i_sigma_l = numpy.sqrt(variances)
 
         #da calculeishon
-        sigma_g_2 = float(d(d(i.weight,cov),i.weight))
+        sigma_g_2 = float(d(d(i_weight,cov),i_weight))
         if sigma_g_2 >0:
             try:
-                zscore = numpy.sum(i.weight * i.zscore * i.sigma_l) / numpy.sqrt(sigma_g_2)
-                effect_size = numpy.sum(i.weight * i.beta * (i.sigma_l**2))/ sigma_g_2
+                zscore = numpy.sum(i_weight * i_zscore * i_sigma_l) / numpy.sqrt(sigma_g_2)
+                effect_size = numpy.sum(i_weight * i_beta * (i_sigma_l**2))/ sigma_g_2
             except Exception as e:
                 logging.log(9, "Unexpected exception when calculating zscore: %s, %s", gene, str(e))
+                zscore = numpy.nan
+                effect_size = numpy.nan
 
         r = (gene, zscore, effect_size, sigma_g_2, n_snps_in_model, n_snps_in_cov, n_snps_used)
     else:
         r = (gene, numpy.nan, numpy.nan, numpy.nan, n_snps_in_model, n_snps_in_cov, n_snps_used)
 
     if return_snps:
-        return r, set(i.snp)
+        return r, set(snps_used)
     else:
         return r
 

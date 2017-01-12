@@ -84,13 +84,24 @@ def gwas_filtered_source(path, snps=None, snp_column_name=None, skip_until_heade
             if not snp_column_name in header_comps: raise Exceptions.ReportableException("Did not find snp colum name")
             index = header_comps.index(snp_column_name)
 
+        header_count = {k:header_comps.count(k) for k in header_comps}
+        if len(header_count) < len(header_comps):
+            duplicated = [k for k,v in header_count.iteritems() if v>1]
+            logging.error("The input GWAS has duplicated columns: %s", str(duplicated))
+
         for line in file:
             comps = line.strip().split(separator)
             if snps and not comps[index] in snps:
                 continue
+
+            # Load only the first column if in presence of duplicated columns. Yuck!
+            sentinel=set()
             for i,c in enumerate(comps):
                 c = c if c!="NA" else None
-                s[header_comps[i]].append(c)
+                comp = header_comps[i]
+                if comp in sentinel: continue
+                sentinel.add(comp)
+                s[comp].append(c)
 
         for c in header_comps:
             s[c] = numpy.array(pandas.to_numeric(s[c], errors='ignore'))

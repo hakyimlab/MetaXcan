@@ -111,9 +111,9 @@ def gwas_filtered_source(path, snps=None, snp_column_name=None, skip_until_heade
 import re
 non_en_number = re.compile("^[-\+]?[0-9]*,{1}[0-9]+([eE]{1}[-\+]?[0-9]+)?$")
 def sanitize_component(c):
-    if c == ".": c = None
     if non_en_number.match(c): c = c.replace(",",".")
     if c == "NA": c = None
+    if c == ".": c = None
     return c
 
 

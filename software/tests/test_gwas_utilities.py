@@ -101,6 +101,7 @@ class TestGWAS(unittest.TestCase):
 
         #NA gets translated into Nome
         self.assertIsNone(sanitize("NA"))
+        self.assertIsNone(sanitize("."))
 
 if __name__ == '__main__':
     unittest.main()

@@ -87,7 +87,7 @@ def gwas_filtered_source(path, snps=None, snp_column_name=None, skip_until_heade
         header_count = {k:header_comps.count(k) for k in header_comps}
         if len(header_count) < len(header_comps):
             duplicated = [k for k,v in header_count.iteritems() if v>1]
-            logging.error("The input GWAS has duplicated columns: %s", str(duplicated))
+            logging.log("The input GWAS has duplicated columns: %s, will only use the first one in each case", str(duplicated))
 
         for line in file:
             comps = line.strip().split(separator)

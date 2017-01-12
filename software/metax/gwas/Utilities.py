@@ -97,16 +97,24 @@ def gwas_filtered_source(path, snps=None, snp_column_name=None, skip_until_heade
             # Load only the first column if in presence of duplicated columns. Yuck!
             sentinel=set()
             for i,c in enumerate(comps):
-                c = c if c!="NA" else None
                 comp = header_comps[i]
                 if comp in sentinel: continue
                 sentinel.add(comp)
+                c = sanitize_component(c)
                 s[comp].append(c)
 
         for c in header_comps:
             s[c] = numpy.array(pandas.to_numeric(s[c], errors='ignore'))
 
     return s
+
+import re
+non_en_number = re.compile("^[-\+]?[0-9]*,{1}[0-9]+([eE]{1}[-\+]?[0-9]+)?$")
+def sanitize_component(c):
+    if c == ".": c = None
+    if non_en_number.match(c): c = c.replace(",",".")
+    if c == "NA": c = None
+    return c
 
 
 def gwas_from_data(data, extra_columns=None):

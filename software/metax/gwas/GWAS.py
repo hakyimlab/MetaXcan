@@ -107,11 +107,6 @@ def load_gwas(source, gwas_format, strict=True, sep='\s+'):
 
     return d
 
-def _or_to_beta(odd):
-    if numpy.any(numpy.where(odd <= 0)):
-        raise Exceptions.InvalidArguments("Odd Ratios include negative values.")
-    return numpy.log(odd)
-
 def _keep_gwas_columns(d):
     keep_columns = [SNP, EFFECT_ALLELE, NON_EFFECT_ALLELE, ZSCORE]
     if CHROMOSOME in d: keep_columns.append(CHROMOSOME)
@@ -167,6 +162,7 @@ def _ensure_z(d):
         return
 
     z = None
+
     if PVALUE in d:
         logging.log(9, "Calculating zscore from pvalue")
         p = d[PVALUE]
@@ -192,6 +188,11 @@ def _beta_sign(d):
         b = b.apply(lambda x: 1.0 if (x =="+" or x==1.0) else -1.0)
     if b is None: raise Exceptions.ReportableException("No beta sign in GWAS")
     return b
+
+def _or_to_beta(odd):
+    if numpy.any(numpy.where(odd <= 0)):
+        raise Exceptions.InvalidArguments("Odd Ratios include negative values.")
+    return numpy.log(odd)
 
 def extract(gwas, snps):
     """Assumes that argument snps are there in the gwas."""

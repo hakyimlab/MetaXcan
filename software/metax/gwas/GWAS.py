@@ -190,8 +190,11 @@ def _beta_sign(d):
     return b
 
 def _or_to_beta(odd):
-    if numpy.any(numpy.where(odd <= 0)):
+    if numpy.any(numpy.where(odd < 0)):
         raise Exceptions.InvalidArguments("Odd Ratios include negative values.")
+    if numpy.any(numpy.where(odd == 0)):
+        logging.info("Odd Ratios column holds some [0] values")
+        odd = odd.replace(0, numpy.nan)
     return numpy.log(odd)
 
 def extract(gwas, snps):

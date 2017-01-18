@@ -223,13 +223,14 @@ def _build_simple_context(model, covariance_manager, gwas):
     context = SimpleContext(gwas, model, covariance_manager)
     return context
 
-def format_output(results, context):
+def format_output(results, context, keep_ens_version):
     results = results.drop("n_snps_in_model",1)
     results[Constants.PVALUE] = 2 * stats.norm.cdf(-numpy.abs(results.zscore.values))
     model_info = pandas.DataFrame(context.get_model_info())
     merged = pandas.merge(results, model_info, how="inner", on="gene")
-    merged.gene = merged.gene.str.split(".").str.get(0)
     merged = merged.sort_values(by=Constants.PVALUE)
+    if not keep_ens_version:
+        merged.gene = merged.gene.str.split(".").str.get(0)
 
     K = Constants
     AK = AssociationCalculation.ARF

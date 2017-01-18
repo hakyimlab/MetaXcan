@@ -4,7 +4,6 @@ import metax
 __version__ = metax.__version__
 
 import logging
-import pandas
 import os
 
 from timeit import default_timer as timer
@@ -14,7 +13,6 @@ from metax import Utilities
 from metax import Exceptions
 from metax.metaxcan import AssociationCalculation
 from metax.metaxcan import Utilities as MetaxcanUtilities
-
 
 
 def run(args, _gwas=None):
@@ -44,7 +42,7 @@ def run(args, _gwas=None):
 
     reporter.update(len(snps_found), "%d %% of model's snps used", force=True)
     results = AssociationCalculation.dataframe_from_results(zip(*results))
-    results = MetaxcanUtilities.format_output(results, context)
+    results = MetaxcanUtilities.format_output(results, context, args.keep_ens_version)
     results.to_csv(args.output_file, index=False)
     end = timer()
     logging.info("Sucessfully processed metaxcan association in %s seconds"%(str(end - start)))
@@ -68,21 +66,6 @@ if __name__ == "__main__":
     parser.add_argument("--output_file",
                         help="name of output file",
                         default="results/zscores.csv")
-
-    parser.add_argument("--zscore_scheme",
-                        help="Scheme for zscore calculation. Options are:"
-                             "'beta_z' (uses zscore of beta and sigma_l from input file), default;"
-                            " 'beta_z_and_ref' (uses zscore of beta and sigma_l from reference population);"
-                            " 'metaxcan' ('bare metal' MetaXcan, normalization recommended); "
-                            " 'metaxcan_from_reference' ('bare metal' MetaXcan, using reference variance);",
-                        default=None)
-
-    parser.add_argument("--normalization_scheme",
-                        help="Scheme for zscore normalization, relevant for 'global normalization' scheme. Options are:"
-                            "'none';"
-                            " 'from_pheno', estimate normalization constant from phenotype file, needs 'sigma_l' and 'standard error' in phenotype;"
-                            " 'from_reference', estimate normalization constant from reference, needs 'standard error' on phenotype",
-                        default=None)
 
     parser.add_argument("--verbosity",
                         help="Log verbosity level. 1 is everything being logged. 10 is only high level messages, above 10 will hardly log anything",

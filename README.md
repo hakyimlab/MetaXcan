@@ -60,7 +60,7 @@ The following example assumes that you have **python 2.7**, **numpy**, and **sci
 1) Clone this repository.
 ```bash
 $ git clone https://github.com/hakyimlab/MetaXcan
-```
+~~```~~
 
 2) Go to the software folder.
 ```bash
@@ -123,16 +123,16 @@ Where each row is a gene's association result:
 * gene: a gene's id: as listed in the Tissue Transcriptome model.
 Ensemble Id for some, while some others (mainly DGN Whole Blood) provide [Genquant](http://www.gencodegenes.org/)'s gene name
 * gene_name: gene name as listed by the Transcriptome Model, generally extracted from Genquant
-* zscore: MetaXcan'as association result for the gene
-* effect_size: MetaXcan'as association effect size for the gene
+* zscore: MetaXcan's association result for the gene
+* effect_size: MetaXcan's association effect size for the gene
 * pvalue: P-value of the aforementioned statistic.
-* pred_perf_R2: R2 of tissue model's correlation to gene's measured transcriptome (prediction performance)
+* pred_perf_r2: R2 of tissue model's correlation to gene's measured transcriptome (prediction performance)
 * pred_perf_pval: pval of tissue model's correlation to gene's measured transcriptome (prediction performance)
 * pred_perf_qval: qval of tissue model's correlation to gene's measured transcriptome (prediction performance)
 * n_snps_used: number of snps from GWAS that got used in MetaXcan analysis
 * n_snps_in_cov: number of snps in the covariance matrix
 * n_snps_in_model: number of snps in the model
-* VAR_g: variance of the gene expression, calculated as *W' * G * W*
+* var_g: variance of the gene expression, calculated as *W' * G * W*
 (where *W* is the vector of SNP weights in a gene's model,
 *W'* is its transpose, and *G* is the covariance matrix)
 

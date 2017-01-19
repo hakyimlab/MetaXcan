@@ -48,7 +48,7 @@ def association(gene, context, return_snps=False):
     n_snps_used = len(snps_used)
     n_snps_in_cov = context.get_n_in_covariance(gene)
 
-
+    zscore, effect_size, sigma_g_2 = numpy.nan, numpy.nan, numpy.nan
     if n_snps_used > 0:
         i_weight = i[WDBQF.K_WEIGHT]
         i_zscore = i[Constants.ZSCORE]
@@ -65,12 +65,8 @@ def association(gene, context, return_snps=False):
                 effect_size = numpy.sum(i_weight * i_beta * (i_sigma_l**2))/ sigma_g_2
             except Exception as e:
                 logging.log(9, "Unexpected exception when calculating zscore: %s, %s", gene, str(e))
-                zscore = numpy.nan
-                effect_size = numpy.nan
 
-        r = (gene, zscore, effect_size, sigma_g_2, n_snps_in_model, n_snps_in_cov, n_snps_used)
-    else:
-        r = (gene, numpy.nan, numpy.nan, numpy.nan, n_snps_in_model, n_snps_in_cov, n_snps_used)
+    r = (gene, zscore, effect_size, sigma_g_2, n_snps_in_model, n_snps_in_cov, n_snps_used)
 
     if return_snps:
         return r, set(snps_used)

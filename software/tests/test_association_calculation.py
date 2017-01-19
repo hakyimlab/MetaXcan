@@ -34,8 +34,8 @@ class TestAssociationCalculation(unittest.TestCase):
         gwas = SampleData.dataframe_from_gwas(SampleData.sample_gwas_data_4())
         p = _prediction_model()
         g, s = Utilities._data_intersection(p, gwas)
-        self.assertEqual(set(s), set(['rs1666', 'rs1', 'rs2', 'rs3', 'rs6', 'rs7', 'rs7666', 'rs8', 'rs9','rs100', 'rs101', 'rs102', 'rs202']))
-        self.assertEqual(set(g), set(["A","B","C","D"]))
+        self.assertEqual(set(s), set(['rs1666', 'rs1', 'rs2', 'rs3', 'rs6', 'rs7', 'rs7666', 'rs8', 'rs9','rs100', 'rs101', 'rs102', 'rs202', 'rs401', 'rs402']))
+        self.assertEqual(set(g), set(["A","B","C","D","F","G"]))
 
         t_gwas = gwas[3:10]
         g, s = Utilities._data_intersection(p, t_gwas)
@@ -58,6 +58,13 @@ class TestAssociationCalculation(unittest.TestCase):
 
         r, snps = AssociationCalculation.association("E", c, return_snps=True)
         self.assertEqual(r, ('E', numpy.nan, numpy.nan, numpy.nan, 1, numpy.nan, 0))
+
+        #The following is a case of "wrong" data
+        r, snps = AssociationCalculation.association("F", c, return_snps=True)
+        self.assertEqual(r, ('F', numpy.nan, numpy.nan, 0, 2, 2, 2))
+
+        r, snps = AssociationCalculation.association("G", c, return_snps=True)
+        self.assertEqual(r, ('G', numpy.nan, numpy.nan, 0, 1, 1, 1))
 
     def test_dataframe_from_results(self):
         results = [

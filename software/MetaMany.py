@@ -157,6 +157,10 @@ arguments --covariance_directory and --covariance_suffix. """)
                     action="store_true",
                     default=False)
 
+    parser.add_argument("--overwrite",
+                        help="If set, will overwrite the results file if it exists.",
+                    action="store_true",
+                    default=False)
 
     parser.add_argument("--verbosity",
                         help="Log verbosity level. 1 is everything being logged. 10 is only high level messages, above 10 will hardly log anything",

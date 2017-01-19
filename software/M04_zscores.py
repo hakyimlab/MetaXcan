@@ -17,7 +17,7 @@ from metax.metaxcan import Utilities as MetaxcanUtilities
 
 def run(args, _gwas=None):
     start = timer()
-    if os.path.exists(args.output_file):
+    if not args.overwrite and os.path.exists(args.output_file):
         logging.info("%s already exists, move it or delete it if you want it done again", args.output_file)
         return
     logging.info("Started metaxcan association")
@@ -73,6 +73,11 @@ if __name__ == "__main__":
 
     parser.add_argument("--keep_ens_version",
                         help="If set, will keep the -version- postfix in gene id.",
+                    action="store_true",
+                    default=False)
+
+    parser.add_argument("--overwrite",
+                        help="If set, will overwrite the results file if it exists.",
                     action="store_true",
                     default=False)
 

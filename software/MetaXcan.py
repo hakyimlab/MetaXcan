@@ -16,7 +16,7 @@ import M04_zscores
 
 
 def run(args):
-    if os.path.exists(args.output_file):
+    if not args.overwrite and os.path.exists(args.output_file):
         logging.info("%s already exists, move it or delete it if you want it done again", args.output_file)
         return
     if not args.model_db_path:
@@ -78,6 +78,11 @@ if __name__ == "__main__":
                         action="store_true",
                         help="Throw exception on error",
                         default=False)
+
+    parser.add_argument("--overwrite",
+                        help="If set, will overwrite the results file if it exists.",
+                    action="store_true",
+                    default=False)
 
     args = parser.parse_args()
 

@@ -11,8 +11,7 @@ from threading import Thread
 import metax.MainScreenView as MainScreenView
 import metax.MetaXcanUITask as MetaXcanUITask
 import metax.Exceptions as Exceptions
-import M03_betas
-import M04_zscores
+import MetaXcan
 import metax.Formats as Formats
 import metax.GWASUtilities as GWASUtilities
 import metax.ZScoreCalculation as ZScoreCalculation
@@ -52,8 +51,8 @@ class MainScreen(object):
 
         self.output_path = OUTPUT_PATH
 
-        self.compressed_on = Tkinter.BooleanVar()
-        self.compressed_on.set(False)
+        # self.compressed_on = Tkinter.BooleanVar()
+        # self.compressed_on.set(False)
 
         self.gwas_file_pattern_value = Tkinter.StringVar()
 
@@ -198,18 +197,18 @@ class MainScreen(object):
         self.launchTask()
 
     def checkClearToRun(self):
-        sane = checkSubdirectorySanity(self.cwd, self.beta_folder)
-        if not sane:
-            tkMessageBox.showwarning( "Beta Folder", "Beta folder cannot be current directory, or ancestor.")
-            return False
+        # sane = checkSubdirectorySanity(self.cwd, self.beta_folder)
+        # if not sane:
+        #     tkMessageBox.showwarning( "Beta Folder", "Beta folder cannot be current directory, or ancestor.")
+        #     return False
 
-        clear, message, clean_up_beta, clean_up_results = self.checkGenerated()
-        if not clear:
-            answer = tkMessageBox.askokcancel(TS("Warning!"), message, icon=tkMessageBox.ERROR)
-            if answer:
-                self.cleanUpGenerated(clean_up_beta, clean_up_results)
-            else:
-                return False
+        # clear, message, clean_up_beta, clean_up_results = self.checkGenerated()
+        # if not clear:
+        #     answer = tkMessageBox.askokcancel(TS("Warning!"), message, icon=tkMessageBox.ERROR)
+        #     if answer:
+        #         self.cleanUpGenerated(clean_up_beta, clean_up_results)
+        #     else:
+        #         return False
 
         return True
 
@@ -307,12 +306,11 @@ class MainScreen(object):
 
 # MetaxCan process
     def buildWork(self):
-        class BetaWorkArgs(object):
+        class MetaXcanArgs(object):
             def __init__(self, source):
                 self.verbosity = "10"
                 self.weight_db_path = source.weight_db_path
                 self.gwas_folder = source.gwas_folder
-                self.output_folder = source.beta_folder
 
                 self.snp_column = source.snp_value.get()
                 self.non_effect_allele_column = source.non_effect_allele_value.get()
@@ -321,38 +319,42 @@ class MainScreen(object):
                 self.or_column = source.or_value.get() if source.or_on.get() else None
                 self.beta_column = source.beta_value.get() if source.beta_on.get() else None
                 self.beta_sign_column = source.beta_sign_value.get() if source.beta_sign_on.get() else None
-                self.beta_zscore_column = source.beta_z_value.get() if source.beta_z_on.get() else None
+                self.zscore_column = source.beta_z_value.get() if source.beta_z_on.get() else None
                 self.frequency_column = source.frequency_value.get() if source.frequency_on.get() else None
                 self.se_column = source.se_value.get() if source.se_on.get() else None
                 self.pvalue_column = source.p_value.get() if source.p_on.get() else None
-                self.compressed_gwas = source.compressed_on.get()
                 self.gwas_file_pattern = source.gwas_file_pattern_value.get() if len(source.gwas_file_pattern_value.get()) else None
                 self.separator = source.separator_value.get() if len(source.separator_value.get()) else None
-                self.scheme = GWASUtilities.BETA_P
+
                 # TODO: implement this
                 self.skip_until_header = None
                 self.throw = True
 
-        beta_args = BetaWorkArgs(source=self)
-        beta_work = M03_betas.GetBetas(beta_args)
-
-        class ZScoresWorkArgs(object):
-            def __init__(self, source):
                 self.verbosity = "10"
                 self.keep_ens_version = False
-                self.beta_folder = source.beta_folder
-                self.weight_db_path = source.weight_db_path
+                self.model_db_path = source.weight_db_path
                 self.output_file = source.output_path
                 self.covariance = source.covariance_file
-                self.zscore_scheme = ZScoreCalculation.BETA_Z_SIGMA_REF
-                self.normalization_scheme = Normalization.NONE
-                self.input_format = Formats.FlatFile
-                self.selected_dosage_folder = "intermediate/filtered_1000GP_Phase3"
                 self.throw = True
+                self.overwrite = True
 
-        zscore_args = ZScoresWorkArgs(source=self)
-        zscore_work = M04_zscores.CalculateZScores(zscore_args)
+        beta_args = MetaXcanArgs(source=self)
+
         #TODO: maybe connect stuff together so that M03 passes stuff to M04
+
+        class MetaxcanWorkWrapper(object):
+            def __init__(self,args):
+                self.args = args
+
+            def run(self):
+                try:
+                    MetaXcan.run(self.args)
+                except Exceptions.ReportableException, e:
+                    logging.error(e.msg)
+                except Exception as e:
+                    logging.info("Exception when running task: %s", str(e))
+                finally:
+                    pass
 
         class WorkWrapper(object):
             def __init__(self, works):
@@ -373,5 +375,5 @@ class MainScreen(object):
                 finally:
                     pass
 
-        work = WorkWrapper([beta_work, zscore_work])
+        work = MetaxcanWorkWrapper(beta_args)
         return work

@@ -82,13 +82,11 @@ tar -xzvpf sample_data.tar.gz
 
 4) Run the High-Level MetaXcan Script
 ```bash
-$ ./MetaXcan.py \
---beta_folder intermediate/beta \
---weight_db_path data/DGN-WB_0.5.db \
+./MetaXcan.py \
+--model_db_path data/DGN-WB_0.5.db \
 --covariance data/covariance.DGN-WB_0.5.txt.gz \
 --gwas_folder data/GWAS \
 --gwas_file_pattern ".*gz" \
---compressed \
 --beta_column BETA \
 --pvalue_column P \
 --output_file results/test.csv
@@ -172,6 +170,8 @@ Issues and questions can be raised at this repository's issue tracker.
 
 There is also a [Google Group](https://groups.google.com/forum/?hl=en#!forum/predixcanmetaxcan) mail list for general discussion, feature requests, etc. 
 Join if you want to be notified of new releases, feature sets and important news concerning this software.
+
+You can check [here](https://github.com/hakyimlab/MetaXcan/wiki) for release history.
 
 ### Cautionary Warning to Existing Users on Updates and Transcriptome Models
 

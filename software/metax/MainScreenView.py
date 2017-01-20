@@ -72,10 +72,10 @@ class MainScreenView(Frame):
 
         controller = self.controller()
 
-        compressed_on = controller.compressed_on
-        self.compressed_check = Checkbutton(file_options_frame, text=TS('Compressed GWAS'), variable=compressed_on)
-        self.compressed_check.grid(row=0, column=0, sticky=W+E)
-        self.addToDisabable(self.compressed_check)
+        # compressed_on = controller.compressed_on
+        # self.compressed_check = Checkbutton(file_options_frame, text=TS('Compressed GWAS'), variable=compressed_on)
+        # self.compressed_check.grid(row=0, column=0, sticky=W+E)
+        # self.addToDisabable(self.compressed_check)
 
         file_pattern_value = controller.gwas_file_pattern_value
         file_pattern_label = Label(file_options_frame, text=TS("GWAS Filename Pattern"))
@@ -194,7 +194,7 @@ class MainScreenView(Frame):
         shared_container = Frame(self, relief=RAISED, borderwidth=1)
         shared_container.pack(fill=BOTH, expand=1)
 
-        self.initBetaFolderUI(shared_container)
+        #self.initBetaFolderUI(shared_container)
         self.initWeightDBUI(shared_container)
 
     def initBetaFolderUI(self, options_frame):

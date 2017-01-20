@@ -1,6 +1,7 @@
 __author__ = 'heroico'
 
 import os
+import json
 import Exceptions
 
 VALID_ALLELES = ["A", "T", "C", "G"]
@@ -90,15 +91,22 @@ class PercentReporter(object):
         self.last_reported = 0
         self.pattern = pattern
 
-    def update(self, i, text=None):
+    def update(self, i, text=None, force=False):
         percent = int(i*100.0/self.total)
-        if percent == self.last_reported + self.increment:
+
+        if force or  percent >= self.last_reported + self.increment:
             self.last_reported = percent
 
             if not text:
                 text = self.pattern
 
             logging.log(self.level, text, percent)
+
+def load_json(path):
+    d = None
+    with open(path) as file:
+        d = json.load(file)
+    return d
 
 import gzip
 class FileIterator(object):
@@ -161,3 +169,8 @@ class CSVFileIterator(FileIterator):
 def TS(string):
     """placeholder for string translation"""
     return string
+
+def ensure_requisite_folders(path):
+    folder = os.path.split(path)[0]
+    if len(folder) and not os.path.exists(folder):
+        os.makedirs(folder)

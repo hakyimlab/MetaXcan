@@ -179,9 +179,10 @@ arguments --covariance_directory and --covariance_suffix. """)
     Logging.configureLogging(int(args.verbosity))
 
     if args.throw:
+        run(args)
+    else:
         try:
             run(args)
         except Exceptions.ReportableException, e:
             logging.error(e.msg)
-    else:
-        run(args)
+        

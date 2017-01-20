@@ -99,21 +99,19 @@ or specify a different folder on each run.
 
 The example command parameters mean:
 
-* *--beta_folder* Folder where intermediate statistics from the GWAS files will be written to.
-* *--weight_db_path* Path to tissue transriptome model
+* *--model_db_path* Path to tissue transriptome model
 * *--covariance* Path to file containing covariance information. This covariance should have information related to the tissue transcriptome model.
 * *--gwas_folder* Folder containing GWAS summary statistics data.
 * *--gwas_file_pattern* This option allows the program to select which files from the input to use based on their name.
 ...This allows to ignore several support files that might be generated at your GWAS analysis, such as plink logs.
 * *--beta_column* Tells the program the name of a column containing -phenotype beta data for each SNP- in the input GWAS files.
 * *--pvalue_column* Tells the program the name of a column containing -PValue for each SNP- in the input GWAS files.
-* *--compressed* This options tells that the input files are in gzip compressed form.
 * *--output_file* Path where results will be saved to.
 
 Its output is a CSV file that looks like:
 
 ```
-gene,gene_name,zscore,effect_size,pvalue,VAR_g,pred_perf_R2,pred_perf_p,pred_perf_q,n_snps_used,n_snps_in_cov,n_snps_in_model
+gene,gene_name,zscore,effect_size,pvalue,VAR_g,pred_perf_r2,pred_perf_p,pred_perf_q,n_snps_used,n_snps_in_cov,n_snps_in_model
 ENSG00000150938,CRIM1,-4.19069760413,-0.231471478373,2.78098095601e-05,0.0983344808163,0.13320775358,1.97496173512e-30,7.47907447189e-30,37,37,37
 ...
 ```

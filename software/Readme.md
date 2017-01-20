@@ -19,7 +19,7 @@ Check the root [Readme](https://github.com/hakyimlab/MetaXcan) for a sample scri
 
 The software is developed and tested in Linux and Max OS environments. Should be mostly working on Windows.
 
-You need [Python 2.7](https://www.python.org/) and [numpy](http://www.numpy.org/) and [scipy](http://www.scipy.org/)  to run MetaXcan.
+You need [Python 2.7](https://www.python.org/), [numpy](http://www.numpy.org/), [scipy](http://www.scipy.org/), [pandas](http://pandas.pydata.org/) to run MetaXcan.
 
 [R](https://www.r-project.org/) with [ggplot](http://ggplot2.org/) and [dplyr](https://cran.r-project.org/web/packages/dplyr/index.html) 
 is needed for some optional statistics and charts.

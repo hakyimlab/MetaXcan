@@ -12,7 +12,7 @@ and building processing pipelines as well.
 
 The software is developed and tested in Linux and Max OS environments. The main MetaXcan script is supported in Windows.
 
-You need [Python 2.7](https://www.python.org/), [numpy](http://www.numpy.org/), and [scipy](http://www.scipy.org/) to run MetaXcan, and there is a GUI done in TKInter.
+You need  [Python 2.7](https://www.python.org/), [numpy](http://www.numpy.org/), [scipy](http://www.scipy.org/), [pandas](http://pandas.pydata.org/) to run MetaXcan, and there is a GUI done in TKInter.
 
 [R](https://www.r-project.org/) with [ggplot](http://ggplot2.org/) and [dplyr](https://cran.r-project.org/web/packages/dplyr/index.html) 
 is needed for some optional statistics and charts.
@@ -31,7 +31,7 @@ M02_variances.py
 M03_betas.py
 M04_zscores.py
 ```
-, although a typical user will use ony the last two of them.
+, although a typical user will use only the last two of them.
 
 The rest of the scripts in **software** folder are python packaging support scripts,
 and convenience wrappers such as the GUI.

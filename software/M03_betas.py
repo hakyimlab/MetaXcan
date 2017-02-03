@@ -46,7 +46,7 @@ def align_data_to_alleles(data, base, left_on, right_on):
         merged.loc[flipped, B] = - merged.loc[flipped, B]
 
     merged.loc[flipped, EA] = merged.loc[flipped, EA_BASE]
-    merged.loc[flipped, NEA_BASE] = merged.loc[flipped, NEA_BASE]
+    merged.loc[flipped, NEA] = merged.loc[flipped, NEA_BASE]
 
     return merged
 

@@ -223,10 +223,19 @@ def _build_simple_context(model, covariance_manager, gwas):
     context = SimpleContext(gwas, model, covariance_manager)
     return context
 
+def _to_int(d):
+    r = d
+    try:
+        r = int(d)
+    except:
+        pass
+    return r
+
 def format_output(results, context, keep_ens_version):
     results = results.drop("n_snps_in_model",1)
     results[Constants.PVALUE] = 2 * stats.norm.cdf(-numpy.abs(results.zscore.values))
     model_info = pandas.DataFrame(context.get_model_info())
+
     merged = pandas.merge(results, model_info, how="inner", on="gene")
     merged = merged.sort_values(by=Constants.PVALUE)
     if not keep_ens_version:
@@ -248,4 +257,9 @@ def format_output(results, context, keep_ens_version):
                     WDBEQF.K_N_SNP_IN_MODEL]
 
     merged = merged[column_order]
+    merged = merged.fillna("NA")
+    # since we allow NA in covs, we massage it a little bit into resemblying an int instead of a float
+    # (pandas uses the NaN float.)
+    merged.n_snps_in_cov = merged.n_snps_in_cov.apply(_to_int)
+
     return merged

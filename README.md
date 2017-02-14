@@ -67,10 +67,10 @@ $ git clone https://github.com/hakyimlab/MetaXcan
 $ cd MetaXcan/software
 ```
 
-3) Download sample [data](https://s3.amazonaws.com/imlab-open/Data/MetaXcan/sample_data/sample_data.tar.gz):
+3) Download sample [data](https://s3.amazonaws.com/imlab-open/Data/MetaXcan/sample_data/v0_5/sample_data.tar.gz):
 ```bash
 # You can click on the link above or type the following at a terminal
-$ wget https://s3.amazonaws.com/imlab-open/Data/MetaXcan/sample_data/sample_data.tar.gz
+$ wget https://s3.amazonaws.com/imlab-open/Data/MetaXcan/sample_data/v0_5/sample_data.tar.gz
 ```
 This may take a few minutes depending on your connection: it has to download approximately 200Mb worth of data.
 Downloaded data will include an appropiate **Transcriptome Model Database**, a **GWAS/Meta Analysis summary statistics**, and **SNP covariance matrices**.

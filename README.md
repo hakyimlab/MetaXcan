@@ -111,8 +111,8 @@ The example command parameters mean:
 Its output is a CSV file that looks like:
 
 ```
-gene,gene_name,zscore,effect_size,pvalue,VAR_g,pred_perf_r2,pred_perf_p,pred_perf_q,n_snps_used,n_snps_in_cov,n_snps_in_model
-ENSG00000150938,CRIM1,-4.19069760413,-0.231471478373,2.78098095601e-05,0.0983344808163,0.13320775358,1.97496173512e-30,7.47907447189e-30,37,37,37
+gene,gene_name,zscore,effect_size,pvalue,var_g,pred_perf_r2,pred_perf_pval,pred_perf_qval,n_snps_used,n_snps_in_cov,n_snps_in_model
+ENSG00000150938,CRIM1,4.190697619877402,0.7381499095142079,2.7809807629839122e-05,0.09833448081630237,0.13320775358,1.97496173512e-30,7.47907447189e-30,37,37,37
 ...
 ```
 Where each row is a gene's association result:

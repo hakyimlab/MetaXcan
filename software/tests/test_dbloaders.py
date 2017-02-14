@@ -15,9 +15,8 @@ if "DEBUG" in sys.argv:
     sys.path.insert(0, ".")
     sys.argv.remove("DEBUG")
 
-from metax.DBLoaders import DBLoaders
 import unittest
-
+from metax.deprecated.DBLoaders import DBLoaders
 
 class geneEntry(object):
     def __init__(self, gene, genename, rsq, snp_count):

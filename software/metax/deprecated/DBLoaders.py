@@ -3,8 +3,8 @@ __author__ = 'heroico'
 
 import sqlite3
 import numpy
-import KeyedDataSet
-import Exceptions
+from .. import KeyedDataSet
+from .. import Exceptions
 import os
 
 class DBLoaders(object):

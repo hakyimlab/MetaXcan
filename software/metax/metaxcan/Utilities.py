@@ -152,7 +152,10 @@ def _prepare_gwas(gwas):
     #If zscore is numeric, then everything is fine with us.
     # if not, try to remove "NA" strings.
     try:
-        gwas = gwas[gwas.zscore != "NA"]
+        i = gwas.zscore.str.contains("NA")
+        i = i.fillna(False)
+        i = ~i
+        gwas = gwas[i]
     except Exception as e:
         logging.log(9, "Unexpected issue preparing gwas... %s", str(e))
         pass
@@ -233,11 +236,15 @@ def _to_int(d):
 
 def format_output(results, context, keep_ens_version):
     results = results.drop("n_snps_in_model",1)
-    results[Constants.PVALUE] = 2 * stats.norm.cdf(-numpy.abs(results.zscore.values))
+
+    # Dodge the use of cdf on non finite values
+    i = numpy.isfinite(results.zscore)
+    results[Constants.PVALUE] = numpy.nan
+    results.loc[i, Constants.PVALUE] = 2 * stats.norm.cdf(-numpy.abs(results.loc[i, Constants.ZSCORE].values))
+
     model_info = pandas.DataFrame(context.get_model_info())
 
     merged = pandas.merge(results, model_info, how="inner", on="gene")
-    merged = merged.sort_values(by=Constants.PVALUE)
     if not keep_ens_version:
         merged.gene = merged.gene.str.split(".").str.get(0)
 
@@ -261,5 +268,6 @@ def format_output(results, context, keep_ens_version):
     # since we allow NA in covs, we massage it a little bit into resemblying an int instead of a float
     # (pandas uses the NaN float.)
     merged.n_snps_in_cov = merged.n_snps_in_cov.apply(_to_int)
+    merged = merged.sort_values(by=Constants.PVALUE)
 
     return merged

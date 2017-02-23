@@ -1,7 +1,7 @@
 import os
 import pandas
 import logging
-from numpy import dot, transpose
+from numpy import dot, transpose, cov
 
 from .. import MatrixManager
 from .. import Utilities
@@ -13,23 +13,24 @@ class FeatureMatrixManager(object):
         self.data = _build_data(data)
         self.columns = _get_columns(data)
 
-    def get_feature_matrix(self, feature_key):
+    def get_feature_product(self, feature_key, center=False):
         vectors = self.data[feature_key]
         labels = sorted(vectors.keys())
         X = [vectors[m] for m in labels]
-        product = dot(X, transpose(X)) # this is the other way around to our notation
+        product = dot(X, transpose(X)) if not center else cov(X)# this is the other way around to our notation
         return product, labels
 
-    def save(self, path, column_names=K_GENE_MODEL_HEADER):
+    def save(self, path, column_names=K_GENE_MODEL_HEADER, center=True):
         data = []
         for key in self.columns:
-            matrix, labels = self.get_feature_matrix(key)
+            matrix, labels = self.get_feature_product(key, center)
             flat = MatrixManager._flatten_matrix_data([(key, labels, matrix)])
             data.extend(flat)
 
         data = Utilities.to_dataframe(data, column_names)
         data = data.sort_values(by=["gene", "model1", "model2"])
-        data.to_csv(path, index=False, sep="\t")
+        compression = "gzip" if "gz" in path else None
+        data.to_csv(path, index=False, sep="\t", compression=compression)
 
 #TODO: not necessarily "genes", but genetic features
 def build_manager(folder, filters=["TW_*"]):

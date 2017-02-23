@@ -10,6 +10,9 @@ from metax import Utilities
 from metax.misc import FeatureMatrix
 
 def run(args):
+    if os.path.exists(args.output):
+        logging.info("%s already exists, you have to move it or delete it if you wnat it done again", args.output)
+        return
     logging.info("Loading expressions")
     manager = FeatureMatrix.build_manager(args.expression_folder)
 

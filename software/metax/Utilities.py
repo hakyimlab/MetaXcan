@@ -2,6 +2,9 @@ __author__ = 'heroico'
 
 import os
 import json
+import re
+import logging
+import gzip
 import Exceptions
 
 VALID_ALLELES = ["A", "T", "C", "G"]
@@ -58,6 +61,14 @@ def contentsWithRegexpFromFolder(folder, regexp):
     paths = [x for x in contents if regexp.match(x)] if regexp else contents
     return paths
 
+def target_files(input_folder, file_filters=None):
+    files = os.listdir(input_folder)
+    if file_filters:
+        patterns = [re.compile(x) for x in file_filters]
+        files = [x for x in files if any([r.match(x) for r in patterns])]
+    files = [os.path.join(input_folder, x) for x in files]
+    return files
+
 def samplesInputPath(path):
     samples_content = contentsWithPatternsFromFolder(path, [".sample"])
     if len(samples_content) == 0:
@@ -82,7 +93,6 @@ def checkSubdirectorySanity(base, candidate):
 
     return sane
 
-import logging
 class PercentReporter(object):
     def __init__(self, level, total, increment=10, pattern="%i percent complete"):
         self.level = level
@@ -108,7 +118,6 @@ def load_json(path):
         d = json.load(file)
     return d
 
-import gzip
 class FileIterator(object):
     def __init__(self, path, header=None, compressed = False, ignore_until_header = False):
         self.path = path

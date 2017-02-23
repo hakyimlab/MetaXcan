@@ -253,3 +253,43 @@ def sample_covariance_s_1():
 def dataframe_from_covariance(c):
     names = ["GENE", "RSID1", "RSID2", "VALUE"]
     return _dataframe(names, c)
+
+def feature_set_1():
+    #4 individuals, 2 genes
+    c = [
+        (0.0, 1.0),
+        (0.1, 0.5),
+        (0.3, 1.2),
+        (0.0, 0.9)
+    ]
+    c = _dataframe(["a", "b"], c)
+    return c
+
+def feature_set_2():
+    #4 individuals, 5 genes
+    c = [
+        (0.0, 1.0, 3.0, 0.5, 0.31),
+        (0.1, 1.0, 0.0, 0.7, 0.32),
+        (0.0, 1.2, 0.2, 0.6, 0.29),
+        (0.1, 1.0, 0.3, 0.8, 0.3),
+    ]
+    c = _dataframe(["a", "b", "c", "d", "e"], c)
+    return c
+
+def feature_set_3():
+    #4 individuals, 3 genes
+    c = [
+        (0.0, 1.0, 0.9),
+        (0.1, 0.75, 0.9),
+        (0.2, 1.2, 0.8),
+        (0.1, 0.95, 1.1),
+    ]
+    c = _dataframe(["a", "b", "d"], c)
+    return c
+
+def set_of_feature_sets():
+    sets = {}
+    sets["1"] = feature_set_1()
+    sets["2"] = feature_set_2()
+    sets["3"] = feature_set_3()
+    return sets

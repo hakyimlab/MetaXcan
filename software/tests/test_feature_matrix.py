@@ -55,3 +55,4 @@ class TestFeatureMatrix(unittest.TestCase):
         d_m, d_labels = manager.get_feature_matrix("d")
         numpy.testing.assert_almost_equal(d_m, EXPECTED_D)
         self.assertEqual(d_labels, ["2", "3"])
+

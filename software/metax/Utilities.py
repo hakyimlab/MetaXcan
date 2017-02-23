@@ -6,6 +6,7 @@ import re
 import logging
 import gzip
 import Exceptions
+import pandas
 
 VALID_ALLELES = ["A", "T", "C", "G"]
 
@@ -183,3 +184,11 @@ def ensure_requisite_folders(path):
     folder = os.path.split(path)[0]
     if len(folder) and not os.path.exists(folder):
         os.makedirs(folder)
+
+def to_dataframe(data, columns):
+    data = zip(*data)
+    data = {columns[i]:data[i] for i in xrange(0, len(columns))}
+    data = pandas.DataFrame(data)
+    data = data[columns]
+    return data
+

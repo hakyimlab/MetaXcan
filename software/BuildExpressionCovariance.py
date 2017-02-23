@@ -14,6 +14,7 @@ def run(args):
     manager = FeatureMatrix.build_manager(args.expression_folder)
 
     logging.info("Saving")
+    Utilities.ensure_requisite_folders(args.output)
     manager.save(args.output)
 
     logging.info("Ran.")

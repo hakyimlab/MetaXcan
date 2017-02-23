@@ -8,37 +8,50 @@ def load_matrix_manager(path):
     return m
 
 
+K_MODEL="model"
+K_ID1="id1"
+K_ID2="id2"
+K_VALUE="value"
+
+GENE_SNP_COVARIANCE_DEFINITION = {
+    K_MODEL:"GENE",
+    K_ID1:"RSID1",
+    K_ID2:"RSID2",
+    K_VALUE:"VALUE"
+}
+
+class CDTF(object):
+    """How we organize in memory data at the matrix"""
+    MODEL=0
+    ID1=1
+    ID2=2
+    VALUE=3
+
 class MatrixManager(object):
-    def __init__(self, d):
-        _validate(d)
-        self.data = _build_data(d)
+    """
+    Needs a dictionary mapping the header names to the keys ["model", "id1", "id2", "value"],
+    """
+    def __init__(self, d, definition=GENE_SNP_COVARIANCE_DEFINITION):
+        self.definition = definition
+        _validate(d, definition)
+        self.data = _build_data(d, definition)
 
-    def get(self, gene, snps=None, strict=True):
-        return _get(self.data, gene, snps, strict)
+    def get(self, key, whitelist=None, strict=True):
+        return _get(self.data, key, whitelist, strict)
 
-    def n_snps(self,gene):
+    def n_ids(self, gene):
         if not gene in self.data:
             return numpy.nan
         snps = self.data[gene]
         snps = _non_na(snps)
-        snps = {x[CDTF.RSID1] for x in snps}
+        snps = {x[CDTF.ID1] for x in snps}
         return len(snps)
 
-class CDTF(object):
-    GENE=0
-    RSID1=1
-    RSID2=2
-    VALUE=3
-
-    K_GENE = "GENE"
-    K_RSID1 = "RSID1"
-    K_RSID2 = "RSID2"
-    K_VALUE = "VALUE"
-
-def _validate(d):
+def _validate(d, definition):
+    MODEL_KEY = definition[K_MODEL]
     processed_genes = set()
     last_gene = None
-    genes = d[CDTF.K_GENE]
+    genes = d[MODEL_KEY]
     for g in genes:
         if g != last_gene:
             if g in processed_genes:
@@ -51,50 +64,55 @@ def _validate(d):
         msg = "Duplicated SNP entries found"
         raise Exceptions.InvalidInputFormat(msg)
 
-def _build_data(d):
+def _build_data(d, definition):
+    MODEL_KEY=definition[K_MODEL]
+    ID1_KEY=definition[K_ID1]
+    ID2_KEY = definition[K_ID2]
+    VALUE_KEY = definition[K_VALUE]
+
     d = d.fillna("NA")
     d.GENE = pandas.Categorical(d.GENE, d.GENE.drop_duplicates())  # speed things up!
-    d = zip(d[CDTF.K_GENE].values, d[CDTF.K_RSID1].values, d[CDTF.K_RSID2].values, d[CDTF.K_VALUE].values)
+    d = zip(d[MODEL_KEY].values, d[ID1_KEY].values, d[ID2_KEY].values, d[VALUE_KEY].values)
     r = {}
     for t in d:
-        gene = t[0]
-        if not gene in r:
-            r[gene] = []
-        r[gene].append(t)
+        model = t[0]
+        if not model in r:
+            r[model] = []
+        r[model].append(t)
     return r
 
-def _get(d, gene, snps_whitelist=None, strict=True):
-    if not gene in d:
+def _get(d, key, whitelist=None, strict=True):
+    if not key in d:
         return None,None
 
-    d = d[gene]
+    d = d[key]
 
-    if snps_whitelist is not None:
+    if whitelist is not None:
         g, r1, r2, v = zip(*d)
         snps = set(r1)
-        snps_whitelist = set(snps_whitelist)
+        whitelist = set(whitelist)
         if strict:
-            extra = {x for x in snps_whitelist if not x in snps}
+            extra = {x for x in whitelist if not x in snps}
             if len(extra):
-                msg = "SNPs in whitelist not in matrix for %s:%s"%(gene,extra)
+                msg = "SNPs in whitelist not in matrix for %s:%s"%(key, extra)
                 raise Exceptions.InvalidArguments(msg)
-        d = [x for x in d if x[CDTF.RSID1] in snps_whitelist]
+        d = [x for x in d if x[CDTF.ID1] in whitelist]
 
     _s = set()
     snps = []
     entries = {}
     for row in d:
-        rsid1 = row[CDTF.RSID1]
-        rsid2 = row[CDTF.RSID2]
-        if not rsid1 in entries: entries[rsid1] = {}
-        if not rsid2 in entries: entries[rsid2] = {}
+        id1 = row[CDTF.ID1]
+        id2 = row[CDTF.ID2]
+        if not id1 in entries: entries[id1] = {}
+        if not id2 in entries: entries[id2] = {}
         value = row[CDTF.VALUE]
         if value == "NA":continue
-        entries[rsid1][rsid2] = value
-        entries[rsid2][rsid1] = value
-        if not rsid1 in _s:
-            _s.add(rsid1)
-            snps.append(rsid1)
+        entries[id1][id2] = value
+        entries[id2][id1] = value
+        if not id1 in _s:
+            _s.add(id1)
+            snps.append(id1)
 
     snps = list(snps)
     rows = []
@@ -108,3 +126,17 @@ def _get(d, gene, snps_whitelist=None, strict=True):
 
 def _non_na(snps_data):
     return [x for x in snps_data if  x[CDTF.VALUE] != "NA"]
+
+def _flatten_matrix_data(data):
+    """data is expected to be a list of (name, id_labels, matrix) tuples"""
+    results = []
+    for name, id_labels, matrix in data:
+        for i in xrange(0, len(id_labels)):
+            for j in xrange(i, len(id_labels)):
+                value = matrix[i][j]
+                id1 = id_labels[i]
+                id2 = id_labels[j]
+                results.append((name, id1, id2, value))
+    return results
+
+

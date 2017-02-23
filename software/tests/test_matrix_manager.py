@@ -28,7 +28,7 @@ class TestMatrixManager(unittest.TestCase):
         self.assertEqual(snps, cov_data.SNPS_ENSG00000239789_1)
         numpy.testing.assert_array_almost_equal(cov, cov_data.COV_ENSG00000239789_1)
 
-        n = m.n_snps("ENSG00000239789.1")
+        n = m.n_ids("ENSG00000239789.1")
         self.assertEqual(n, len(cov_data.SNPS_ENSG00000239789_1))
 
         with self.assertRaises(Exceptions.InvalidArguments) as ctx:
@@ -45,7 +45,7 @@ class TestMatrixManager(unittest.TestCase):
         self.assertEqual(snps, cov_data.SNPS_ENSG00000004766_11)
         numpy.testing.assert_array_almost_equal(cov, cov_data.COV_ENSG00000004766_11)
 
-        n = m.n_snps("ENSG00000004766.11")
+        n = m.n_ids("ENSG00000004766.11")
         self.assertEqual(n, len(cov_data.COV_ENSG00000004766_11))
 
     def test_from_data(self):
@@ -70,6 +70,21 @@ class TestMatrixManager(unittest.TestCase):
         with self.assertRaises(Exceptions.InvalidArguments) as ctx:
             snps, cov = m.get("C", ["rs100", "rs12718973"])
         self.assertTrue("whitelist" in ctx.exception.message)
+
+    def test_flatten(self):
+        labels = cov_data.SNPS_ENSG00000183742_8_w = ['rs7806506', 'rs12536095', 'rs10226814']
+        matrix = cov_data.COV_ENSG00000183742_8_w
+        name= "test"
+
+        flat = MatrixManager._flatten_matrix_data([(name, labels, matrix)])
+        expected = \
+            [('test', 'rs7806506', 'rs7806506', 0.28428631),
+             ('test', 'rs7806506', 'rs12536095', -0.01636001),
+             ('test', 'rs7806506', 'rs10226814', -0.00157224),
+             ('test', 'rs12536095', 'rs12536095', 0.35760734),
+             ('test', 'rs12536095', 'rs10226814', 0.00815426),
+             ('test', 'rs10226814', 'rs10226814', 0.44923289)]
+        numpy.testing.assert_array_equal(flat, expected)
 
 if __name__ == '__main__':
     unittest.main()

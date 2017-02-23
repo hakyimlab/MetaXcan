@@ -1,8 +1,6 @@
 #! /usr/bin/env python
 import os
 import logging
-import pandas
-import gzip
 from metax import __version__
 from metax import Logging
 from metax import Exceptions

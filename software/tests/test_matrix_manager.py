@@ -72,7 +72,7 @@ class TestMatrixManager(unittest.TestCase):
         self.assertTrue("whitelist" in ctx.exception.message)
 
     def test_flatten(self):
-        labels = cov_data.SNPS_ENSG00000183742_8_w = ['rs7806506', 'rs12536095', 'rs10226814']
+        labels = cov_data.SNPS_ENSG00000183742_8_w
         matrix = cov_data.COV_ENSG00000183742_8_w
         name= "test"
 
@@ -84,6 +84,13 @@ class TestMatrixManager(unittest.TestCase):
              ('test', 'rs12536095', 'rs12536095', 0.35760734),
              ('test', 'rs12536095', 'rs10226814', 0.00815426),
              ('test', 'rs10226814', 'rs10226814', 0.44923289)]
+        numpy.testing.assert_array_equal(flat, expected)
+
+        X = [0,1,3]
+        cov = numpy.cov([X])
+        flat = MatrixManager._flatten_matrix_data([("a", "b", cov)])
+
+        expected = [('a', 'b', 'b', 2.33333333333333)]
         numpy.testing.assert_array_equal(flat, expected)
 
 if __name__ == '__main__':

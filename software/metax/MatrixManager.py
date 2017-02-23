@@ -131,6 +131,11 @@ def _flatten_matrix_data(data):
     """data is expected to be a list of (name, id_labels, matrix) tuples"""
     results = []
     for name, id_labels, matrix in data:
+        if len(id_labels) == 1:
+            id = id_labels[0]
+            results.append((name, id, id, float(matrix)))
+            continue
+
         for i in xrange(0, len(id_labels)):
             for j in xrange(i, len(id_labels)):
                 value = matrix[i][j]

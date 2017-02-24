@@ -9,21 +9,21 @@ from metax.misc import FeatureMatrix
 
 def run(args):
     if os.path.exists(args.output):
-        logging.info("%s already exists, you have to move it or delete it if you wnat it done again", args.output)
+        logging.info("%s already exists, you have to move it or delete it if you want it done again", args.output)
         return
     logging.info("Loading expressions")
-    manager = FeatureMatrix.build_manager(args.expression_folder)
+    manager = FeatureMatrix.build_manager(args.expression_folder, standardize=True)
 
     logging.info("Saving")
     Utilities.ensure_requisite_folders(args.output)
-    manager.save(args.output)
+    manager.save_covariances(args.output)
 
     logging.info("Ran.")
 
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description='BuildExpressionProducts.py %s:'
-        'Will take "gene expression matrix" files, and build their products with each file being a feature' % (__version__))
+        'Will take "gene expression matrix" files, and build their products (or covariances) with each file being a feature' % (__version__))
 
     parser.add_argument("--expression_folder", help="path to folder with expression", default=None)
     parser.add_argument("--output", help="where you want the output", default=None)

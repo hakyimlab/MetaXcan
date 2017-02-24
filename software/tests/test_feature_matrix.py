@@ -25,7 +25,7 @@ class TestFeatureMatrix(unittest.TestCase):
 
     def test_load(self):
         data = SampleData.set_of_feature_sets()
-        manager = FeatureMatrix.FeatureMatrixManager(data)
+        manager = FeatureMatrix.FeatureMatrixManager(data, standardize=False)
 
         a = manager.data["a"]
         self.assertEqual(len(a), 3)

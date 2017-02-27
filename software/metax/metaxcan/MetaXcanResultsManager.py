@@ -1,6 +1,7 @@
 import pandas
 import os
 import logging
+import numpy
 
 from .. import Utilities
 from ..misc import NamingConventions
@@ -46,6 +47,8 @@ def _build_data(data):
     for k, df in data.iteritems():
         logging.log(9, "Processing %s", k)
         for i, row in df.iterrows():
+            if not numpy.isfinite(row.zscore):
+                continue
             if not row.gene in result:
                 result[row.gene]={}
             gene_entries = result[row.gene]

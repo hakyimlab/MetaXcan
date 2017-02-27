@@ -5,6 +5,7 @@ import unittest
 
 from metax import Exceptions
 from metax import MatrixManager
+D = MatrixManager.GENE_SNP_COVARIANCE_DEFINITION
 
 import cov_data
 import SampleData
@@ -50,7 +51,7 @@ class TestMatrixManager(unittest.TestCase):
 
     def test_from_data(self):
         s = SampleData.dataframe_from_covariance(SampleData.sample_covariance_s_1())
-        m = MatrixManager.MatrixManager(s)
+        m = MatrixManager.MatrixManager(s, D)
         snps, cov = m.get("A")
         self.assertEqual(snps, cov_data.SNPS_A)
         numpy.testing.assert_array_almost_equal(cov, cov_data.COV_A)

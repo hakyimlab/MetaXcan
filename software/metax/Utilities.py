@@ -66,7 +66,7 @@ def target_files(input_folder, file_filters=None):
     files = os.listdir(input_folder)
     if file_filters:
         patterns = [re.compile(x) for x in file_filters]
-        files = [x for x in files if any([r.match(x) for r in patterns])]
+        files = [x for x in files if all([r.match(x) for r in patterns])]
     files = [os.path.join(input_folder, x) for x in files]
     return files
 

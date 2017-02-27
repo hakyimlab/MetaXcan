@@ -5,6 +5,7 @@ import unittest
 import SampleData
 from metax import PredictionModel
 from metax import MatrixManager
+D = MatrixManager.GENE_SNP_COVARIANCE_DEFINITION
 
 from metax.metaxcan import Utilities
 from metax.metaxcan import AssociationCalculation
@@ -24,7 +25,7 @@ def _context():
     gwas = _gwas()
     model = _prediction_model()
     s = SampleData.dataframe_from_covariance(SampleData.sample_covariance_s_1())
-    covariance = MatrixManager.MatrixManager(s)
+    covariance = MatrixManager.MatrixManager(s, D)
     c = Utilities._build_context(model, covariance, gwas)
     return c
 

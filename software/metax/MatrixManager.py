@@ -2,12 +2,6 @@ import pandas
 import numpy
 import Exceptions
 
-def load_matrix_manager(path):
-    d = pandas.read_table(path, sep="\s+")
-    m = MatrixManager(d)
-    return m
-
-
 K_MODEL="model"
 K_ID1="id1"
 K_ID2="id2"
@@ -27,17 +21,25 @@ class CDTF(object):
     ID2=2
     VALUE=3
 
+def load_matrix_manager(path, definition=GENE_SNP_COVARIANCE_DEFINITION):
+    d = pandas.read_table(path, sep="\s+")
+    m = MatrixManager(d, definition)
+    return m
+
 class MatrixManager(object):
     """
     Needs a dictionary mapping the header names to the keys ["model", "id1", "id2", "value"],
     """
-    def __init__(self, d, definition=GENE_SNP_COVARIANCE_DEFINITION):
+    def __init__(self, d, definition):
         self.definition = definition
         _validate(d, definition)
         self.data = _build_data(d, definition)
 
     def get(self, key, whitelist=None, strict=True):
         return _get(self.data, key, whitelist, strict)
+
+    def model_labels(self):
+        return set(self.data.keys())
 
     def n_ids(self, gene):
         if not gene in self.data:
@@ -71,7 +73,7 @@ def _build_data(d, definition):
     VALUE_KEY = definition[K_VALUE]
 
     d = d.fillna("NA")
-    d.GENE = pandas.Categorical(d.GENE, d.GENE.drop_duplicates())  # speed things up!
+    d[MODEL_KEY] = pandas.Categorical(d[MODEL_KEY], d[MODEL_KEY].drop_duplicates())  # speed things up!
     d = zip(d[MODEL_KEY].values, d[ID1_KEY].values, d[ID2_KEY].values, d[VALUE_KEY].values)
     r = {}
     for t in d:

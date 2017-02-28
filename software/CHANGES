@@ -1,3 +1,6 @@
+Version 0.5.4
+    * Bugfix for the case when there is no intersection between the prediction model's snps and  the GWAS'
+    * Updated Readme.
 Version 0.5.2
     * Had the MetaXcan output contain explicit -NA-
 Version 0.5.1
@@ -24,7 +27,7 @@ Version 0.3.2
     * Minor fix to be more lenient on input covariances.
 Version 0.3.1
     * Various changes to MetaMany.py: 
-        * Better flexibility for database organization. 
+        * Better flexibility for database organization.
         * Result files are now named GWAS-TISSUE to make them easier to identify
         * Betas are stored inside the output directory 
 Version 0.3

@@ -99,7 +99,8 @@ def load_gwas(source, gwas_format, strict=True, sep='\s+'):
         raise Exceptions.ReportableException("A valid SNP column name must be provided in the format")
 
     #keep only rsids
-    d = d[d[SNP].str.contains("rs")]
+    if d.shape[0] > 0:
+        d = d[d[SNP].str.contains("rs")]
 
     if strict:
         d = _ensure_columns(d)
@@ -138,6 +139,12 @@ def _rename_columns(d, gwas_format):
     return d
 
 def _ensure_columns(d):
+    if d.shape[0] == 0:
+        if OR in d: d[BETA] = None
+        if BETA_SIGN in d: d[BETA_SIGN] = None
+        d[ZSCORE] = None
+        return d
+
     d[EFFECT_ALLELE] = d[EFFECT_ALLELE].str.upper()
     d[NON_EFFECT_ALLELE] = d[NON_EFFECT_ALLELE].str.upper()
 

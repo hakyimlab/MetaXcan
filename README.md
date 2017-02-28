@@ -8,19 +8,20 @@ MetaXcan is an extension of [PrediXcan](https://github.com/hakyimlab/PrediXcan) 
 This repository contains a wide set of tools for calculating the gene-level association test results,
 and building processing pipelines as well.
 
+A manuscript desribing the MetaXcan method and application can be found [here](http://biorxiv.org/content/early/2017/02/27/045260).
+
 ## Prerequisites
 
 The software is developed and tested in Linux and Max OS environments. The main MetaXcan script is supported in Windows.
 
-You need  [Python 2.7](https://www.python.org/), [numpy](http://www.numpy.org/), [scipy](http://www.scipy.org/), [pandas](http://pandas.pydata.org/) to run MetaXcan, and there is a GUI done in TKInter.
+You need  [Python 2.7](https://www.python.org/), [numpy (>=1.11.1)](http://www.numpy.org/), [scipy (>=0.18.1)](http://www.scipy.org/), [pandas (>=0.18.1)](http://pandas.pydata.org/) to run MetaXcan, and there is a GUI done in TKInter.
 [mock](https://github.com/testing-cabal/mock) is needed for the unit tests
+
 
 [R](https://www.r-project.org/) with [ggplot](http://ggplot2.org/) and [dplyr](https://cran.r-project.org/web/packages/dplyr/index.html) 
 is needed for some optional statistics and charts.
 
 ## Project Layout
-
-You will find a preliminary version of MetaXcan's manuscript under **manuscript** folder.
 
 **software** folder contains an implementation of MetaXcan's method. 
 The following scripts from that folder are different steps in the MetaXcan pipeline:
@@ -31,8 +32,9 @@ M01_covariances_correlations.py
 M02_variances.py
 M03_betas.py
 M04_zscores.py
+MetaXcan.py
 ```
-, although a typical user will use only the last two of them.
+, although a typical user will use `MetaXcan.py`.
 
 The rest of the scripts in **software** folder are python packaging support scripts,
 and convenience wrappers such as the GUI.
@@ -61,7 +63,7 @@ The following example assumes that you have **python 2.7**, **numpy**, and **sci
 1) Clone this repository.
 ```bash
 $ git clone https://github.com/hakyimlab/MetaXcan
-~~```~~
+```
 
 2) Go to the software folder.
 ```bash
@@ -92,11 +94,8 @@ tar -xzvpf sample_data.tar.gz
 --pvalue_column P \
 --output_file results/test.csv
 ```
-This should take less than a minute on a 3GHZ computer.
-Bear in mind that this will generate intermediate data at `intermediate/beta`.
-This folder's content's are reused on different runs, not deleted:
-you might want to delete this folder before running MetaXcan again,
-or specify a different folder on each run.
+This should take less than a minute on a 3GHZ computer. For the full specification of command line parameters, you can check the [wiki](https://github.com/hakyimlab/MetaXcan/wiki/MetaXcan's-Command-Line-Reference).
+
 
 The example command parameters mean:
 
@@ -187,11 +186,6 @@ Check [this](https://github.com/hakyimlab/MetaXcan/tree/master/software) if you 
 about more general or advanced usages of MetaXcan.
 
 Check out the [Wiki](https://github.com/hakyimlab/MetaXcan/wiki) for exhaustive usage information.
-
-You will find the manuscript with the theory and rationale for the method at
-```bash
-/manuscript
-```
 
 The code lies at
 ```bash

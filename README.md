@@ -15,6 +15,7 @@ A manuscript desribing the MetaXcan method and application can be found [here](h
 The software is developed and tested in Linux and Max OS environments. The main MetaXcan script is supported in Windows.
 
 You need  [Python 2.7](https://www.python.org/), [numpy (>=1.11.1)](http://www.numpy.org/), [scipy (>=0.18.1)](http://www.scipy.org/), [pandas (>=0.18.1)](http://pandas.pydata.org/) to run MetaXcan, and there is a GUI done in TKInter.
+[mock](https://github.com/testing-cabal/mock) is needed for the unit tests.
 
 [R](https://www.r-project.org/) with [ggplot](http://ggplot2.org/) and [dplyr](https://cran.r-project.org/web/packages/dplyr/index.html) 
 is needed for some optional statistics and charts.

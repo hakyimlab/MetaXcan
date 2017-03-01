@@ -11,6 +11,7 @@ class Context(object):
     def get_genes(self): pass
     def get_metaxcan_zscores(self, gene): pass
     def get_model_matrix(self, gene, tissues): pass
+    def get_cutoff(self, matrix): pass
 
 class CalculationStatus(object):
     OK=0
@@ -33,8 +34,7 @@ def joint_analysis(context, gene):
         status = CalculationStatus.NO_PRODUCT
         return g, pvalue, n, n_indep, p_i_best, p_i_worst, status
 
-    trace = numpy.trace(matrix)
-    cutoff = 0.1*trace
+    cutoff = context.get_cutoff(matrix)
     zscores = array([z for i,z in enumerate(zscores) if tissue_labels[i] in labels])
     inv, n_indep, eigen = Math.capinv(matrix, cutoff)
 

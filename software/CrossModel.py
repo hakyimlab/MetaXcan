@@ -33,6 +33,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='CrossModel.py %s:'
         'Assess joint analysis of MetaXcan Results' % (__version__))
 
+    parser.add_argument("--cutoff_ratio", help="ratio to use when truncating SVD", default=None)
     parser.add_argument("--metaxcan_folder", help="path to metaxcan files", default=None)
     parser.add_argument("--metaxcan_filter", help="regular expression to filter results files", default=[".*csv"], type=str, nargs='+')
     parser.add_argument("--model_product", help="path to file with model feature product", default=None)

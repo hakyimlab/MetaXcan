@@ -43,7 +43,7 @@ def _inv(a, cf, rcond):
     cutoff = cf(s, rcond)
     for i in range(min(n, m)):
         # The first Singular Value will always be selected because we want at least one, and the first is the highest
-        if s[i] > cutoff or i==0:
+        if s[i] >= cutoff or i==0:
             s[i] = 1. / s[i]
         else:
             s[i] = 0.

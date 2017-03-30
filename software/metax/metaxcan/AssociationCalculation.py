@@ -74,6 +74,8 @@ def association(gene, context, return_snps=False):
         return r
 
 def dataframe_from_results(results):
+    if len(results) == 0:
+        results = [[],[],[],[],[],[],[]]
     r = pandas.DataFrame({key: results[order] for order, key in ARF.order})
     r = r[[key for order,key in ARF.order]]
     return r

@@ -80,6 +80,7 @@ def gwas_filtered_source(path, snps=None, snp_column_name=None, skip_until_heade
         header_comps = header.strip().split(separator)
         s = {c:[] for c in header_comps}
         index = -1
+
         if snp_column_name:
             if not snp_column_name in header_comps: raise Exceptions.ReportableException("Did not find snp colum name")
             index = header_comps.index(snp_column_name)
@@ -89,8 +90,10 @@ def gwas_filtered_source(path, snps=None, snp_column_name=None, skip_until_heade
             duplicated = [k for k,v in header_count.iteritems() if v>1]
             logging.info("The input GWAS has duplicated columns: %s, will only use the first one in each case", str(duplicated))
 
+        strip_c = "\n" if separator else None
         for i,line in enumerate(file):
-            comps = line.strip().split(separator)
+            comps = line.strip(strip_c).split(separator)
+
             if snps and not comps[index] in snps:
                 continue
 

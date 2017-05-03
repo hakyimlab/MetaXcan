@@ -1,16 +1,18 @@
 import numpy
+import logging
 from JointAnalysis import Context
 from ..metaxcan import MetaXcanResultsManager
 from .. import MatrixManager
 from .. import Exceptions
 
 class SimpleContext(Context):
-    def __init__(self, metaxcan_results_manager, matrix_manager, cutoff):
+    def __init__(self, metaxcan_results_manager, matrix_manager, cutoff, epsilon):
         self.metaxcan_results_manager = metaxcan_results_manager
         self.matrix_manager = matrix_manager
         self.model_name_index = _index(matrix_manager)
         # Yeah, a callable object. Go figure.
         self.cutoff = cutoff
+        self.epsilon = epsilon
 
     def get_genes(self):
         matrix_genes = self.matrix_manager.model_labels()
@@ -40,6 +42,9 @@ def _cutoff(args):
             self.cutoff_ratio = float(cutoff_ratio)
 
         def __call__(self, matrix):
+            # conceptual shotcut
+            if self.cutoff_ratio == 0:
+                return 0.0
             trace = numpy.trace(matrix)
             cutoff = self.cutoff_ratio * trace
             return cutoff
@@ -49,6 +54,9 @@ def _cutoff(args):
             self.cutoff_threshold = float(cutoff_threshold)
 
         def __call__(self, matrix):
+            #conceptual shotcut
+            if self.cutoff_threshold== 0:
+                return 0.0
             eigen = sorted(numpy.linalg.eig(matrix)[0], reverse=True)
             trace = numpy.sum(eigen)
             cumsum = numpy.cumsum(eigen)
@@ -61,9 +69,9 @@ def _cutoff(args):
             return last
 
     cutoff = None
-    if args.cutoff_ratio:
+    if args.cutoff_ratio is not None:
         cutoff = CutoffRatio(args.cutoff_ratio)
-    elif args.cutoff_threshold:
+    elif args.cutoff_threshold is not None:
         cutoff = CutoffThreshold(args.cutoff_threshold)
     else:
         raise Exceptions.InvalidArguments("Specify either cutoff_ratio or cutoff_threshold")
@@ -79,6 +87,6 @@ def context_from_args(args):
     matrix_manager = MatrixManager.load_matrix_manager(args.model_product, definition=definition)
     metaxcan_manager = MetaXcanResultsManager.build_manager(args.metaxcan_folder, filters=args.metaxcan_filter)
     cutoff = _cutoff(args)
-    context = SimpleContext(metaxcan_manager, matrix_manager, cutoff)
+    context = SimpleContext(metaxcan_manager, matrix_manager, cutoff, args.regularization)
     return context
 

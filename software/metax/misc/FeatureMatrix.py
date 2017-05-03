@@ -1,6 +1,7 @@
 import os
 import pandas
 import logging
+import re
 from numpy import dot, transpose, cov
 
 from .. import MatrixManager
@@ -38,7 +39,7 @@ class FeatureMatrixManager(object):
             data.extend(flat)
 
         data = Utilities.to_dataframe(data, column_names)
-        data = data.sort_values(by=["gene", "model1", "model2"])
+        data = data.sort_values(by=column_names[0:2])
         compression = "gzip" if "gz" in path else None
         data.to_csv(path, index=False, sep="\t", compression=compression)
 
@@ -49,10 +50,9 @@ def build_manager(folder, filters=["TW_*"], standardize=True):
     manager = FeatureMatrixManager(expressions, standardize)
     return manager
 
+_regexp = re.compile(".*TW_(.*)_0.5.expr.txt$")
 def _parse_expression_name(file):
-    n = os.path.basename(os.path.normpath(file))
-    n = n.replace("TW_","").replace(".expr.txt", "").replace("_0.5", "")
-    return n
+    return _regexp.match(file).group(1)
 
 def _load_features(files, parse_func):
     results = {}
@@ -63,6 +63,7 @@ def _load_features(files, parse_func):
         results[tag] = e
     return results
 
+# dictionary[gene][tissue]
 def _build_data(data, standardize):
     logging.log(9,"Building data")
     result = {}

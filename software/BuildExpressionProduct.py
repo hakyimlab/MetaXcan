@@ -23,7 +23,7 @@ def run(args):
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description='BuildExpressionProducts.py %s:'
-        'Will take "gene expression matrix" files, and build their products (or covariances) with each file being a feature' % (__version__))
+        'Will take "gene expression matrix" files, and build their products (or covariances) with each file taken as a feature' % (__version__))
 
     parser.add_argument("--expression_folder", help="path to folder with expression", default=None)
     parser.add_argument("--output", help="where you want the output", default=None)

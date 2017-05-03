@@ -59,8 +59,13 @@ def get_name_prefix(args):
     regexp = re.compile(args.gwas_file_pattern) if args.gwas_file_pattern else None
     names = Utilities.contentsWithRegexpFromFolder(args.gwas_folder, regexp)
     name = names[0]
-    report_prefix = name.split("/")[-1].split(".")[0]
+    report_prefix = get_result_prefix(args, name)
     return report_prefix
+
+def get_result_prefix(args, name):
+    if args.output_file_prefix:
+        return args.output_file_prefix
+    return name.split("/")[-1].split(".")[0]
 
 def process(args, db_filename):
     filebase = os.path.basename(db_filename).replace(".db", "")
@@ -148,6 +153,10 @@ arguments --covariance_directory and --covariance_suffix. """)
                         default=".txt.gz.._0.5.db")
 
     parser.add_argument("--output_directory",
+                        help="name of output file",
+                        default="results")
+
+    parser.add_argument("--output_file_prefix",
                         help="name of output file",
                         default="results")
 

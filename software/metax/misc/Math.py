@@ -8,15 +8,15 @@ def _rc(s, tolerance):
 def _ac(s, tolerance):
     return tolerance
 
-def crpinv(a, rcond=1e-15):
+def crpinv(a, rcond=1e-15, epsilon=None):
     """Pseudo inverse, relative cutoff """
-    return _inv(a, _rc, rcond)
+    return _inv(a, _rc, rcond, epsilon)
 
-def capinv(a, rcond=1e-15):
+def capinv(a, rcond=1e-15, epsilon=None):
     """Pseudo inverse, absolute cutoff"""
-    return _inv(a, _ac, rcond)
+    return _inv(a, _ac, rcond, epsilon)
 
-def _inv(a, cf, rcond):
+def _inv(a, cf, rcond, epsilon):
     """
     modified pseudo inverse
     """
@@ -33,6 +33,11 @@ def _inv(a, cf, rcond):
 
     a, wrap = _makearray(a)
     _assertNoEmpty2d(a)
+
+    if epsilon is not None:
+        epsilon = numpy.repeat(epsilon, a.shape[0])
+        epsilon = numpy.diag(epsilon)
+        a = a + epsilon
     a = a.conjugate()
     u, s, vt = numpy.linalg.svd(a, 0)
     m = u.shape[0]

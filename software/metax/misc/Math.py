@@ -58,7 +58,8 @@ def _inv(a, cf, rcond, epsilon):
 
 def standardize(x):
     mean = numpy.mean(x)
-    scale = numpy.std(x)
+    #follow R's convention, ddof=1
+    scale = numpy.std(x, ddof=1)
     x = x - mean
     x = x / scale
     return x

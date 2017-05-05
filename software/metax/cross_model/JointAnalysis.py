@@ -26,12 +26,6 @@ def joint_analysis(context, gene):
     pvalue, n, n_indep, p_i_best, p_i_worst, status = None, None, None, None, None, CalculationStatus.NO_DATA
     g = gene.split(".")[0]
 
-    # if not g in set(["ENSG00000125772", #cross predixcan best
-    #     "ENSG00000154529",  #-30, meta p_i_best much better than predixcan_i_best
-    #     "ENSG00000206503",  #-30, low p_i_bets
-    #     "ENSG00000104918"]): #-11
-    #     return g, pvalue, n, n_indep, p_i_best, p_i_worst, status
-
     zscores, tissue_labels = context.get_metaxcan_zscores(gene)
     if not zscores or len(zscores) == 0:
         status = CalculationStatus.NO_METAXCAN_RESULTS
@@ -44,9 +38,9 @@ def joint_analysis(context, gene):
         return g, pvalue, n, n_indep, p_i_best, p_i_worst, status
 
     cutoff = context.get_cutoff(matrix)
-    zscores = array([z for i,z in enumerate(zscores) if tissue_labels[i] in labels])
+    _d = {tissue_labels[i]:zscores[i] for i in xrange(0, len(tissue_labels))}
+    zscores = array([_d[l] for l in labels])
     inv, n_indep, eigen = Math.capinv(matrix, cutoff, context.epsilon)
-
 
     max_z = numpy.max(numpy.abs(zscores))
     p_i_best = 2*stats.norm.cdf(-max_z)
@@ -62,24 +56,19 @@ def joint_analysis(context, gene):
 
 
     w = float(dot(dot(zscores, inv), zscores))
-
-    chi2 = stats.chi2.cdf(w, n_indep)
-    if chi2 == 1:
-        pvalue = 1e-30
-        status = CalculationStatus.INSUFFICIENT_NUMERICAL_RESOLUTION
-        return g, pvalue, n, n_indep, p_i_best, p_i_worst, status
-
-    pvalue = 1 - chi2
-
-#    from IPython import embed; embed()
+    chi2_p = stats.chi2.sf(w, n_indep)
 
     # if we got to this point, we are  ok-ish. The chi distribution might have been unable to calculate the pvalue because it is too small...
-    status = CalculationStatus.OK
+    if chi2_p == 0:
+        status = CalculationStatus.INSUFFICIENT_NUMERICAL_RESOLUTION
+    else:
+        status = CalculationStatus.OK
+
+    pvalue = chi2_p
 
     return g, pvalue, n, n_indep, p_i_best, p_i_worst, status
 
 def format_results(results):
-#    exit(0)
     columns = ["gene", "pvalue", "n", "n_indep", "p_i_best", "p_i_worst", "status"]
     results = Utilities.to_dataframe(results, columns)
     results = results.sort_values(by="pvalue")

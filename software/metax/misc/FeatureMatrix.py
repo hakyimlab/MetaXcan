@@ -14,6 +14,7 @@ class FeatureMatrixManager(object):
     def __init__(self, data, standardize=True):
         self.data = _build_data(data, standardize)
         self.columns = _get_columns(data)
+        self.standardize = True
 
     def get_feature_product(self, feature_key, center=False):
         X, labels = self._x(feature_key)

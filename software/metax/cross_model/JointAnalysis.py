@@ -21,21 +21,31 @@ class CalculationStatus(object):
     NO_PRODUCT=-3
     INSUFFICIENT_NUMERICAL_RESOLUTION = -4
     SINGULAR_COVARIANCE = -5
+#    COMPLEX_COVARIANCE = -6
 
 def joint_analysis(context, gene):
-    pvalue, n, n_indep, p_i_best, p_i_worst, status = None, None, None, None, None, CalculationStatus.NO_DATA
+    pvalue, n, n_indep, p_i_best, p_i_worst, eigen_max, eigen_min, status = None, None, None, None, None, None, None, CalculationStatus.NO_DATA
     g = gene.split(".")[0]
 
     zscores, tissue_labels = context.get_metaxcan_zscores(gene)
     if not zscores or len(zscores) == 0:
         status = CalculationStatus.NO_METAXCAN_RESULTS
-        return g, pvalue, n, n_indep, p_i_best, p_i_worst, status
+        return g, pvalue, n, n_indep, p_i_best, p_i_worst, eigen_max, eigen_min, status
     n = len(zscores)
 
     labels, matrix = context.get_model_matrix(gene, tissue_labels)
     if not labels or len(labels) == 0:
         status = CalculationStatus.NO_PRODUCT
-        return g, pvalue, n, n_indep, p_i_best, p_i_worst, status
+        return g, pvalue, n, n_indep, p_i_best, p_i_worst, eigen_max, eigen_min, status
+
+    e, v = numpy.linalg.eig(matrix)
+    eigen_max, eigen_min = numpy.max(e), numpy.min(e)
+
+    #eigen_max_i, eigen_min_i = float(numpy.imag(eigen_max)), float(numpy.imag(eigen_min))
+    #if eigen_max_i != 0 or eigen_min_i != 0:
+    #    from IPython import embed; embed(); exit(0)
+    #    status = CalculationStatus.COMPLEX_COVARIANCE
+    #    return g, pvalue, n, n_indep, p_i_best, p_i_worst, None, None, status
 
     cutoff = context.get_cutoff(matrix)
     _d = {tissue_labels[i]:zscores[i] for i in xrange(0, len(tissue_labels))}
@@ -52,8 +62,7 @@ def joint_analysis(context, gene):
     if numpy.max(eigen_w) > 1e10:
         logging.log(8, "gene %s has a suspicious covariance, skipping", gene)
         status = CalculationStatus.SINGULAR_COVARIANCE
-        return g, pvalue, n, n_indep, p_i_best, p_i_worst, status
-
+        return g, pvalue, n, n_indep, p_i_best, p_i_worst, eigen_max, eigen_min, status
 
     w = float(dot(dot(zscores, inv), zscores))
     chi2_p = stats.chi2.sf(w, n_indep)
@@ -66,10 +75,10 @@ def joint_analysis(context, gene):
 
     pvalue = chi2_p
 
-    return g, pvalue, n, n_indep, p_i_best, p_i_worst, status
+    return g, pvalue, n, n_indep, p_i_best, p_i_worst, eigen_max, eigen_min, status
 
 def format_results(results):
-    columns = ["gene", "pvalue", "n", "n_indep", "p_i_best", "p_i_worst", "status"]
+    columns = ["gene", "pvalue", "n", "n_indep", "p_i_best", "p_i_worst", "eigen_max", "eigen_min", "status"]
     results = Utilities.to_dataframe(results, columns)
     results = results.sort_values(by="pvalue")
     results = results.fillna("NA")

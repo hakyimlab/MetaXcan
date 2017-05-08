@@ -20,7 +20,9 @@ def dosageName(name):
     return name + ".dosage.gz"
 
 def dosageNamesFromFolder(folder):
-    names = namesWithPatternFromFolder(folder, ".dosage.gz")
+    names = contentsWithRegexpFromFolder(folder, ".*.dosage.gz")
+    if not names:
+        names = contentsWithRegexpFromFolder(folder, ".*.dos.gz")
     return names
 
 def hapNamesFromFolder(folder):
@@ -58,6 +60,8 @@ def contentsWithPatternsFromFolder(folder, patterns):
     return paths
 
 def contentsWithRegexpFromFolder(folder, regexp):
+    if type(regexp) == str:
+        regexp = re.compile(regexp)
     contents = os.listdir(folder)
     paths = [x for x in contents if regexp.match(x)] if regexp else contents
     return paths

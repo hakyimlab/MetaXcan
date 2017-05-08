@@ -102,10 +102,11 @@ class ProcessWeightDB(object):
     def getSNPS(self, name, weight_db_logic):
         dosageLoader = None
         if self.input_format == Formats.IMPUTE:
+            #TODO: update
             dosageLoader = ThousandGenomesUtilities.IMPUTEDosageLoader(self.data_folder, name) #outdated code
         elif self.input_format == Formats.PrediXcan:
-            dosageName = Utilities.dosageName(name)
-            path = os.path.join(self.data_folder, dosageName)
+            #dosageName = Utilities.dosageName(name)
+            path = os.path.join(self.data_folder, name)
             dosageLoader = PrediXcanFormatUtilities.PrediXcanFormatDosageLoader(path, weight_db_logic)
         else:
             logging.info("Invalid input format: %s", self.input_format)

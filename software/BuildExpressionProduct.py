@@ -7,24 +7,41 @@ from metax import Exceptions
 from metax import Utilities
 from metax.misc import FeatureMatrix
 
+def _run(args, subset=None, append=None):
+    logging.info("Loading expressions")
+    manager = FeatureMatrix.build_manager(args.expression_folder, standardize=True, subset=subset)
+
+    logging.info("Saving")
+    Utilities.ensure_requisite_folders(args.output)
+    manager.save_covariances(args.output, append=append)
+
+    logging.info("Ran.")
+
 def run(args):
     if os.path.exists(args.output):
         logging.info("%s already exists, you have to move it or delete it if you want it done again", args.output)
         return
-    logging.info("Loading expressions")
-    manager = FeatureMatrix.build_manager(args.expression_folder, standardize=True)
 
-    logging.info("Saving")
-    Utilities.ensure_requisite_folders(args.output)
-    manager.save_covariances(args.output)
+    if args.column_chunks:
+        features = sorted(FeatureMatrix.features_in_folder(args.expression_folder))
+        total = len(features)
+        chunk_size = len(features)/args.column_chunks
+        features = [features[i : i+chunk_size] for i in range(0, len(features), chunk_size)]
+        l=0
+        for i,f in enumerate(features):
+            l+=len(f)
+            logging.info("Pass %i, %i/%i",i,l,total)
+            _run(args, subset=f, append=(i>0))
+    else:
+        _run(args)
 
-    logging.info("Ran.")
 
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description='BuildExpressionProducts.py %s:'
         'Will take "gene expression matrix" files, and build their products (or covariances) with each file taken as a feature' % (__version__))
 
+    parser.add_argument("--column_chunks", help="wether to figure it out on a subset of columsn a t a time (memory reasons)", default=None, type=int)
     parser.add_argument("--expression_folder", help="path to folder with expression", default=None)
     parser.add_argument("--output", help="where you want the output", default=None)
     parser.add_argument("--verbosity", help="Log verbosity level. 1 is everything being logged. 10 is only high level messages, above 10 will hardly log anything", default = "10")

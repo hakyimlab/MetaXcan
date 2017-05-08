@@ -1,4 +1,3 @@
-import os
 import pandas
 import logging
 import re
@@ -32,7 +31,7 @@ class FeatureMatrixManager(object):
         X = [vectors[m] for m in labels]
         return X, labels
 
-    def save_covariances(self, path, column_names=K_GENE_MODEL_HEADER):
+    def save_covariances(self, path, column_names=K_GENE_MODEL_HEADER, append=False):
         data = []
         for key in self.columns:
             matrix, labels = self.get_feature_cov(key)
@@ -42,24 +41,47 @@ class FeatureMatrixManager(object):
         data = Utilities.to_dataframe(data, column_names)
         data = data.sort_values(by=column_names[0:2])
         compression = "gzip" if "gz" in path else None
-        data.to_csv(path, index=False, sep="\t", compression=compression)
+        if append:
+            with open(path, 'a') as f:
+                data.to_csv(f, header=False, index=False, sep="\t", compression=compression)
+        else:
+            data.to_csv(path, index=False, sep="\t", compression=compression)
 
 #TODO: not necessarily "genes", but genetic features
-def build_manager(folder, filters=["TW_*"], standardize=True):
+def build_manager(folder, filters=["TW_*"], standardize=True, subset=None):
     files = Utilities.target_files(folder, file_filters=filters)
-    expressions = _load_features(files, _parse_expression_name)
+    expressions = _load_features(files, _parse_expression_name, subset)
     manager = FeatureMatrixManager(expressions, standardize)
     return manager
+
+def _features(file):
+    r = None
+    with open(file) as f:
+        r = f.readline().strip().split()
+    return r
+
+def features_in_folder(folder, filters=["TW_*"]):
+    features = set()
+    files = Utilities.target_files(folder, file_filters=filters)
+    for file in files:
+        l = _features(file)
+        features.update(l)
+    return features
 
 _regexp = re.compile(".*TW_(.*)_0.5.expr.txt$")
 def _parse_expression_name(file):
     return _regexp.match(file).group(1)
 
-def _load_features(files, parse_func):
+def _load_features(files, parse_func, subset):
+    subset = set(subset)
     results = {}
     for file in sorted(files):
         logging.log(9, "Loading feature file %s", file)
-        e = pandas.read_csv(file, sep="\t")
+        features = None
+        if subset:
+            features = _features(file)
+            features = [x for x in features if x in subset]
+        e = pandas.read_csv(file, sep="\t", usecols=features)
         tag = parse_func(file)
         results[tag] = e
     return results

@@ -37,7 +37,7 @@ And use them to run MetaXcan analysis on:
 
 However, if you have access to interesting data,
 you can build your own Transcriptome Prediction Model database 
-(using tools such as [PredictDB](https://github.com/hakyimlab/PrediXmod/tree/master/PredictDB)), 
+(using tools such as [PredictDB](http://predictdb.org)), 
 and your own covariance (using tools from this repository).
 
 More detailed information and usage documentation can be found at the [Wiki](https://github.com/hakyimlab/MetaXcan/wiki),

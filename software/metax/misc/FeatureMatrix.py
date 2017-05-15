@@ -1,6 +1,7 @@
 import pandas
 import logging
 import re
+import gzip
 from numpy import dot, transpose, cov
 
 from .. import MatrixManager
@@ -42,7 +43,8 @@ class FeatureMatrixManager(object):
         data = data.sort_values(by=column_names[0:2])
         compression = "gzip" if "gz" in path else None
         if append:
-            with open(path, 'a') as f:
+            _open = gzip.open if compression == "gzip" else open
+            with _open(path, 'a') as f:
                 data.to_csv(f, header=False, index=False, sep="\t", compression=compression)
         else:
             data.to_csv(path, index=False, sep="\t", compression=compression)
@@ -81,6 +83,11 @@ def _load_features(files, parse_func, subset):
         if subset:
             features = _features(file)
             features = [x for x in features if x in subset]
+
+            if len(features) == 0:
+                logging.info("No selected features for %s, skipping", file)
+                continue
+
         e = pandas.read_csv(file, sep="\t", usecols=features)
         tag = parse_func(file)
         results[tag] = e

@@ -21,7 +21,9 @@ class CalculationStatus(object):
     NO_PRODUCT=-3
     INSUFFICIENT_NUMERICAL_RESOLUTION = -4
     SINGULAR_COVARIANCE = -5
-#    COMPLEX_COVARIANCE = -6
+    INVERSE_ERROR = -6
+    COMPLEX_COVARIANCE = -7
+
 
 def joint_analysis(context, gene):
     pvalue, n, n_indep, p_i_best, p_i_worst, eigen_max, eigen_min, status = None, None, None, None, None, None, None, CalculationStatus.NO_DATA
@@ -38,14 +40,13 @@ def joint_analysis(context, gene):
         status = CalculationStatus.NO_PRODUCT
         return g, pvalue, n, n_indep, p_i_best, p_i_worst, eigen_max, eigen_min, status
 
+    # also, check that the matrix actually makes sense. We are currently returning it just in case but matrices with complex covariance are suspicious.
     e, v = numpy.linalg.eig(matrix)
-    eigen_max, eigen_min = numpy.max(e), numpy.min(e)
+    if numpy.imag(e).any():
+        status = CalculationStatus.COMPLEX_COVARIANCE
+        return g, pvalue, n, n_indep, p_i_best, p_i_worst, eigen_max, eigen_min, status
 
-    #eigen_max_i, eigen_min_i = float(numpy.imag(eigen_max)), float(numpy.imag(eigen_min))
-    #if eigen_max_i != 0 or eigen_min_i != 0:
-    #    from IPython import embed; embed(); exit(0)
-    #    status = CalculationStatus.COMPLEX_COVARIANCE
-    #    return g, pvalue, n, n_indep, p_i_best, p_i_worst, None, None, status
+    eigen_max, eigen_min = numpy.max(e), numpy.min(e)
 
     cutoff = context.get_cutoff(matrix)
     _d = {tissue_labels[i]:zscores[i] for i in xrange(0, len(tissue_labels))}
@@ -58,7 +59,14 @@ def joint_analysis(context, gene):
     p_i_worst = 2*stats.norm.cdf(-min_z)
 
     #TODO: implement a better heuristic
-    eigen_w, eigen_v = numpy.linalg.eig(inv)
+    try:
+        eigen_w, eigen_v = numpy.linalg.eig(inv)
+    except:
+        #WTCCC 'ENSG00000204560.5'
+        logging.log(8, "Problems with inverse for %s, skipping", gene)
+        status = CalculationStatus.INVERSE_ERROR
+        return g, pvalue, n, n_indep, p_i_best, p_i_worst, eigen_max, eigen_min, status
+
     if numpy.max(eigen_w) > 1e10:
         logging.log(8, "gene %s has a suspicious covariance, skipping", gene)
         status = CalculationStatus.SINGULAR_COVARIANCE

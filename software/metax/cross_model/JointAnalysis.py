@@ -44,6 +44,8 @@ def joint_analysis(context, gene):
     e, v = numpy.linalg.eig(matrix)
     if numpy.imag(e).any():
         status = CalculationStatus.COMPLEX_COVARIANCE
+        e = numpy.real(e)
+        eigen_max, eigen_min = numpy.max(e), numpy.min(e)
         return g, pvalue, n, n_indep, p_i_best, p_i_worst, eigen_max, eigen_min, status
 
     eigen_max, eigen_min = numpy.max(e), numpy.min(e)
@@ -88,6 +90,6 @@ def joint_analysis(context, gene):
 def format_results(results):
     columns = ["gene", "pvalue", "n", "n_indep", "p_i_best", "p_i_worst", "eigen_max", "eigen_min", "status"]
     results = Utilities.to_dataframe(results, columns)
-    results = results.sort_values(by="pvalue")
+    results = results.sort_values(by=["pvalue", "status"])
     results = results.fillna("NA")
     return results

@@ -75,7 +75,7 @@ def _parse_expression_name(file):
     return _regexp.match(file).group(1)
 
 def _load_features(files, parse_func, subset):
-    subset = set(subset)
+    subset = set(subset) if subset else None
     results = {}
     for file in sorted(files):
         logging.log(9, "Loading feature file %s", file)

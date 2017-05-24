@@ -189,10 +189,14 @@ def ensure_requisite_folders(path):
     if len(folder) and not os.path.exists(folder):
         os.makedirs(folder)
 
-def to_dataframe(data, columns):
+def to_dataframe(data, columns,to_numeric=None, fill_na=None):
     data = zip(*data)
+    if to_numeric:
+        data = [pandas.to_numeric(x, errors=to_numeric) for x in data]
     data = {columns[i]:data[i] for i in xrange(0, len(columns))}
     data = pandas.DataFrame(data)
     data = data[columns]
+    if fill_na:
+        data = data.fillna(fill_na)
     return data
 

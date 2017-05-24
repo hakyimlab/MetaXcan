@@ -1,6 +1,7 @@
 import os
 import sqlite3
 import pandas
+import logging
 
 import Exceptions
 
@@ -133,3 +134,55 @@ def load_model(path):
     extra = dataframe_from_extra_data(extra)
     model = Model(weights, extra)
     return model
+
+class ModelManager(object):
+    def __init__(self, models):
+        self.models = models #models is a dictionary of dictionaries, models[gene][model] are the weights for a given gene and model
+
+    def get_genes(self):
+        return set(self.models.index.get_level_values(0))
+
+    def get_snps(self, gene = None):
+        w = self.models if not gene else self.models.loc[gene]
+        i = 2 if not gene else 1
+        snps = set(w.index.get_level_values(i))
+        return snps
+
+    def get_weights(self, gene):
+        return self.models.loc[gene]
+
+def _split_models(models):
+    _m = {}
+    for k,m in models.iteritems():
+        for gene in m.extra.gene:
+            w = m.weights
+            w = w[w.gene == gene]
+            if not gene in _m: _m[gene] = {}
+            _m[gene][k] = w
+    return _m
+
+
+def load_model_manager(path):
+    def _extract_model_name(path):
+        p = os.path.split(path)[1]
+        p = p.split("_0.5.db")[0]
+        return p
+
+    def _get_models(paths):
+        logging.log(9, "preloading models")
+        _m = {_extract_model_name(x): load_model(x) for x in paths}
+        for k,m in _m.iteritems():
+            logging.log(9, "processing %s", k)
+            w = m.weights
+            w["model"] = k
+        _m = [x.weights for x in _m.values()]
+        models = pandas.concat(_m)
+        logging.log(9, "indexing")
+        models = models.set_index(["gene", "model", "rsid"])
+        models = models.sort_index()
+        return models
+
+    paths = [os.path.join(path,x) for x in os.listdir(path) if ".db" in x]
+    models = _get_models(paths)
+    model_manager = ModelManager(models)
+    return model_manager

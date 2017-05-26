@@ -5,19 +5,42 @@ from metax import __version__
 from metax import Logging
 from metax import Exceptions
 from metax import PredictionModel
-
-
-
+from metax import Utilities
+from metax.genotype import  Utilities as GenotypeUtilities
+from metax.genotype import GenotypeAnalysis
 
 def run(args):
-    if os.path.exists(args.output):
-        logging.info("%s already exists, you have to move it or delete it if you want it done again", args.output)
+    if os.path.exists(args.snp_covariance_output):
+        logging.info("%s already exists, you have to move it or delete it if you want it done again", args.snp_covariance_output)
+        return
+
+    if os.path.exists(args.gene_variance_output):
+        logging.info("%s already exists, you have to move it or delete it if you want it done again", args.gene_variance_output)
         return
 
     logging.info("Loading models...")
     model_manager = PredictionModel.load_model_manager(args.models_folder)
-    print len(model_manager.get_genes())
-    print len(model_manager.get_snps())
+    all_snps = model_manager.get_rsids()
+
+    logging.info("processing genotype")
+    covariance_results = []
+    variance_results = []
+    for chromosome, metadata, dosage in GenotypeUtilities.genotype_by_chromosome_from_args(args, all_snps):
+        logging.log(9, "Processing chromosome %s", str(chromosome))
+        context = GenotypeAnalysis.GenotypeAnalysisContext(metadata, dosage, model_manager)
+        genes = context.get_genes()
+        for gene in genes:
+            cov_data = GenotypeAnalysis.get_prediction_covariance(context, gene)
+            covariance_results.append(cov_data)
+
+            variance_data = GenotypeAnalysis.get_prediction_variance(context, gene)
+            variance_results.extend(variance_data)
+
+    covariance_results = GenotypeAnalysis.format_prediction_covariance_results(covariance_results)
+    Utilities.save_pandas_table(covariance_results, args.snp_covariance_output)
+
+    variance_results = GenotypeAnalysis.format_prediction_variance_results(variance_results)
+    Utilities.save_pandas_table(variance_results, args.gene_variance_output)
 
 
 if __name__ == "__main__":
@@ -28,7 +51,8 @@ if __name__ == "__main__":
     parser.add_argument("--models_folder", help="Path to folder with prediction models")
     parser.add_argument("--gtex_genotype_file", help="Path to gtex genotype file")
     parser.add_argument("--gtex_snp_file", help="Path to snp annotation file")
-    parser.add_argument("--output", help="where you want the output", default=None)
+    parser.add_argument("--snp_covariance_output", help="where you want the output", default=None)
+    parser.add_argument("--gene_variance_output", help="where you want the output", default=None)
     parser.add_argument("--verbosity", help="Log verbosity level. 1 is everything being logged. 10 is only high level messages, above 10 will hardly log anything", default = "10")
     parser.add_argument("--throw", action="store_true", help="Throw exception on error", default=False)
 

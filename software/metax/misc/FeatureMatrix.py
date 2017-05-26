@@ -107,6 +107,8 @@ def _build_data(data, standardize):
             values =  df[column].values
             if standardize:
                 values = Math.standardize(values)
+                if values is None:
+                    continue
             c[k] = values
     return result
 

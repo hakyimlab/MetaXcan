@@ -1,10 +1,12 @@
-import pandas
-import os
 import logging
-import numpy
+import os
 
+import numpy
+import pandas
+
+from .. import NamingConventions
 from .. import Utilities
-from ..misc import NamingConventions
+
 
 class MetaXcanResultsManager(object):
     def __init__(self, data):

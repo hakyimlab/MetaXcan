@@ -60,6 +60,8 @@ def standardize(x):
     mean = numpy.mean(x)
     #follow R's convention, ddof=1
     scale = numpy.std(x, ddof=1)
+    if scale == 0:
+        return None
     x = x - mean
     x = x / scale
     return x

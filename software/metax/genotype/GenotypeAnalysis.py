@@ -1,0 +1,90 @@
+import numpy
+
+from .. import MatrixManager
+from .. import Utilities
+from ..misc import Math
+
+
+class GenotypeAnalysisContext(object):
+    def __init__(self, metadata, dosage, model_manager, standardize=False):
+        self.metadata = metadata
+        self.dosage = numpify(dosage)
+        self.model_manager = model_manager
+        if standardize: self.standardise_data()
+
+    def standardise_data(self):
+        d = {}
+        rejected = set()
+        for k,v in self.dosage.iteritems():
+            v = Math.standardize(v)
+            if v is None:
+                rejected.add(k)
+                continue
+            d[k] = v
+        self.dosage = d
+        self.metadata = self.metadata[~self.metadata.rsid.isin(rejected)]
+
+    def get_genes(self):
+        snps = set(self.metadata.rsid)
+        genes = self.model_manager.get_genes_for_snps(snps)
+        return genes
+
+    def get_rsids(self, gene=None):
+        snps = self.model_manager.get_rsids(gene)
+        snps = [x for x in snps if x in self.dosage]
+        return set(snps)
+
+    def get_model_labels(self, gene=None):
+        return self.model_manager.get_model_labels(gene)
+
+    def get_models(self, gene=None):
+        return self.model_manager.get_models(gene)
+
+    def get_dosage(self, rsid):
+        return self.dosage[rsid]
+
+def numpify(d):
+    return {k:numpy.array(v, dtype=numpy.float64) for k, v in d.iteritems()}
+
+
+def get_prediction_variance(context, gene):
+    labels = context.get_model_labels(gene)
+    models = context.get_models(gene)
+    snps = context.get_rsids(gene)
+
+    results = []
+    for label in labels:
+        model = models.loc[label]
+        model_snps = [x for x in model.index.values if x in snps]
+        T = [context.get_dosage(l) * model.loc[l].weight for l in model_snps] #(X_0 * w_0, ... ,X_p * w_p)
+        T = numpy.sum(T, axis=0) #Sum_l (X_l * w_l)
+        # Mind the degrees of freedom! This way we will match  w_ * GAMMA * w, because covariance was calculated with ddof=1
+        v = numpy.var(T, ddof=1)
+        results.append((gene, label,v))
+
+    return results
+
+def format_prediction_variance_results(results):
+    columns = ["gene", "model", "variance"]
+    results = Utilities.to_dataframe(results, columns)
+    results = results.sort_values(by=["gene", "model"])
+    results = results.fillna("NA")
+    return results
+
+def get_prediction_covariance(context, gene):
+    snps = sorted(context.get_rsids(gene))
+    X = [context.get_dosage(x) for x in snps]
+    cov = numpy.cov(X)
+    return gene, snps, cov
+
+def format_prediction_covariance_results(results):
+    flat = []
+    for result in results:
+        data = MatrixManager._flatten_matrix_data([result])
+        flat.extend(data)
+
+    column_names = ["GENE", "RSID1", "RSID2", "VALUE"]
+    data = Utilities.to_dataframe(flat, column_names)
+    data = data.fillna("NA")
+    data = data.sort_values(by=column_names[0:2])
+    return data

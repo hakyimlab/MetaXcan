@@ -1,9 +1,12 @@
+import logging
 import os
 import sqlite3
+
 import pandas
-import logging
 
 import Exceptions
+import NamingConventions
+
 
 class WDBQF(object):
     "Weight DB weight Query Format"
@@ -137,18 +140,28 @@ def load_model(path):
 
 class ModelManager(object):
     def __init__(self, models):
-        self.models = models #models is a dictionary of dictionaries, models[gene][model] are the weights for a given gene and model
+        self.models = models
 
     def get_genes(self):
         return set(self.models.index.get_level_values(0))
 
-    def get_snps(self, gene = None):
+    def get_genes_for_snps(self,snps):
+        k = self.models.loc[(slice(None), slice(None), snps), :]
+        return set(k.index.get_level_values(0))
+
+    def get_rsids(self, gene = None):
         w = self.models if not gene else self.models.loc[gene]
         i = 2 if not gene else 1
         snps = set(w.index.get_level_values(i))
         return snps
 
-    def get_weights(self, gene):
+    def get_model_labels(self, gene = None):
+        w = self.models if not gene else self.models.loc[gene]
+        i = 1 if not gene else 0
+        snps = set(w.index.get_level_values(i))
+        return snps
+
+    def get_models(self, gene):
         return self.models.loc[gene]
 
 def _split_models(models):
@@ -163,14 +176,11 @@ def _split_models(models):
 
 
 def load_model_manager(path):
-    def _extract_model_name(path):
-        p = os.path.split(path)[1]
-        p = p.split("_0.5.db")[0]
-        return p
+
 
     def _get_models(paths):
         logging.log(9, "preloading models")
-        _m = {_extract_model_name(x): load_model(x) for x in paths}
+        _m = {NamingConventions.extract_model_name(x): load_model(x) for x in paths}
         for k,m in _m.iteritems():
             logging.log(9, "processing %s", k)
             w = m.weights

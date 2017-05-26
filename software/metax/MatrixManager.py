@@ -108,8 +108,15 @@ def _get(d, key, whitelist=None, strict=True):
         id2 = row[CDTF.ID2]
         if not id1 in entries: entries[id1] = {}
         if not id2 in entries: entries[id2] = {}
+
         value = row[CDTF.VALUE]
         if value == "NA":continue
+        try:
+            float(value)
+        except:
+            msg = "Invalid value:{} for ({},{},{})".format(value,key,id1,id2)
+            raise Exceptions.InvalidInputFormat(msg)
+
         entries[id1][id2] = value
         entries[id2][id1] = value
         if not id1 in _s:

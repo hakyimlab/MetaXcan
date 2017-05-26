@@ -200,3 +200,8 @@ def to_dataframe(data, columns,to_numeric=None, fill_na=None):
         data = data.fillna(fill_na)
     return data
 
+def save_pandas_table(data, path):
+    compression = "gzip" if "gz" in path else None
+    ensure_requisite_folders(path)
+    data.to_csv(path, index=False, sep="\t", compression=compression)
+

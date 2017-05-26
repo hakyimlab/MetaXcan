@@ -1,5 +1,13 @@
 import re
 import logging
+import os
+
+def extract_model_name(path):
+    p = os.path.split(path)[1]
+    p = p.split(".db")[0]
+    if "_0.5" in p: p = p.split("_0.5")[0]
+    return p
+
 
 def X_treatment(tissue_tag, token, fix):
     comps = tissue_tag.split(token)

@@ -1,6 +1,9 @@
 #! /usr/bin/env python
 import os
 import logging
+
+from timeit import default_timer as timer
+
 from metax import __version__
 from metax import Logging
 from metax import Exceptions
@@ -18,6 +21,8 @@ def run(args):
         logging.info("%s already exists, you have to move it or delete it if you want it done again", args.gene_variance_output)
         return
 
+    start = timer()
+
     logging.info("Loading models...")
     model_manager = PredictionModel.load_model_manager(args.models_folder)
     all_snps = model_manager.get_rsids()
@@ -25,11 +30,15 @@ def run(args):
     logging.info("processing genotype")
     covariance_results = []
     variance_results = []
+
     for chromosome, metadata, dosage in GenotypeUtilities.genotype_by_chromosome_from_args(args, all_snps):
         logging.log(9, "Processing chromosome %s", str(chromosome))
         context = GenotypeAnalysis.GenotypeAnalysisContext(metadata, dosage, model_manager)
         genes = context.get_genes()
-        for gene in genes:
+        reporter = Utilities.PercentReporter(9, len(genes))
+        reporter.update(0, "%d %% of genes processed so far in chromosome " + str(chromosome))
+        for i,gene in enumerate(genes):
+            reporter.update(i, "%d %% of genes processed so far in chromosome "+str(chromosome))
             cov_data = GenotypeAnalysis.get_prediction_covariance(context, gene)
             covariance_results.append(cov_data)
 
@@ -41,6 +50,9 @@ def run(args):
 
     variance_results = GenotypeAnalysis.format_prediction_variance_results(variance_results)
     Utilities.save_pandas_table(variance_results, args.gene_variance_output)
+
+    end = timer()
+    logging.info("Ran covariance builder in %s seconds" % (str(end - start)))
 
 
 if __name__ == "__main__":

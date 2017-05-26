@@ -33,11 +33,13 @@ def gtex_geno_lines(gtex_file, gtex_snp_file, snps=None):
             if i==0:continue #skip header. This line is not needed but for conceptual ease of mind
             comps = line.strip().split()
             variant = comps[0]
+
             if not variant in gtex_snp:
                 continue
 
             rsid = gtex_snp[variant]
-            if snps and not rsid in snps: continue
+            if snps and not rsid in snps:
+                continue
 
             data = parse_gtex_variant(variant)
             dosage = numpy.array(comps[1:], dtype=numpy.float64)
@@ -73,7 +75,9 @@ def gtex_geno_by_chromosome(gtex_file, gtex_snp_file, snps=None):
 
         return chromosome, metadata, dosage_data
 
+    logging.log(8, "Starting to process lines")
     for line in gtex_geno_lines(gtex_file, gtex_snp_file, snps):
+
         chromosome = line[GF.CHROMOSOME]
         if last_chr is None: last_chr = chromosome
 

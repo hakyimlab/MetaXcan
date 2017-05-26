@@ -141,13 +141,17 @@ def load_model(path):
 class ModelManager(object):
     def __init__(self, models):
         self.models = models
+        self.snp_keys = _get_snp_key(models)
 
     def get_genes(self):
         return set(self.models.index.get_level_values(0))
 
-    def get_genes_for_snps(self,snps):
-        k = self.models.loc[(slice(None), slice(None), snps), :]
-        return set(k.index.get_level_values(0))
+    def get_implicated_genes(self, snps):
+        genes = set()
+        for snp in snps:
+            if snp in self.snp_keys:
+                genes.update(self.snp_keys[snp])
+        return genes
 
     def get_rsids(self, gene = None):
         w = self.models if not gene else self.models.loc[gene]
@@ -164,20 +168,17 @@ class ModelManager(object):
     def get_models(self, gene):
         return self.models.loc[gene]
 
-def _split_models(models):
-    _m = {}
-    for k,m in models.iteritems():
-        for gene in m.extra.gene:
-            w = m.weights
-            w = w[w.gene == gene]
-            if not gene in _m: _m[gene] = {}
-            _m[gene][k] = w
-    return _m
-
+def _get_snp_key(models):
+    logging.log(9, "preparing snp keys")
+    keys = {}
+    for k in models.itertuples():
+        rsid = k.Index[2]
+        gene = k.Index[0]
+        if not rsid in keys: keys[rsid] = set()
+        keys[rsid].add(gene)
+    return keys
 
 def load_model_manager(path):
-
-
     def _get_models(paths):
         logging.log(9, "preloading models")
         _m = {NamingConventions.extract_model_name(x): load_model(x) for x in paths}

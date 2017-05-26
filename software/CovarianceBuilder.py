@@ -33,6 +33,7 @@ def run(args):
 
     for chromosome, metadata, dosage in GenotypeUtilities.genotype_by_chromosome_from_args(args, all_snps):
         logging.log(9, "Processing chromosome %s", str(chromosome))
+
         context = GenotypeAnalysis.GenotypeAnalysisContext(metadata, dosage, model_manager)
         genes = context.get_genes()
         reporter = Utilities.PercentReporter(9, len(genes))
@@ -44,7 +45,7 @@ def run(args):
 
             variance_data = GenotypeAnalysis.get_prediction_variance(context, gene)
             variance_results.extend(variance_data)
-
+        reporter.update(len(genes), "%d %% of genes processed so far in chromosome " + str(chromosome))
     covariance_results = GenotypeAnalysis.format_prediction_covariance_results(covariance_results)
     Utilities.save_pandas_table(covariance_results, args.snp_covariance_output)
 

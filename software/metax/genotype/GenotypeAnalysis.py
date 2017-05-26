@@ -61,16 +61,17 @@ def get_prediction_variance(context, gene):
     for label in labels:
         model = models.loc[label]
         model_snps = [x for x in model.index.values if x in snps]
+        n_snps = len(model_snps)
         T = [context.get_dosage(l) * model.loc[l].weight for l in model_snps] #(X_0 * w_0, ... ,X_p * w_p)
         T = numpy.sum(T, axis=0) #Sum_l (X_l * w_l)
         # Mind the degrees of freedom! This way we will match  w_ * GAMMA * w, because covariance was calculated with ddof=1
         v = numpy.var(T, ddof=1)
-        results.append((gene, label,v))
+        results.append((gene, label, v, n_snps))
 
     return results
 
 def format_prediction_variance_results(results):
-    columns = ["gene", "model", "variance"]
+    columns = ["gene", "model", "variance", "n_snps"]
     results = Utilities.to_dataframe(results, columns)
     results = results.sort_values(by=["gene", "model"])
     results = results.fillna("NA")

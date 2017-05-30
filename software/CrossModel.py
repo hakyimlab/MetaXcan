@@ -14,11 +14,10 @@ def run(args):
         return
     logging.info("Creating context")
     context = CrossModelUtilities.context_from_args(args)
-    genes = context.get_genes()
     results = []
 
     logging.info("Processing")
-    for gene in genes:
+    for gene in context.get_genes():
         result = JointAnalysis.joint_analysis(context, gene)
         results.append(result)
 
@@ -34,11 +33,13 @@ if __name__ == "__main__":
         'Assess joint analysis of MetaXcan Results' % (__version__))
 
     parser.add_argument("--regularization", help="Add a regularization term to correct for singularity", default=None, type=float)
+    parser.add_argument("--cutoff_eigen_ratio", help="ratio to use when truncating SVD", default=None, type=float)
     parser.add_argument("--cutoff_threshold", help="threshold of variance when truncating SVD", default=None, type=float)
-    parser.add_argument("--cutoff_ratio", help="ratio to use when truncating SVD", default=None, type=float)
+    parser.add_argument("--cutoff_trace_ratio", help="ratio to use when truncating SVD", default=None, type=float)
     parser.add_argument("--metaxcan_folder", help="path to metaxcan files", default=None)
     parser.add_argument("--metaxcan_filter", help="regular expression to filter results files", default=[".*csv"], type=str, nargs='+')
     parser.add_argument("--model_product", help="path to file with model feature product", default=None)
+    parser.add_argument("--expression_data_prefix", help="Prefix of gene expression data files", default=None)
     parser.add_argument("--output", help="where you want the output", default=None)
     parser.add_argument("--verbosity", help="Log verbosity level. 1 is everything being logged. 10 is only high level messages, above 10 will hardly log anything", default = "10")
     parser.add_argument("--throw", action="store_true", help="Throw exception on error", default=False)

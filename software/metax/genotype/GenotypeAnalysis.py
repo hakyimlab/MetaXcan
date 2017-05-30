@@ -3,6 +3,7 @@ import logging
 
 from .. import MatrixManager
 from .. import Utilities
+import pandas
 from ..misc import Math
 
 
@@ -94,3 +95,8 @@ def format_prediction_covariance_results(results):
     data = data.fillna("NA")
     data = data.sort_values(by=COVARIANCE_COLUMNS[0:2])
     return data
+
+class GeneExpressionMatrixManager(object):
+    def __init__(self, gene_expression_variance, snp_covariance):
+        self.gene_expression_variance = gene_expression_variance
+        self.snp_covariance = snp_covariance

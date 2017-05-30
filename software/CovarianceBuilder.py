@@ -9,6 +9,7 @@ from metax import Logging
 from metax import Exceptions
 from metax import PredictionModel
 from metax import Utilities
+from metax import MatrixManager
 from metax.genotype import  Utilities as GenotypeUtilities
 from metax.genotype import GenotypeAnalysis
 
@@ -28,11 +29,10 @@ def run(args):
     all_snps = model_manager.get_rsids()
 
     logging.info("processing genotype")
-    covariance_results = []
-    variance_results = []
-
     for chromosome, metadata, dosage in GenotypeUtilities.genotype_by_chromosome_from_args(args, all_snps):
         logging.log(9, "Processing chromosome %s", str(chromosome))
+        covariance_results = []
+        variance_results = []
 
         context = GenotypeAnalysis.GenotypeAnalysisContext(metadata, dosage, model_manager)
         genes = context.get_genes()
@@ -41,16 +41,22 @@ def run(args):
         for i,gene in enumerate(genes):
             reporter.update(i, "%d %% of genes processed so far in chromosome "+str(chromosome))
             cov_data = GenotypeAnalysis.get_prediction_covariance(context, gene)
-            covariance_results.append(cov_data)
+            cov_data = MatrixManager._flatten_matrix_data([cov_data])
+            covariance_results.extend(cov_data)
 
             variance_data = GenotypeAnalysis.get_prediction_variance(context, gene)
             variance_results.extend(variance_data)
         reporter.update(len(genes), "%d %% of genes processed so far in chromosome " + str(chromosome))
-    covariance_results = GenotypeAnalysis.format_prediction_covariance_results(covariance_results)
-    Utilities.save_pandas_table(covariance_results, args.snp_covariance_output)
 
-    variance_results = GenotypeAnalysis.format_prediction_variance_results(variance_results)
-    Utilities.save_pandas_table(variance_results, args.gene_variance_output)
+        logging.log(9, "writing chromosome results")
+
+        Utilities.save_table(covariance_results, args.snp_covariance_output,
+                                    mode="w" if chromosome ==1 else "a",
+                                    header= GenotypeAnalysis.COVARIANCE_COLUMNS if chromosome==1 else None)
+
+        Utilities.save_table(variance_results, args.gene_variance_output,
+                                    mode="w" if chromosome == 1 else "a",
+                                    header=GenotypeAnalysis.VARIANCE_COLUMNS if chromosome == 1 else None)
 
     end = timer()
     logging.info("Ran covariance builder in %s seconds" % (str(end - start)))

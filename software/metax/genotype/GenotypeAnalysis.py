@@ -70,9 +70,9 @@ def get_prediction_variance(context, gene):
 
     return results
 
+VARIANCE_COLUMNS=["gene", "model", "variance", "n_snps"]
 def format_prediction_variance_results(results):
-    columns = ["gene", "model", "variance", "n_snps"]
-    results = Utilities.to_dataframe(results, columns)
+    results = Utilities.to_dataframe(results, VARIANCE_COLUMNS)
     results = results.sort_values(by=["gene", "model"])
     results = results.fillna("NA")
     return results
@@ -83,14 +83,14 @@ def get_prediction_covariance(context, gene):
     cov = numpy.cov(X)
     return gene, snps, cov
 
+COVARIANCE_COLUMNS=["GENE", "RSID1", "RSID2", "VALUE"]
 def format_prediction_covariance_results(results):
     flat = []
     for result in results:
         data = MatrixManager._flatten_matrix_data([result])
         flat.extend(data)
 
-    column_names = ["GENE", "RSID1", "RSID2", "VALUE"]
-    data = Utilities.to_dataframe(flat, column_names)
+    data = Utilities.to_dataframe(flat, COVARIANCE_COLUMNS)
     data = data.fillna("NA")
-    data = data.sort_values(by=column_names[0:2])
+    data = data.sort_values(by=COVARIANCE_COLUMNS[0:2])
     return data

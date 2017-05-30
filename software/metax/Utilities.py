@@ -200,8 +200,20 @@ def to_dataframe(data, columns,to_numeric=None, fill_na=None):
         data = data.fillna(fill_na)
     return data
 
-def save_pandas_table(data, path):
+def save_table(data, path, mode="w", header=None):
     compression = "gzip" if "gz" in path else None
+    _o = gzip.open if compression == "gzip" else open
     ensure_requisite_folders(path)
-    data.to_csv(path, index=False, sep="\t", compression=compression)
+
+    def _to_line(comps):
+        line = "\t".join([str(x) for x in comps]) + "\n"
+        return line
+
+    with _o(path, mode) as file:
+        if header:
+            file.write(_to_line(header))
+
+        for d in data:
+            line = _to_line(d)
+            file.write(line)
 

@@ -23,7 +23,7 @@ class SimpleContext(AssociationCalculation.Context):
         return w
 
     def get_covariance(self, gene, snps):
-        return self.covariance.get(gene, snps, strict=False)
+        return self.covariance.get(gene, snps, strict_whitelist=False)
 
     def get_n_in_covariance(self, gene):
         return self.covariance.n_ids(gene)

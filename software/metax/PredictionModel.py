@@ -178,8 +178,13 @@ def _get_snp_key(models):
         keys[rsid].add(gene)
     return keys
 
-def load_model_manager(path):
-    def _get_models(paths):
+def _model_paths(path):
+    paths = [os.path.join(path, x) for x in os.listdir(path) if ".db" in x]
+    return paths
+
+def load_model_manager(path, trim_ensemble_version=False):
+
+    def _get_models(paths, trim_ensemble_version=False):
         logging.log(9, "preloading models")
         _m = {NamingConventions.extract_model_name(x): load_model(x) for x in paths}
         for k,m in _m.iteritems():
@@ -189,11 +194,16 @@ def load_model_manager(path):
         _m = [x.weights for x in _m.values()]
         models = pandas.concat(_m)
         logging.log(9, "indexing")
+        if trim_ensemble_version:
+            k = models.gene.str.split(".").str.get(0)
+            if len(set(k)) != len(set(models.gene)):
+                raise Exceptions.ReportableException("genes cannot lose the ensemble version id")
+            models.gene = k
         models = models.set_index(["gene", "model", "rsid"])
         models = models.sort_index()
         return models
 
-    paths = [os.path.join(path,x) for x in os.listdir(path) if ".db" in x]
-    models = _get_models(paths)
+    paths = _model_paths(path)
+    models = _get_models(paths, trim_ensemble_version)
     model_manager = ModelManager(models)
     return model_manager

@@ -20,35 +20,13 @@ import pandas
 from timeit import default_timer as timer
 
 from metax import Constants
+from metax.misc import GWASAndModels
 from metax.gwas import GWAS
 from metax.gwas import Utilities as GWASUtilities
 from metax import PredictionModel
 from metax import Utilities
 from metax import Logging
 from metax import Exceptions
-
-def align_data_to_alleles(data, base, left_on, right_on):
-    EA, NEA = Constants.EFFECT_ALLELE, Constants.NON_EFFECT_ALLELE
-    EA_BASE, NEA_BASE = EA+"_BASE", NEA+"_BASE"
-    merged = pandas.merge(data, base, left_on=left_on, right_on=right_on, suffixes=("", "_BASE"))
-
-    alleles_1 = pandas.Series([set(e) for e in zip(merged[EA], merged[NEA])])
-    alleles_2 = pandas.Series([set(e) for e in zip(merged[EA_BASE], merged[NEA_BASE])])
-    eq = alleles_1 == alleles_2
-    merged = merged[eq]
-
-    flipped = merged[EA] != merged[EA_BASE]
-    Z = Constants.ZSCORE
-    if Z in merged:
-        merged.loc[flipped, Z] = - merged.loc[flipped, Z]
-    B = Constants.BETA
-    if B in merged:
-        merged.loc[flipped, B] = - merged.loc[flipped, B]
-
-    merged.loc[flipped, EA] = merged.loc[flipped, EA_BASE]
-    merged.loc[flipped, NEA] = merged.loc[flipped, NEA_BASE]
-
-    return merged
 
 def build_betas(args, model, gwas_format, name):
     logging.info("Building beta for %s and %s", name, args.model_db_path if args.model_db_path else "no database")
@@ -63,7 +41,7 @@ def build_betas(args, model, gwas_format, name):
     if model is not None:
         PF = PredictionModel.WDBQF
         base = model.weights[[PF.K_RSID, PF.K_EFFECT_ALLELE, PF.K_NON_EFFECT_ALLELE]].drop_duplicates()
-        b = align_data_to_alleles(b, base, Constants.SNP, PF.K_RSID)
+        b = GWASAndModels.align_data_to_alleles(b, base, Constants.SNP, PF.K_RSID)
 
     b = b.fillna("NA")
     keep = [GWAS.SNP, GWAS.ZSCORE]
@@ -138,10 +116,6 @@ if __name__ == "__main__":
                         default=None)
 
     GWASUtilities.add_gwas_arguments_to_parser(parser)
-
-    parser.add_argument("--separator",
-                        help="Character or string separating fields in input file. Defaults to any whitespace.",
-                        default=None)
 
     parser.add_argument("--skip_until_header",
                         help="Some files may be malformed and contain unespecified bytes in the beggining."

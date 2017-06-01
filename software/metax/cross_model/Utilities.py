@@ -1,14 +1,18 @@
 import numpy
 import pandas
+import logging
 
 from JointAnalysis import Context, ContextMixin
 from .. import MatrixManager
 from .. import Exceptions
+from .. import PredictionModel
+from ..misc import GWASAndModels
 from ..misc import DataFrameStreamer
+from ..misc import KeyedDataSource
 from ..genotype import GenotypeAnalysis
 from ..metaxcan import MetaXcanResultsManager
 
-class SimpleContext(Context, ContextMixin):
+class SimpleContext(ContextMixin, Context):
     def __init__(self, metaxcan_results_manager, matrix_manager, cutoff, epsilon):
         self.metaxcan_results_manager = metaxcan_results_manager
         self.matrix_manager = matrix_manager
@@ -23,19 +27,33 @@ class SimpleContext(Context, ContextMixin):
         genes = {x for x in matrix_genes if x.split(".")[0] in results_genes}
         return genes
 
-class ExpressionStreamedContext(Context, ContextMixin):
-    def __init__(self, metaxcan_results_manager, gene_variance_data, snp_covariance_streamer, cutoff, epsilon):
+    def get_n_genes(self):
+        return len(self.get_genes())
+
+class ExpressionStreamedContext(ContextMixin, Context):
+    """
+    A context that works by streaming the snps covariance file, one gene at a time.
+    Whenever it yields a gene from `get_genes()`, it will configure itself to that gene,
+    but since it holds snp covariance data one gene at a time, it won work if you sort it.
+    So, use it as it comes.
+    """
+    def __init__(self, metaxcan_results_manager, snp_covariance_streamer, model_manager, cutoff, epsilon):
         self.metaxcan_results_manager = metaxcan_results_manager
-        self.gene_variance_data = gene_variance_data,
         self.snp_covariance_streamer = snp_covariance_streamer
+        self.model_manager = model_manager
         self.cutoff = cutoff
         self.epsilon = epsilon
         self.matrix_manager = None
 
     def get_genes(self):
         for d in self.snp_covariance_streamer:
-            self.matrix_manager = GenotypeAnalysis.GeneExpressionMatrixManager(self.gene_variance_data, d)
-            yield d.GENE.values[0]
+            d.GENE = d.GENE.str.split(".").str.get(0)
+            g = d.GENE.values[0]
+            self.matrix_manager = GenotypeAnalysis.GeneExpressionMatrixManager(d, self.model_manager)
+            yield g
+
+    def get_n_genes(self):
+        return len(self.model_manager.get_genes())
 
 def _index(matrix_manager):
     labels = matrix_manager.model_labels()
@@ -98,6 +116,17 @@ def _cutoff(args):
         raise Exceptions.InvalidArguments("Specify either cutoff_ratio or cutoff_threshold")
     return cutoff
 
+def load_variance(path, trim_ensemble_version=True):
+    logging.log(9, "Loading variance",)
+    gene_variance_data = pandas.read_table(path)
+    logging.log(9, "Indexing variance")
+    if trim_ensemble_version:
+        k = gene_variance_data.gene.str.split(".").str.get(0)
+        gene_variance_data.gene = k
+    gene_variance_data = gene_variance_data.set_index(["gene", "model"])
+    gene_variance_data = gene_variance_data.sort_index()
+    return gene_variance_data
+
 def context_from_args(args):
     context = None
     if args.model_product:
@@ -111,15 +140,22 @@ def context_from_args(args):
         metaxcan_manager = MetaXcanResultsManager.build_manager(args.metaxcan_folder, filters=args.metaxcan_filter)
         cutoff = _cutoff(args)
         context = SimpleContext(metaxcan_manager, matrix_manager, cutoff, args.regularization)
-    elif args.expression_data_prefix:
-        snp_covariance_path = args.expression_data_prefix + "_snp_covariance.txt.gz"
-        snp_covariance_streamer = DataFrameStreamer.data_frame_streamer(snp_covariance_path, "GENE")
+    elif args.snp_covariance:
+        model_manager = PredictionModel.load_model_manager(args.models_folder, trim_ensemble_version=True)
 
-        gene_variance_path = args.expression_data_prefix + "_gene_variance.txt.gz"
-        gene_variance_data = pandas.read_table(gene_variance_path)
+        if args.cleared_snps:
+            intersection = KeyedDataSource.load_data_column(args.cleared_snps, "rsid")
+            intersection = set(intersection)
+        else:
+            intersection = GWASAndModels.gwas_model_intersection(args)
+
+        def _check_in(comps, intersection):
+            return comps[1] not in intersection or comps[2] not in intersection
+
+        snp_covariance_streamer = DataFrameStreamer.data_frame_streamer(args.snp_covariance, "GENE", additional_skip_row_check= lambda x: _check_in(x, intersection))
 
         cutoff = _cutoff(args)
         metaxcan_manager = MetaXcanResultsManager.build_manager(args.metaxcan_folder, filters=args.metaxcan_filter)
-        context = ExpressionStreamedContext(metaxcan_manager, gene_variance_data, snp_covariance_streamer, cutoff, args.regularization)
+        context = ExpressionStreamedContext(metaxcan_manager, snp_covariance_streamer, model_manager, cutoff, args.regularization)
     return context
 

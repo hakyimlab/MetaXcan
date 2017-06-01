@@ -2,12 +2,15 @@ import re
 import logging
 import os
 
+re_db = re.compile(".db$")
+re_tw = re.compile("^TW_")
+re_0_5 = re.compile("_0.5$")
 def extract_model_name(path):
     p = os.path.split(path)[1]
-    p = p.split(".db")[0]
-    if "_0.5" in p: p = p.split("_0.5")[0]
+    if re_db.search(p): p = re_db.sub("", p)
+    if re_0_5.search(p): p = re_0_5.sub("", p)
+    if re_tw.search(p): p = re_tw.sub("", p)
     return p
-
 
 def X_treatment(tissue_tag, token, fix):
     comps = tissue_tag.split(token)

@@ -21,6 +21,7 @@ def add_gwas_arguments_to_parser(parser):
     parser.add_argument("--se_column", help="Name of snp association's -beta standard error- column in GWAS input file", default=None)
     parser.add_argument("--zscore_column", help="Name of snp association's -Z-Score ratio column- in GWAS input file", default=None)
     parser.add_argument("--pvalue_column", help="Name of snp association's -p-value column- in GWAS input file", default=None)
+    parser.add_argument("--separator", help="Character or string separating fields in input file. Defaults to any whitespace.", default=None)
 
 def add_gwas_format_json_to_parser(parser):
     parser.add_argument("--input_gwas_format_json",

@@ -35,8 +35,11 @@ class MatrixManager(object):
         _validate(d, definition)
         self.data = _build_data(d, definition)
 
-    def get(self, key, whitelist=None, strict=True):
-        return _get(self.data, key, whitelist, strict)
+    def get(self, key, whitelist=None, strict_whitelist=True):
+        return _get(self.data, key, whitelist, strict_whitelist)
+
+    def get_2(self, key, snps_1, snps_2):
+        return _get_2(self.data, key, snps_1, snps_2)
 
     def model_labels(self):
         return set(self.data.keys())
@@ -83,55 +86,83 @@ def _build_data(d, definition):
         r[model].append(t)
     return r
 
-def _get(d, key, whitelist=None, strict=True):
-    if not key in d:
+def _get(data, key, whitelist=None, strict_whitelist=True):
+    if not key in data:
         return None,None
 
-    d = d[key]
+    d = data[key]
 
-    if whitelist is not None:
+    if strict_whitelist and whitelist:
         g, r1, r2, v = zip(*d)
-        snps = set(r1)
-        whitelist = set(whitelist)
-        if strict:
-            extra = {x for x in whitelist if not x in snps}
-            if len(extra):
-                msg = "SNPs in whitelist not in matrix for %s:%s"%(key, extra)
-                raise Exceptions.InvalidArguments(msg)
-        d = [x for x in d if x[CDTF.ID1] in whitelist]
+        _check_strict(whitelist, set(r1), key)
+        _check_strict(whitelist, set(r2), key)
 
-    _s = set()
-    snps = []
+    snps, entries = _rows_to_entries(d, key, whitelist)
+    covariance_matrix = _to_matrix(entries, snps)
+    return snps, covariance_matrix
+
+def _rows_to_entries(d, key, whitelist):
     entries = {}
+    _i = set()
+    ids = []
     for row in d:
         id1 = row[CDTF.ID1]
         id2 = row[CDTF.ID2]
+        if whitelist:
+            if not id1 in whitelist: continue
+            if not id2 in whitelist: continue
+
+        value = row[CDTF.VALUE]
+        if value == "NA": continue
+        _check_value(value, key, id1, id2)
+
         if not id1 in entries: entries[id1] = {}
         if not id2 in entries: entries[id2] = {}
 
-        value = row[CDTF.VALUE]
-        if value == "NA":continue
-        try:
-            float(value)
-        except:
-            msg = "Invalid value:{} for ({},{},{})".format(value,key,id1,id2)
-            raise Exceptions.InvalidInputFormat(msg)
-
         entries[id1][id2] = value
         entries[id2][id1] = value
-        if not id1 in _s:
-            _s.add(id1)
-            snps.append(id1)
 
-    snps = list(snps)
+        if not id1 in _i:
+            _i.add(id1)
+            ids.append(id1)
+    return ids, entries
+
+def _check_strict(whitelist, snps, key):
+    extra = {x for x in whitelist if not x in snps}
+    if len(extra):
+        msg = "SNPs in whitelist not in matrix for %s:%s" % (key, extra)
+        raise Exceptions.InvalidArguments(msg)
+
+def _check_value(value, key, id1, id2):
+    try:
+        float(value)
+    except:
+        msg = "Invalid value:{} for ({},{},{})".format(value, key, id1, id2)
+        raise Exceptions.InvalidInputFormat(msg)
+
+def _get_2(data, key, id_1, id_2):
+    if not key in data:
+        return None,None
+
+    d = data[key]
+    whitelist = set(id_1)|set(id_2)
+    snps, entries = _rows_to_entries(d, key, whitelist)
+
+    is1 = sorted([x for x in id_1 if x in snps])
+    is2 = sorted([x for x in id_2 if x in snps])
+    matrix = _to_matrix(entries, is1, is2)
+    return is1, is2, matrix
+
+def _to_matrix(entries, keys_i, keys_j=None):
+    if not keys_j: keys_j = keys_i
     rows = []
-    for snp_i in snps:
+    for key_i in keys_i:
         row = []
         rows.append(row)
-        for snp_j in snps:
-            row.append(entries[snp_i][snp_j])
-    covariance_matrix = numpy.matrix(rows)
-    return snps, covariance_matrix
+        for key_j in keys_j:
+            row.append(entries[key_i][key_j])
+    matrix = numpy.matrix(rows, dtype=numpy.float64)
+    return matrix
 
 def _non_na(snps_data):
     return [x for x in snps_data if  x[CDTF.VALUE] != "NA"]
@@ -152,5 +183,3 @@ def _flatten_matrix_data(data):
                 id2 = id_labels[j]
                 results.append((name, id1, id2, value))
     return results
-
-

@@ -9,7 +9,10 @@ from metax.gwas import Utilities as GWASUtilities
 from metax.cross_model import Utilities as CrossModelUtilities
 from metax.cross_model import JointAnalysis
 
+from timeit import default_timer as timer
+
 def run(args):
+    start = timer()
     if os.path.exists(args.output):
         logging.info("%s already exists, you have to move it or delete it if you want it done again", args.output)
         return
@@ -29,7 +32,9 @@ def run(args):
     results = JointAnalysis.format_results(results)
     Utilities.ensure_requisite_folders(args.output)
     results.to_csv(args.output, index=False, sep="\t")
-    logging.info("Ran.")
+
+    end = timer()
+    logging.info("Ran multi tissue in %s seconds" % (str(end - start)))
 
 if __name__ == "__main__":
     import argparse

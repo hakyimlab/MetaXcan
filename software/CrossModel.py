@@ -24,6 +24,7 @@ def run(args):
     reporter = Utilities.PercentReporter(logging.INFO, n_genes)
 
     logging.info("Processing")
+    reporter.update(0, "%d %% of model's genes processed so far")
     for i,gene in enumerate(context.get_genes()):
         result = JointAnalysis.joint_analysis(context, gene)
         results.append(result)

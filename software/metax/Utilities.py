@@ -200,6 +200,11 @@ def to_dataframe(data, columns,to_numeric=None, fill_na=None):
         data = data.fillna(fill_na)
     return data
 
+def save_dataframe(d, path, mode="w", header=True):
+    compression = "gzip" if "gz" in path else None
+    ensure_requisite_folders(path)
+    d.to_csv(path, header=header, mode=mode, compression=compression, sep="\t", index=False)
+
 def save_table(data, path, mode="w", header=None):
     compression = "gzip" if "gz" in path else None
     _o = gzip.open if compression == "gzip" else open

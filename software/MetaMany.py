@@ -132,9 +132,6 @@ arguments --covariance_directory and --covariance_suffix. """)
 
     GWASUtilities.add_gwas_arguments_to_parser(parser)
 
-    parser.add_argument("--separator",
-                        help="Character or string separating fields in input file. Defaults to any whitespace.",
-                        default=None)
     # Added to support GWAS utilities
     parser.add_argument("--skip_until_header",
                         help="Some files may be malformed and contain unespecified bytes in the beggining."

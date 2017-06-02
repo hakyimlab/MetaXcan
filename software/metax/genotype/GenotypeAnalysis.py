@@ -4,6 +4,7 @@ import logging
 from numpy import dot as _d
 
 from .. import MatrixManager
+from .. import MatrixManager2
 from .. import Utilities
 from ..misc import Math
 
@@ -99,7 +100,7 @@ def format_prediction_covariance_results(results):
 
 class GeneExpressionMatrixManager(object):
     def __init__(self, snp_covariance, model_manager):
-        self.snp_covariance_manager = MatrixManager.MatrixManager(snp_covariance, MatrixManager.GENE_SNP_COVARIANCE_DEFINITION)
+        self.snp_covariance_manager = MatrixManager2.MatrixManager2(snp_covariance, MatrixManager.GENE_SNP_COVARIANCE_DEFINITION)
         self.model_manager = model_manager
 
     def get(self, gene, tissues):
@@ -174,6 +175,10 @@ def _get_coef(gene, models,  matrix_manager, variances, t1, t2):
     w1 = model_1.loc[s1].weight.values
     w2 = model_2.loc[s2].weight.values
 
-    coef = _d(_d(w1, matrix), w2) / numpy.sqrt(variances[t1] * variances[t2])
-    coef = numpy.float64(coef)
+    denom = numpy.float64(numpy.sqrt(variances[t1] * variances[t2]))
+    if denom == 0:
+        return numpy.nan
+
+    num = numpy.float64(_d(_d(w1, matrix), w2))
+    coef = num/denom
     return coef

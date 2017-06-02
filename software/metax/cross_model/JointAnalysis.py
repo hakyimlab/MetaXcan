@@ -9,11 +9,11 @@ from .. import Utilities
 
 class Context(object):
     def __init__(self): raise Exceptions.ReportableException("Tried to instantiate abstract Joint Analysis context")
-    def get_genes(self): pass
-    def get_n_genes(self): pass
-    def get_metaxcan_zscores(self, gene): pass
-    def get_model_matrix(self, gene, tissues): pass
-    def get_cutoff(self, matrix): pass
+    def get_genes(self): raise  Exceptions.NotImplemented("Context: get_genes")
+    def get_n_genes(self): raise  Exceptions.NotImplemented("Context: get_n_genes")
+    def get_metaxcan_zscores(self, gene): raise  Exceptions.NotImplemented("Context: get_metaxcan_zscores")
+    def get_model_matrix(self, gene, tissues): raise  Exceptions.NotImplemented("Context: get_model_matrix")
+    def get_cutoff(self, matrix): raise  Exceptions.NotImplemented("Context: get_cutoff")
 
 class ContextMixin(object):
     def __init__(self):

@@ -26,7 +26,13 @@ def load_matrix_manager(path, definition=GENE_SNP_COVARIANCE_DEFINITION):
     m = MatrixManager(d, definition)
     return m
 
-class MatrixManager(object):
+class MatrixManagerBase(object):
+    def get(self, key, whitelist=None, strict_whitelist=True): raise  Exceptions.NotImplemented("MatrixManager: get")
+    def get_2(self, key, snps_1, snps_2): raise  Exceptions.NotImplemented("MatrixManager: get_2")
+    def model_labels(self): raise  Exceptions.NotImplemented("MatrixManager: model_labels")
+    def n_ids(self, gene): raise  Exceptions.NotImplemented("MatrixManager: n_ids")
+
+class MatrixManager(MatrixManagerBase):
     """
     Needs a dictionary mapping the header names to the keys ["model", "id1", "id2", "value"],
     """
@@ -54,16 +60,16 @@ class MatrixManager(object):
 
 def _validate(d, definition):
     MODEL_KEY = definition[K_MODEL]
-    processed_genes = set()
-    last_gene = None
-    genes = d[MODEL_KEY]
-    for g in genes:
-        if g != last_gene:
-            if g in processed_genes:
-                msg = "Snp Matrix Entries for genes must be contiguous but %s was found in two different places" % (g)
+    processed_keys = set()
+    last_key = None
+    keys = d[MODEL_KEY]
+    for k in keys:
+        if k != last_key:
+            if k in processed_keys:
+                msg = "Matrix Entries for keys(genes?) must be contiguous but %s was found in two different, uncontiguous places" % (k)
                 raise Exceptions.InvalidInputFormat(msg)
-            processed_genes.add(g)
-            last_gene = g
+            processed_keys.add(k)
+            last_key = k
 
     if numpy.any(d.duplicated()):
         msg = "Duplicated SNP entries found"

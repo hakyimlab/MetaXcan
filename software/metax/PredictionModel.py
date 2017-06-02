@@ -140,6 +140,7 @@ def load_model(path):
 
 class ModelManager(object):
     def __init__(self, models):
+        models = _prepare_models(models)
         self.models = models
         self.snp_keys = _get_snp_key(models)
 
@@ -167,6 +168,11 @@ class ModelManager(object):
 
     def get_models(self, gene):
         return self.models.loc[gene]
+
+def _prepare_models(models):
+    models = models.set_index(["gene", "model", "rsid"])
+    models = models.sort_index()
+    return models
 
 def _get_snp_key(models):
     logging.log(9, "preparing snp keys")
@@ -199,8 +205,6 @@ def load_model_manager(path, trim_ensemble_version=False):
             if len(set(k)) != len(set(models.gene)):
                 raise Exceptions.ReportableException("genes cannot lose the ensemble version id")
             models.gene = k
-        models = models.set_index(["gene", "model", "rsid"])
-        models = models.sort_index()
         return models
 
     paths = _model_paths(path)

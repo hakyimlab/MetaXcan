@@ -138,7 +138,16 @@ def load_model(path):
     model = Model(weights, extra)
     return model
 
-class ModelManager(object):
+###############################################################################
+class ModelManagerBase(object):
+    def get_genes(self): raise Exceptions.NotImplemented("ModelManager: get_genes")
+    def get_implicated_genes(self, snps): raise Exceptions.NotImplemented("ModelManager: get_implicated_genes")
+    def get_rsids(self, gene = None):raise Exceptions.NotImplemented("ModelManager: get_rsids")
+    def get_model_labels(self, gene = None):raise Exceptions.NotImplemented("ModelManager: get_model_labels")
+    def get_models(self, gene): raise Exceptions.NotImplemented("ModelManager: get_models")
+
+###############################################################################
+class ModelManager(ModelManagerBase):
     def __init__(self, models):
         models = _prepare_models(models)
         self.models = models
@@ -148,11 +157,7 @@ class ModelManager(object):
         return set(self.models.index.get_level_values(0))
 
     def get_implicated_genes(self, snps):
-        genes = set()
-        for snp in snps:
-            if snp in self.snp_keys:
-                genes.update(self.snp_keys[snp])
-        return genes
+        return  _get_implicated(self.snp_keys, snps)
 
     def get_rsids(self, gene = None):
         w = self.models if not gene else self.models.loc[gene]
@@ -169,7 +174,15 @@ class ModelManager(object):
     def get_models(self, gene):
         return self.models.loc[gene]
 
+def _get_implicated(snp_keys, snps):
+    genes = set()
+    for snp in snps:
+        if snp in snp_keys:
+            genes.update(snp_keys[snp])
+    return genes
+
 def _prepare_models(models):
+    logging.log(9, "preparing models (indexing)")
     models = models.set_index(["gene", "model", "rsid"])
     models = models.sort_index()
     return models
@@ -188,7 +201,64 @@ def _model_paths(path):
     paths = [os.path.join(path, x) for x in os.listdir(path) if ".db" in x]
     return paths
 
-def load_model_manager(path, trim_ensemble_version=False):
+###############################################################################
+class _ModelManager(ModelManagerBase):
+    """Version that performs certain operations faster, but returns data in different format!"""
+    def __init__(self, models):
+        models, rsids, snp_key = _prepare_models_2(models)
+        self.models = models
+        self.rsids = rsids
+        self.snp_key = snp_key
+
+    def get_genes(self):
+        return set(self.models.keys())
+
+    def get_implicated_genes(self, snps):
+        return  _get_implicated(self.snp_keys, snps)
+
+    def get_rsids(self, gene = None):
+        if not gene: return self.rsids
+        if not gene in self.models: return None
+
+        g = self.models[gene]
+        rsids = set()
+        for tissue, weights in g.iteritems():
+            rsids.update(weights.keys())
+        return rsids
+
+    def get_model_labels(self, gene = None):
+        if not gene:
+            labels = set()
+            for gene,tissues in self.models:
+                labels.update(tissues.keys())
+            return labels
+
+        if not gene in self.models: return None
+        return set(self.models[gene].keys())
+
+    def get_models(self, gene):
+        return self.models[gene]
+
+def _prepare_models_2(models):
+    logging.log(9, "preparing models (dictionary layout)")
+    rsids = set()
+    rsid_to_genes = {}
+
+    r = {}
+    for t in models.itertuples():
+        if not t.gene in r: r[t.gene] = {}
+        g = r[t.gene]
+        if not t.model in g: g[t.model] = {}
+        m = g[t.model]
+        m[t.rsid] = t.weight
+        rsids.add(t.rsid)
+
+        if not t.rsid in rsid_to_genes: rsid_to_genes[t.rsid] = set()
+        rsid_to_genes[t.rsid].add(t.gene)
+    return r, rsids, rsid_to_genes
+
+###############################################################################
+def load_model_manager(path, trim_ensemble_version=False, Klass=ModelManager):
 
     def _get_models(paths, trim_ensemble_version=False):
         logging.log(9, "preloading models")
@@ -199,7 +269,6 @@ def load_model_manager(path, trim_ensemble_version=False):
             w["model"] = k
         _m = [x.weights for x in _m.values()]
         models = pandas.concat(_m)
-        logging.log(9, "indexing")
         if trim_ensemble_version:
             k = models.gene.str.split(".").str.get(0)
             if len(set(k)) != len(set(models.gene)):
@@ -209,5 +278,5 @@ def load_model_manager(path, trim_ensemble_version=False):
 
     paths = _model_paths(path)
     models = _get_models(paths, trim_ensemble_version)
-    model_manager = ModelManager(models)
+    model_manager = Klass(models)
     return model_manager

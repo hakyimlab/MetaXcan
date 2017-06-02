@@ -9,7 +9,7 @@ from .. import PredictionModel
 from ..misc import GWASAndModels
 from ..misc import DataFrameStreamer
 from ..misc import KeyedDataSource
-from ..genotype import GenotypeAnalysis
+from ..genotype import GeneExpressionMatrixManager
 from ..metaxcan import MetaXcanResultsManager
 
 class SimpleContext(ContextMixin, Context):
@@ -49,7 +49,7 @@ class ExpressionStreamedContext(ContextMixin, Context):
         for d in self.snp_covariance_streamer:
             d.GENE = d.GENE.str.split(".").str.get(0)
             g = d.GENE.values[0]
-            self.matrix_manager = GenotypeAnalysis.GeneExpressionMatrixManager(d, self.model_manager)
+            self.matrix_manager = GeneExpressionMatrixManager._GeneExpressionMatrixManager(d, self.model_manager)
             yield g
 
     def get_n_genes(self):
@@ -141,13 +141,13 @@ def context_from_args(args):
         cutoff = _cutoff(args)
         context = SimpleContext(metaxcan_manager, matrix_manager, cutoff, args.regularization)
     elif args.snp_covariance:
-        model_manager = PredictionModel.load_model_manager(args.models_folder, trim_ensemble_version=True)
-
         if args.cleared_snps:
             intersection = KeyedDataSource.load_data_column(args.cleared_snps, "rsid")
             intersection = set(intersection)
         else:
             intersection = GWASAndModels.gwas_model_intersection(args)
+
+        model_manager = PredictionModel.load_model_manager(args.models_folder, trim_ensemble_version=True, Klass=PredictionModel._ModelManager)
 
         def _check_in(comps, intersection):
             return comps[1] not in intersection or comps[2] not in intersection

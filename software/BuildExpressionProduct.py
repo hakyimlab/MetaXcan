@@ -9,7 +9,7 @@ from metax.misc import FeatureMatrix
 
 def _run(args, subset=None, append=None):
     logging.info("Loading expressions")
-    manager = FeatureMatrix.build_manager(args.expression_folder, standardize=True, subset=subset)
+    manager = FeatureMatrix.build_manager(args.expression_folder, filters = args.expression_filters, standardize=True, subset=subset)
 
     logging.info("Saving")
     Utilities.ensure_requisite_folders(args.output)
@@ -43,7 +43,8 @@ if __name__ == "__main__":
 
     parser.add_argument("--column_chunks", help="wether to figure it out on a subset of columsn a t a time (memory reasons)", default=None, type=int)
     parser.add_argument("--expression_folder", help="path to folder with expression", default=None)
-    parser.add_argument("--output", help="where you want the output", default=None)
+    parser.add_argument("--expression_filters", type=str, nargs="+", help="patterns to match expression files", default=["TW_*"])
+    parser.add_argument("--output",  help="where you want the output")
     parser.add_argument("--verbosity", help="Log verbosity level. 1 is everything being logged. 10 is only high level messages, above 10 will hardly log anything", default = "10")
     parser.add_argument("--throw", action="store_true", help="Throw exception on error", default=False)
 

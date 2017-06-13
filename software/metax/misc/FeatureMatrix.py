@@ -1,4 +1,5 @@
 import pandas
+import os
 import logging
 import re
 import gzip
@@ -7,6 +8,7 @@ from numpy import dot, transpose, cov
 from .. import MatrixManager
 from .. import Utilities
 from . import Math
+from .. import Exceptions
 
 K_GENE_MODEL_HEADER=["gene", "model1", "model2", "value"]
 
@@ -52,6 +54,7 @@ class FeatureMatrixManager(object):
 #TODO: not necessarily "genes", but genetic features
 def build_manager(folder, filters=["TW_*"], standardize=True, subset=None):
     files = Utilities.target_files(folder, file_filters=filters)
+    if not files: raise Exceptions.ReportableException("No valid expressoin files found")
     expressions = _load_features(files, _parse_expression_name, subset)
     manager = FeatureMatrixManager(expressions, standardize)
     return manager
@@ -70,9 +73,13 @@ def features_in_folder(folder, filters=["TW_*"]):
         features.update(l)
     return features
 
-_regexp = re.compile(".*TW_(.*)_0.5.expr.txt$")
+_regexp_1 = re.compile(".*TW_(.*)_0.5.expr.txt$")
+_regexp_2 = re.compile("(.*).txt$")
 def _parse_expression_name(file):
-    return _regexp.match(file).group(1)
+    name = os.path.split(file)[1]
+    if _regexp_1.search(name): return _regexp_1.match(name).group(1)
+    if _regexp_2.search(name): return _regexp_2.match(name).group(1)
+    raise Exceptions.ReportableException("Could not accept expression file names")
 
 def _load_features(files, parse_func, subset):
     subset = set(subset) if subset else None

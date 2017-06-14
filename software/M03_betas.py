@@ -117,11 +117,6 @@ if __name__ == "__main__":
 
     GWASUtilities.add_gwas_arguments_to_parser(parser)
 
-    parser.add_argument("--skip_until_header",
-                        help="Some files may be malformed and contain unespecified bytes in the beggining."
-                             " Specify this option (string value) to identify a header up to which file contents should be skipped.",
-                        default=None)
-
     parser.add_argument("--verbosity",
                         help="Log verbosity level. 1 is everything being logged. 10 is only high level messages, above 10 will hardly log anything",
                         default = "10")

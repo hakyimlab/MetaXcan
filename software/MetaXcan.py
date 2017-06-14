@@ -46,11 +46,6 @@ if __name__ == "__main__":
 
     GWASUtilities.add_gwas_arguments_to_parser(parser)
 
-    parser.add_argument("--skip_until_header",
-                        help="Some files may be malformed and contain unespecified bytes in the beggining."
-                             " Specify this option (string value) to identify a header up to which file contents should be skipped.",
-                        default=None)
-
 # ZScore calculation
     parser.add_argument("--covariance",
                         help="name of file containing covariance data",

@@ -132,12 +132,6 @@ arguments --covariance_directory and --covariance_suffix. """)
 
     GWASUtilities.add_gwas_arguments_to_parser(parser)
 
-    # Added to support GWAS utilities
-    parser.add_argument("--skip_until_header",
-                        help="Some files may be malformed and contain unespecified bytes in the beggining."
-                             " Specify this option (string value) to identify a header up to which file contents should be skipped.",
-                        default=None)
-
 
 # ZScore calculation
 

@@ -40,9 +40,12 @@ def load_gwas(args):
 
     names = Utilities.contentsWithRegexpFromFolder(args.gwas_folder, regexp)
     names.sort()  # cosmetic, because different filesystems/OS yield folders in different order
-    files = [os.path.join(args.gwas_folder,x) for x in names]
+    load_from = [os.path.join(args.gwas_folder,x) for x in names]
     sep = '\s+' if args.separator is None else args.separator
-    files = [GWAS.load_gwas(x, gwas_format, sep=sep) for x in files]
+    if args.skip_until_header:
+        _l = lambda x: GWASUtilities.gwas_filtered_source(x, skip_until_header=args.skip_until_header, separator=args.separator)
+        load_from = [_l(x) for x in load_from]
+    files = [GWAS.load_gwas(x, gwas_format, sep=sep) for x in load_from]
     gwas = pandas.concat(files)
     return gwas
 

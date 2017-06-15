@@ -176,7 +176,11 @@ _numeric_columns = [BETA, OR, SE, PVALUE, ZSCORE]
 def _enforce_numeric_columns(d):
     for column in _numeric_columns:
         if column in d:
-            d[column] = numpy.array(d[column], dtype=numpy.float64)
+            a = d[column]
+            if a.dtype == numpy.object:
+                a = [str(x) for x in a]
+                a = [GWASSpecialHandling.sanitize_component(x) for x in a]
+            d[column] = numpy.array(a, dtype=numpy.float64)
     return d
 
 def _ensure_z(d):

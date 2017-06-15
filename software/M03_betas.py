@@ -31,12 +31,8 @@ from metax import Exceptions
 def build_betas(args, model, gwas_format, name):
     logging.info("Building beta for %s and %s", name, args.model_db_path if args.model_db_path else "no database")
     load_from = os.path.join(args.gwas_folder, name)
-    if model or args.skip_until_header:
-        snps = model.snps() if model else None
-        snp_column_name = args.snp_column if model else None
-        load_from = GWASUtilities.gwas_filtered_source(load_from, snps=snps, snp_column_name=snp_column_name, skip_until_header=args.skip_until_header, separator=args.separator)
-    sep = '\s+' if args.separator is None else args.separator
-    b = GWAS.load_gwas(load_from, gwas_format, sep=sep)
+    snps = model.snps() if model else None
+    b = GWAS.load_gwas(load_from, gwas_format, snps=snps, separator=args.separator, skip_until_header=args.skip_until_header)
 
     if model is not None:
         PF = PredictionModel.WDBQF

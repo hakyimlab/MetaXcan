@@ -3,10 +3,8 @@ import os
 import re
 import pandas
 
-from .. import Utilities
 from .. import Constants
 from .. import PredictionModel
-from ..gwas import GWAS
 from ..gwas import Utilities as GWASUtilities
 
 def align_data_to_alleles(data, base, left_on, right_on):
@@ -32,25 +30,8 @@ def align_data_to_alleles(data, base, left_on, right_on):
 
     return merged
 
-def load_gwas(args):
-    regexp = re.compile(args.gwas_file_pattern) if args.gwas_file_pattern else  None
-    gwas_format = GWASUtilities.gwas_format_from_args(args)
-    GWAS.validate_format_basic(gwas_format)
-    GWAS.validate_format_for_strict(gwas_format)
-
-    names = Utilities.contentsWithRegexpFromFolder(args.gwas_folder, regexp)
-    names.sort()  # cosmetic, because different filesystems/OS yield folders in different order
-    load_from = [os.path.join(args.gwas_folder,x) for x in names]
-    sep = '\s+' if args.separator is None else args.separator
-    if args.skip_until_header:
-        _l = lambda x: GWASUtilities.gwas_filtered_source(x, skip_until_header=args.skip_until_header, separator=args.separator)
-        load_from = [_l(x) for x in load_from]
-    files = [GWAS.load_gwas(x, gwas_format, sep=sep) for x in load_from]
-    gwas = pandas.concat(files)
-    return gwas
-
 def gwas_model_intersection(args):
-    gwas= load_gwas(args)
+    gwas= GWASUtilities.load_plain_gwas_from_args(args)
     paths = PredictionModel._model_paths(args.models_folder)
     PF = PredictionModel.WDBQF
     intersection = set()

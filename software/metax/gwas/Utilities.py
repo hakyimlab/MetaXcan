@@ -96,7 +96,7 @@ def load_plain_gwas_from_args(args):
     names = BUtilities.contentsWithRegexpFromFolder(args.gwas_folder, regexp)
     names.sort()  # cosmetic, because different filesystems/OS yield folders in different order
     files = [os.path.join(args.gwas_folder,x) for x in names]
-    _l = lambda x: GWAS.load_gwas(args, skip_until_header=args.skip_until_header, separator=args.separator)
+    _l = lambda x: GWAS.load_gwas(x, gwas_format, skip_until_header=args.skip_until_header, separator=args.separator)
     files = [_l(x) for x in files]
     gwas = pandas.concat(files)
     return gwas

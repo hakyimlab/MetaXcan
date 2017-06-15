@@ -20,7 +20,6 @@ from ..Constants import BETA_SIGN
 from ..Constants import SE
 from ..Constants import PVALUE
 
-
 COLUMN_SNP="column_snp"
 COLUMN_EFFECT_ALLELE="column_effect_allele"
 COLUMN_NON_EFFECT_ALLELE="column_non_effect_allele"
@@ -33,6 +32,9 @@ COLUMN_PVALUE="column_pvalue"
 COLUMN_SE="column_se"
 COLUMN_OR="column_or"
 COLUMN_ZSCORE="column_zscore"
+
+########################################################################################################################
+# Format Management
 
 #format of raw results
 class GWASF(object):
@@ -76,6 +78,8 @@ def validate_format_for_strict(format):
     if not ok:
         raise Exceptions.InvalidArguments("Arguments missing. Either -zscore-, -pvalue and one in [beta,beta sign,or]-, or -standard error and one in [beta, or]- must be provided")
 
+########################################################################################################################
+# Load a gwas
 def load_gwas(source, gwas_format, strict=True, separator=None, skip_until_header=False, snps=None, force_special_handling=False):
     """
     Attempts to read a GWAS summary statistics file, and load it into a uniform format,
@@ -107,6 +111,7 @@ def load_gwas(source, gwas_format, strict=True, separator=None, skip_until_heade
         d = d[d[SNP].str.contains("rs")]
 
     if strict:
+        d = _enforce_numeric_columns(d)
         d = _ensure_columns(d)
         d = _keep_gwas_columns(d)
 
@@ -167,6 +172,13 @@ def _ensure_columns(d):
     d[ZSCORE] = numpy.array(d[ZSCORE], dtype=numpy.float32)
     return d
 
+_numeric_columns = [BETA, OR, SE, PVALUE, ZSCORE]
+def _enforce_numeric_columns(d):
+    for column in _numeric_columns:
+        if column in d:
+            d[column] = numpy.array(d[column], dtype=numpy.float64)
+    return d
+
 def _ensure_z(d):
     if ZSCORE in d:
         logging.log(9, "Using declared zscore")
@@ -207,6 +219,9 @@ def _or_to_beta(odd):
         logging.info("Odd Ratios column holds some [0] values")
         odd = odd.replace(0, numpy.nan)
     return numpy.log(odd)
+
+########################################################################################################################
+# General purpose methods
 
 def extract(gwas, snps):
     """Assumes that argument snps are there in the gwas."""

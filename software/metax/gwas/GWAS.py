@@ -108,6 +108,7 @@ def load_gwas(source, gwas_format, strict=True, separator=None, skip_until_heade
 
     #keep only rsids
     if d.shape[0] > 0:
+        d = d[~ d[SNP].isnull()]
         d = d[d[SNP].str.contains("rs")]
 
     if strict:

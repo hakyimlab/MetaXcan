@@ -1,7 +1,7 @@
 """
 This is an alternative version of MatrixManager. This is way faster but consumes more memory.
 The ordinary MatrixManager performs well enough when a gene's data is queried only once as in MetaXcan,
-and is memory efficient. This, on the contrary, organizes data in a way that is fast to query but takes up more memory
+and is memory efficient. This one, on the contrary, organizes data in a way that is fast to query but takes up more memory
 """
 import numpy
 import MatrixManager

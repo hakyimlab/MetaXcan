@@ -19,6 +19,11 @@ class GeneExpressionMatrixManager(object):
         return tissues, matrix
 
 def _build_matrix(gene, models, matrix_manager, tissues, variances, coef_method):
+    coefs, _tissues = _build_matrix_entries(gene, models, matrix_manager, tissues, variances, coef_method)
+    matrix = MatrixManager._to_matrix(coefs, _tissues)
+    return _tissues, matrix
+
+def _build_matrix_entries(gene, models, matrix_manager, tissues, variances, coef_method):
     coefs = {}
     _t = set()
     _tissues = []
@@ -31,7 +36,7 @@ def _build_matrix(gene, models, matrix_manager, tissues, variances, coef_method)
 
             value = coef_method(gene, models, matrix_manager, variances, t1, t2)
 
-            if not value:
+            if value is None:
                 continue
 
             coefs[t1][t2] = value
@@ -39,9 +44,7 @@ def _build_matrix(gene, models, matrix_manager, tissues, variances, coef_method)
             if not t1 in _t:
                 _t.add(t1)
                 _tissues.append(t1)
-
-    matrix = MatrixManager._to_matrix(coefs, _tissues)
-    return _tissues, matrix
+    return coefs, _tissues
 
 def _get_variances(models, matrix_manager, gene):
     tissues = models.index.get_level_values(0).values

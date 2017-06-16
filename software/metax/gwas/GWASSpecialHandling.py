@@ -62,6 +62,7 @@ def sanitize_component(c):
     if non_en_number.match(c): c = c.replace(",",".")
     if c == "NA": c = None
     if c == ".": c = None
+    if c == "\N": c = None
     return c
 
 def to_numeric(d, column):

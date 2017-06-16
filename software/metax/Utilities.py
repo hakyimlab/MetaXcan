@@ -193,6 +193,7 @@ def to_dataframe(data, columns,to_numeric=None, fill_na=None):
     data = zip(*data)
     if to_numeric:
         data = [pandas.to_numeric(x, errors=to_numeric) for x in data]
+    if len(data) == 0: data = [[] for i in xrange(0, len(columns))]
     data = {columns[i]:data[i] for i in xrange(0, len(columns))}
     data = pandas.DataFrame(data)
     data = data[columns]

@@ -22,10 +22,14 @@ def add_gwas_arguments_to_parser(parser):
     parser.add_argument("--zscore_column", help="Name of snp association's -Z-Score ratio column- in GWAS input file", default=None)
     parser.add_argument("--pvalue_column", help="Name of snp association's -p-value column- in GWAS input file", default=None)
     parser.add_argument("--separator", help="Character or string separating fields in input file. Defaults to any whitespace.", default=None)
-    parser.add_argument("--skip_until_header",
+
+    parser.add_argument("--skip_until_header", default=None,
                         help="Some files may be malformed and contain unespecified bytes in the beggining."
-                             " Specify this option (string value) to identify a header up to which file contents should be skipped.",
-                        default=None)
+                             " Specify this option (string value) to identify a header up to which file contents should be skipped.")
+
+    parser.add_argument("--handle_empty_columns", default=False, action="store_true",
+                    help="Some files have empty columns, with values not even coded to missing. This instructs the parser to handle those lines."
+                         "Be sur eyou want to use this.")
 
 def add_gwas_format_json_to_parser(parser):
     parser.add_argument("--input_gwas_format_json",
@@ -96,7 +100,8 @@ def load_plain_gwas_from_args(args):
     names = BUtilities.contentsWithRegexpFromFolder(args.gwas_folder, regexp)
     names.sort()  # cosmetic, because different filesystems/OS yield folders in different order
     files = [os.path.join(args.gwas_folder,x) for x in names]
-    _l = lambda x: GWAS.load_gwas(x, gwas_format, skip_until_header=args.skip_until_header, separator=args.separator)
+    _l = lambda x: GWAS.load_gwas(x, gwas_format, skip_until_header=args.skip_until_header,
+            separator=args.separator, handle_empty_columns=args.handle_empty_columns)
     files = [_l(x) for x in files]
     gwas = pandas.concat(files)
     return gwas

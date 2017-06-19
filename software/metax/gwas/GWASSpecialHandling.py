@@ -6,7 +6,7 @@ import pandas
 
 from .. import Exceptions
 
-def gwas_data_source(path, snps=None, snp_column_name=None, skip_until_header=None, separator=None):
+def gwas_data_source(path, snps=None, snp_column_name=None, skip_until_header=None, separator=None, handle_empty_columns=False):
     s = {}
     o = gzip.open if ".gz" in path else open
     with o(path) as file:
@@ -34,8 +34,16 @@ def gwas_data_source(path, snps=None, snp_column_name=None, skip_until_header=No
             duplicated = [k for k,v in header_count.iteritems() if v>1]
             logging.info("The input GWAS has duplicated columns: %s, will only use the first one in each case", str(duplicated))
 
+        if handle_empty_columns:
+            split_r = re.compile(separator) if separator is not None else re.compile("\s")
+
         for i,line in enumerate(file):
-            comps = line.strip().split(separator)
+            if handle_empty_columns:
+                line = line.replace("\n", "")
+                comps = split_r.split(line)
+            else:
+                comps = line.strip().split(separator)
+
             if snps and not comps[index] in snps:
                 continue
 
@@ -60,9 +68,11 @@ def gwas_data_source(path, snps=None, snp_column_name=None, skip_until_header=No
 non_en_number = re.compile("^[-\+]?[0-9]*,{1}[0-9]+([eE]{1}[-\+]?[0-9]+)?$")
 def sanitize_component(c):
     if non_en_number.match(c): c = c.replace(",",".")
-    if c == "NA": c = None
-    if c == ".": c = None
-    if c == "\N": c = None
+    if c == "": c = None
+    elif c == "NA": c = None
+    elif c == ".": c = None
+    elif c == "\N": c = None
+
     return c
 
 def to_numeric(d, column):

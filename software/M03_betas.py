@@ -32,7 +32,8 @@ def build_betas(args, model, gwas_format, name):
     logging.info("Building beta for %s and %s", name, args.model_db_path if args.model_db_path else "no database")
     load_from = os.path.join(args.gwas_folder, name)
     snps = model.snps() if model else None
-    b = GWAS.load_gwas(load_from, gwas_format, snps=snps, separator=args.separator, skip_until_header=args.skip_until_header)
+    b = GWAS.load_gwas(load_from, gwas_format, snps=snps, separator=args.separator,
+            skip_until_header=args.skip_until_header, handle_empty_columns=args.handle_empty_columns)
 
     if model is not None:
         PF = PredictionModel.WDBQF

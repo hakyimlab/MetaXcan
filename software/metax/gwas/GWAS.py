@@ -80,7 +80,7 @@ def validate_format_for_strict(format):
 
 ########################################################################################################################
 # Load a gwas
-def load_gwas(source, gwas_format, strict=True, separator=None, skip_until_header=False, snps=None, force_special_handling=False):
+def load_gwas(source, gwas_format, strict=True, separator=None, skip_until_header=False, snps=None, force_special_handling=False, handle_empty_columns=False):
     """
     Attempts to read a GWAS summary statistics file, and load it into a uniform format,
     in a pandas dataframe.
@@ -93,7 +93,7 @@ def load_gwas(source, gwas_format, strict=True, separator=None, skip_until_heade
     if force_special_handling or skip_until_header or snps:
         logging.info("Reading input gwas with special handling: %s", source)
         snp_column_name = gwas_format[COLUMN_SNP]
-        d = GWASSpecialHandling.gwas_data_source(source, snps, snp_column_name, skip_until_header, separator)
+        d = GWASSpecialHandling.gwas_data_source(source, snps, snp_column_name, skip_until_header, separator, handle_empty_columns)
         d = pandas.DataFrame(d)
     else:
         logging.info("Reading input gwas: %s", source)

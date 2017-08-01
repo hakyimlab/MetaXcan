@@ -1,18 +1,12 @@
-import numpy
-
-class GF(object):
-    RSID=0
-    CHROMOSOME=1
-    POSITION=2
-    REF_ALLELE=3
-    ALT_ALLELE=4
-    FREQUENCY=5
-    FIRST_DOSAGE=6
-
-from ..misc import KeyedDataSource
-from .. import Utilities
 import gzip
 import logging
+
+import numpy
+
+from Genotype import GF
+from .. import Utilities
+from ..misc import KeyedDataSource
+
 
 def parse_gtex_variant(variant):
     comps = variant.split("_")

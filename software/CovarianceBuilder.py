@@ -35,20 +35,14 @@ def run(args):
         reporter = Utilities.PercentReporter(9, len(genes))
         reporter.update(0, "%d %% of genes processed so far in chromosome " + str(chromosome))
         for i,gene in enumerate(genes):
-            if i and i%100 == 0:
-                logging.log(8, "Dropping duplicates")
-                covariance_results.drop_duplicates(inplace=True)
             cov_data = GenotypeAnalysis.get_prediction_covariance(context, gene)
             cov_data = MatrixManager._flatten_matrix_data([cov_data])
             cov_data = Utilities.to_dataframe(cov_data, GenotypeAnalysis.COVARIANCE_COLUMNS, to_numeric="ignore", fill_na="NA")
-            cov_data = cov_data[["RSID1", "RSID2", "VALUE"]]
-            cov_data["CHROMOSOME"] = chromosome
             covariance_results = pandas.concat([covariance_results, cov_data])
 
             reporter.update(i, "%d %% of genes processed so far in chromosome "+str(chromosome))
 
         reporter.update(len(genes), "%d %% of genes processed so far in chromosome " + str(chromosome))
-        covariance_results.drop_duplicates(inplace=True)
 
         logging.log(9, "writing chromosome results")
         Utilities.save_dataframe(covariance_results, args.snp_covariance_output,
@@ -67,6 +61,8 @@ if __name__ == "__main__":
     parser.add_argument("--models_folder", help="Path to folder with prediction models")
     parser.add_argument("--gtex_genotype_file", help="Path to gtex genotype file")
     parser.add_argument("--gtex_snp_file", help="Path to snp annotation file")
+    parser.add_argument("--dosage_genotype_folder", help="Path to dosage folder")
+    parser.add_argument("--dosage_genotype_pattern", help="Regexp-like pattern to select files")
     parser.add_argument("--snp_covariance_output", help="where you want the output", default=None)
     parser.add_argument("--verbosity", help="Log verbosity level. 1 is everything being logged. 10 is only high level messages, above 10 will hardly log anything", default = "10")
     parser.add_argument("--throw", action="store_true", help="Throw exception on error", default=False)

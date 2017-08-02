@@ -36,7 +36,7 @@ def _build_matrix_entries(gene, models, matrix_manager, tissues, variances, coef
 
             value = coef_method(gene, models, matrix_manager, variances, t1, t2)
 
-            if value is None:
+            if value is None or value is numpy.nan:
                 continue
 
             coefs[t1][t2] = value

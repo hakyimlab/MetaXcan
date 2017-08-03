@@ -88,6 +88,7 @@ def joint_analysis(context, gene):
         z_sd = numpy.std(zscores, ddof=1)
 
     labels, matrix = context.get_model_matrix(gene, tissue_labels)
+
     if not labels or len(labels) == 0:
         status = CalculationStatus.NO_PRODUCT
         return g, pvalue, n, n_indep, p_i_best, p_i_worst, eigen_max, eigen_min, z_min, z_max, z_mean, z_sd, tmi, status

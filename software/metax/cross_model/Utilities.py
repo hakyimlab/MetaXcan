@@ -130,17 +130,19 @@ def load_variance(path, trim_ensemble_version=True):
 def context_from_args(args):
     context = None
     if args.model_product:
+        logging.info("Context for model product")
         definition={
             MatrixManager.K_MODEL:"gene",
             MatrixManager.K_ID1:"model1",
             MatrixManager.K_ID2:"model2",
             MatrixManager.K_VALUE:"value"
         }
-        matrix_manager = MatrixManager.load_matrix_manager(args.model_product, definition=definition)
+        matrix_manager = MatrixManager.load_matrix_manager(args.model_product, definition=definition, permissive=args.permissive_model_product)
         metaxcan_manager = MetaXcanResultsManager.build_manager(args.metaxcan_folder, filters=args.metaxcan_filter)
         cutoff = _cutoff(args)
         context = SimpleContext(metaxcan_manager, matrix_manager, cutoff, args.regularization)
     elif args.snp_covariance:
+        logging.info("Context for snp covariance")
         if args.cleared_snps:
             intersection = KeyedDataSource.load_data_column(args.cleared_snps, "rsid")
             intersection = set(intersection)

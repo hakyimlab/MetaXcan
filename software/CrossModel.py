@@ -55,6 +55,7 @@ if __name__ == "__main__":
     parser.add_argument("--metaxcan_folder", help="path to metaxcan files", default=None)
     parser.add_argument("--metaxcan_filter", help="regular expression to filter results files", default=[".*csv"], type=str, nargs='+')
     parser.add_argument("--model_product", help="path to file with model feature product", default=None)
+    parser.add_argument("--permissive_model_product", action="store_true", help="Tells the Model Product to need some slack, entires may be missing on numerical problems", default=False)
     parser.add_argument("--snp_covariance", help="path  to snp covariance", default=None)
     parser.add_argument("--output", help="where you want the output", default=None)
     parser.add_argument("--verbosity", help="Log verbosity level. 1 is everything being logged. 10 is only high level messages, above 10 will hardly log anything", default = "10")

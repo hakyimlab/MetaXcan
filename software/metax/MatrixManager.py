@@ -21,9 +21,13 @@ class CDTF(object):
     ID2=2
     VALUE=3
 
-def load_matrix_manager(path, definition=GENE_SNP_COVARIANCE_DEFINITION):
+def load_matrix_manager(path, definition=GENE_SNP_COVARIANCE_DEFINITION, permissive=False):
+    class _PermissiveMatrixManager(MatrixManager):
+        def get(self, key, whitelist=None, strict_whitelist=False):
+            return super(_PermissiveMatrixManager, self).get(key, whitelist, strict_whitelist)
+
     d = pandas.read_table(path, sep="\s+")
-    m = MatrixManager(d, definition)
+    m = MatrixManager(d, definition) if not permissive else _PermissiveMatrixManager(d, definition)
     return m
 
 class MatrixManagerBase(object):
@@ -72,7 +76,7 @@ def _validate(d, definition):
             last_key = k
 
     if numpy.any(d.duplicated()):
-        msg = "Duplicated SNP entries found"
+        msg = "Duplicated entries found in matrix file"
         raise Exceptions.InvalidInputFormat(msg)
 
 def _build_data(d, definition):

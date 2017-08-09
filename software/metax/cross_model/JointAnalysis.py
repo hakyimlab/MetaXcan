@@ -14,12 +14,14 @@ class Context(object):
     def get_metaxcan_zscores(self, gene): raise  Exceptions.NotImplemented("Context: get_metaxcan_zscores")
     def get_model_matrix(self, gene, tissues): raise  Exceptions.NotImplemented("Context: get_model_matrix")
     def get_cutoff(self, matrix): raise  Exceptions.NotImplemented("Context: get_cutoff")
+    def get_gene_name(self, gene): raise  Exceptions.NotImplemented("Context: get_gene_name")
 
 class ContextMixin(object):
     def __init__(self):
         self.metaxcan_results_manager = None
         self.matrix_manager = None
         self.cutoff = None
+        self.gene_names = None
 
     def get_metaxcan_zscores(self, gene):
         if "." in gene: gene = gene.split(".")[0]
@@ -32,6 +34,13 @@ class ContextMixin(object):
     def get_cutoff(self, matrix):
         return self.cutoff(matrix)
 
+    def get_gene_name(self, gene):
+        return self.gene_names[gene]
+
+    def _process_genes(self, genes):
+        g = {t.gene.split(".")[0]:t.gene_name for t in genes.itertuples()}
+        return g
+
 class CalculationStatus(object):
     OK=0
     NO_DATA=-1
@@ -42,7 +51,6 @@ class CalculationStatus(object):
     INVERSE_ERROR = -6
     COMPLEX_COVARIANCE = -7
     INADEQUATE_INVERSE = -8
-
 
 # Todo: remove
 DEBUG=False
@@ -65,21 +73,22 @@ def plot(merged):
     plt.show()
 
 def joint_analysis(context, gene):
-    g, pvalue, n, n_indep, p_i_best, p_i_worst, eigen_max, eigen_min, z_min, z_max, z_mean, z_sd, tmi, status \
-        = None, None, None, None, None, None, None, None, None, None, None, None, None, CalculationStatus.NO_DATA
+    g, g_n, pvalue, n, n_indep, p_i_best, p_i_worst, eigen_max, eigen_min, z_min, z_max, z_mean, z_sd, tmi, status \
+        = None, None, None, None, None, None, None, None, None, None, None, None, None, None, CalculationStatus.NO_DATA
     g = gene.split(".")[0]
+    g_n = context.get_gene_name(g)
 
     if DEBUG:
         if not g in ["ENSG00000171824"]:
         #if not g in ["ENSG00000053371"]: #this is close, previous is not
-            return g, pvalue, n, n_indep, p_i_best, p_i_worst, eigen_max, eigen_min, z_min, z_max, z_mean, z_sd, tmi, status
+            return g, g_n, pvalue, n, n_indep, p_i_best, p_i_worst, eigen_max, eigen_min, z_min, z_max, z_mean, z_sd, tmi, status
         print "a"
         from IPython import embed; embed()
 
     zscores, tissue_labels = context.get_metaxcan_zscores(gene)
     if not zscores or len(zscores) == 0:
         status = CalculationStatus.NO_METAXCAN_RESULTS
-        return g, pvalue, n, n_indep, p_i_best, p_i_worst, eigen_max, eigen_min, z_min, z_max, z_mean, z_sd, tmi, status
+        return g, g_n, pvalue, n, n_indep, p_i_best, p_i_worst, eigen_max, eigen_min, z_min, z_max, z_mean, z_sd, tmi, status
     n = len(zscores)
     z_min = numpy.min(zscores)
     z_max = numpy.max(zscores)
@@ -91,7 +100,7 @@ def joint_analysis(context, gene):
 
     if not labels or len(labels) == 0:
         status = CalculationStatus.NO_PRODUCT
-        return g, pvalue, n, n_indep, p_i_best, p_i_worst, eigen_max, eigen_min, z_min, z_max, z_mean, z_sd, tmi, status
+        return g, g_n, pvalue, n, n_indep, p_i_best, p_i_worst, eigen_max, eigen_min, z_min, z_max, z_mean, z_sd, tmi, status
 
     # also, check that the matrix actually makes sense. We are currently returning it just in case but matrices with complex covariance are suspicious.
     e, v = numpy.linalg.eig(matrix)
@@ -99,7 +108,7 @@ def joint_analysis(context, gene):
         status = CalculationStatus.COMPLEX_COVARIANCE
         e = numpy.real(e)
         eigen_max, eigen_min = numpy.max(e), numpy.min(e)
-        return g, pvalue, n, n_indep, p_i_best, p_i_worst, eigen_max, eigen_min, z_min, z_max, z_mean, z_sd, tmi, status
+        return g, g_n, pvalue, n, n_indep, p_i_best, p_i_worst, eigen_max, eigen_min, z_min, z_max, z_mean, z_sd, tmi, status
 
     eigen_max, eigen_min = numpy.max(e), numpy.min(e)
 
@@ -120,7 +129,7 @@ def joint_analysis(context, gene):
         #WTCCC 'ENSG00000204560.5'
         logging.log(8, "Problems with inverse for %s, skipping", gene)
         status = CalculationStatus.INVERSE_ERROR
-        return g, pvalue, n, n_indep, p_i_best, p_i_worst, eigen_max, eigen_min, z_min, z_max, z_mean, z_sd, tmi, status
+        return g, g_n, pvalue, n, n_indep, p_i_best, p_i_worst, eigen_max, eigen_min, z_min, z_max, z_mean, z_sd, tmi, status
 
     # if numpy.max(eigen_w) > 1e10:
     #     logging.log(8, "gene %s has a suspicious covariance, skipping", gene)
@@ -143,10 +152,10 @@ def joint_analysis(context, gene):
     if DEBUG:
         from IPython import embed; embed();
 
-    return g, pvalue, n, n_indep, p_i_best, p_i_worst, eigen_max, eigen_min, z_min, z_max, z_mean, z_sd, tmi, status
+    return g, g_n, pvalue, n, n_indep, p_i_best, p_i_worst, eigen_max, eigen_min, z_min, z_max, z_mean, z_sd, tmi, status
 
 def format_results(results):
-    columns = ["gene", "pvalue", "n", "n_indep", "p_i_best", "p_i_worst", "eigen_max", "eigen_min", "z_min", "z_max", "z_mean", "z_sd", "tmi",  "status"]
+    columns = ["gene", "gene_name", "pvalue", "n", "n_indep", "p_i_best", "p_i_worst", "eigen_max", "eigen_min", "z_min", "z_max", "z_mean", "z_sd", "tmi",  "status"]
     results = Utilities.to_dataframe(results, columns)
     results = results.sort_values(by=["pvalue", "status"])
     results = results.fillna("NA")

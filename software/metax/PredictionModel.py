@@ -138,6 +138,19 @@ def load_model(path):
     model = Model(weights, extra)
     return model
 
+def load_genes(folder):
+    model_paths = _model_paths(folder)
+    models = pandas.DataFrame()
+
+    for path in model_paths:
+        m = load_model(path)
+        e = m.extra
+        e = e[["gene", "gene_name"]]
+        models = pandas.concat([models, e])
+
+    models = models.drop_duplicates()
+    return models
+
 ###############################################################################
 class ModelManagerBase(object):
     def get_genes(self): raise Exceptions.NotImplemented("ModelManager: get_genes")

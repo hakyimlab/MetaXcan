@@ -13,10 +13,11 @@ from ..genotype import GeneExpressionMatrixManager
 from ..metaxcan import MetaXcanResultsManager
 
 class SimpleContext(ContextMixin, Context):
-    def __init__(self, metaxcan_results_manager, matrix_manager, cutoff, epsilon):
+    def __init__(self, metaxcan_results_manager, matrix_manager, genes, cutoff, epsilon):
         self.metaxcan_results_manager = metaxcan_results_manager
         self.matrix_manager = matrix_manager
         self.model_name_index = _index(matrix_manager)
+        self.gene_names = self._process_genes(genes)
         # Yeah, a callable object. Go figure.
         self.cutoff = cutoff
         self.epsilon = epsilon
@@ -37,10 +38,12 @@ class ExpressionStreamedContext(ContextMixin, Context):
     but since it holds snp covariance data one gene at a time, it won work if you sort it.
     So, use it as it comes.
     """
-    def __init__(self, metaxcan_results_manager, snp_covariance_streamer, model_manager, cutoff, epsilon):
+    def __init__(self, metaxcan_results_manager, snp_covariance_streamer, model_manager, genes, cutoff, epsilon):
         self.metaxcan_results_manager = metaxcan_results_manager
         self.snp_covariance_streamer = snp_covariance_streamer
         self.model_manager = model_manager
+        self.gene_names = self._process_genes(genes)
+        # Yeah, a callable object. Go figure.
         self.cutoff = cutoff
         self.epsilon = epsilon
         self.matrix_manager = None
@@ -129,6 +132,10 @@ def load_variance(path, trim_ensemble_version=True):
 
 def context_from_args(args):
     context = None
+
+    logging.info("Loading genes")
+    genes = PredictionModel.load_genes(args.models_folder)
+
     if args.model_product:
         logging.info("Context for model product")
         definition={
@@ -140,7 +147,7 @@ def context_from_args(args):
         matrix_manager = MatrixManager.load_matrix_manager(args.model_product, definition=definition, permissive=args.permissive_model_product)
         metaxcan_manager = MetaXcanResultsManager.build_manager(args.metaxcan_folder, filters=args.metaxcan_filter)
         cutoff = _cutoff(args)
-        context = SimpleContext(metaxcan_manager, matrix_manager, cutoff, args.regularization)
+        context = SimpleContext(metaxcan_manager, matrix_manager, genes, cutoff, args.regularization)
     elif args.snp_covariance:
         logging.info("Context for snp covariance")
         if args.cleared_snps:
@@ -161,6 +168,6 @@ def context_from_args(args):
 
         cutoff = _cutoff(args)
         metaxcan_manager = MetaXcanResultsManager.build_manager(args.metaxcan_folder, filters=args.metaxcan_filter)
-        context = ExpressionStreamedContext(metaxcan_manager, snp_covariance_streamer, model_manager, cutoff, args.regularization)
+        context = ExpressionStreamedContext(metaxcan_manager, snp_covariance_streamer, model_manager, genes, cutoff, args.regularization)
     return context
 

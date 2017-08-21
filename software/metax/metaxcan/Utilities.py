@@ -271,3 +271,13 @@ def format_output(results, context, keep_ens_version):
     merged = merged.sort_values(by=Constants.PVALUE)
 
     return merged
+
+def format_additional_output(results, context, keep_ens_version):
+    model_info = pandas.DataFrame(context.get_model_info())[["gene", "gene_name"]]
+
+    merged = pandas.merge(results, model_info, how="inner", on="gene")
+    if not keep_ens_version:
+        merged.gene = merged.gene.str.split(".").str.get(0)
+
+    merged = merged[["gene", "gene_name", "best_gwas_p", "largest_weight"]]
+    return merged

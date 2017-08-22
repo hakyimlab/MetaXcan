@@ -32,7 +32,7 @@ def run_metaxcan(args, context):
         reporter.update(len(snps_found), "%d %% of model's snps found so far in the gwas study")
 
     reporter.update(len(snps_found), "%d %% of model's snps used", force=True)
-    results = AssociationCalculation.dataframe_from_results(zip(*results))
+    results = AssociationCalculation.dataframe_from_results(results)
     results = MetaxcanUtilities.format_output(results, context, args.keep_ens_version)
 
     if args.output_file:
@@ -49,7 +49,7 @@ def run_additional(args, context):
         stats_ = AssociationCalculation.additional_stats(gene, context)
         results.append(stats_)
 
-    results = AssociationCalculation.dataframe_from_aditional_stats(zip(*results))
+    results = AssociationCalculation.dataframe_from_aditional_stats(results)
     results = MetaxcanUtilities.format_additional_output(results, context, args.keep_ens_version)
 
     if args.additional_output:

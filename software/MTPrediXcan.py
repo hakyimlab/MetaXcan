@@ -1,0 +1,49 @@
+#! /usr/bin/env python
+import os
+import logging
+
+from timeit import default_timer as timer
+
+from metax import __version__
+from metax import Logging
+from metax import Exceptions
+from metax import Utilities
+
+from metax.predixcan import MultiPrediXcanAssociation
+from metax.predixcan import Utilities as MultiPrediXcanUtilities
+
+def run(args):
+    start = timer()
+    if os.path.exists(args.output):
+        logging.info("%s already exists, you have to move it or delete it if you want it done again", args.output)
+        return
+
+    with MultiPrediXcanUtilities.context_from_args(args) as context:
+        from IPython import embed; embed()
+
+    end = timer()
+    logging.info("Ran multi tissue predixcan in %s seconds" % (str(end - start)))
+
+if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser(description='MTPrediXcan.py %s:'
+        'Multi Tissue PrediXcan' % (__version__))
+
+    parser.add_argument("--hdf5_expression_folder", help="Folder with predicted gene expressions.")
+    parser.add_argument("--output", help="File where stuff will be saved.")
+    parser.add_argument("--verbosity", help="Log verbosity level. 1 is everything being logged. 10 is only high level messages, above 10 will hardly log anything", default = "10")
+    parser.add_argument("--throw", action="store_true", help="Throw exception on error", default=False)
+
+    args = parser.parse_args()
+
+    Logging.configureLogging(int(args.verbosity))
+
+    if args.throw:
+        run(args)
+    else:
+        try:
+            run(args)
+        except Exceptions.ReportableException as e:
+            logging.error(e.msg)
+        except Exception as e:
+            logging.info("Unexpected error: %s" % str(e))

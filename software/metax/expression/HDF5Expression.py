@@ -8,6 +8,11 @@ class ExpressionManager(object):
         self.h5 = h5
         self.own = False
 
+    def expression_for_gene(self, gene):
+        m_ = self.gene_map[gene]
+        k = {model:self.h5[model]['pred_expr'][m_[model]] for model in sorted(m_.keys())}
+        return k
+
 _exregex = re.compile("pred_TW_(.*)_0.5_hrc_hapmap.h5")
 def _structure(folder):
     files = os.listdir(folder)

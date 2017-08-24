@@ -19,7 +19,20 @@ def run(args):
         return
 
     with MultiPrediXcanUtilities.context_from_args(args) as context:
-        from IPython import embed; embed()
+        genes = context.get_genes()
+        n_genes = len(genes)
+        reporter = Utilities.PercentReporter(logging.INFO, n_genes)
+        reporter.update(0, "%d %% of model's genes processed so far", force=True)
+        results = []
+        for i,gene in enumerate(genes):
+            r = MultiPrediXcanAssociation.multi_predixcan_association(gene, context)
+            results.append(r)
+            reporter.update(i, "%d %% of model's genes processed so far")
+
+            if i>10:break
+
+        results = MultiPrediXcanAssociation.dataframe_from_results(results)
+        results.to_csv(args.output, index=False)
 
     end = timer()
     logging.info("Ran multi tissue predixcan in %s seconds" % (str(end - start)))
@@ -30,6 +43,8 @@ if __name__ == "__main__":
         'Multi Tissue PrediXcan' % (__version__))
 
     parser.add_argument("--hdf5_expression_folder", help="Folder with predicted gene expressions.")
+    parser.add_argument("--input_phenos_file", help="A text file where on column will be used as phenotype")
+    parser.add_argument("--input_phenos_column", help="Name of column fro minput file to be used as phenotype")
     parser.add_argument("--output", help="File where stuff will be saved.")
     parser.add_argument("--verbosity", help="Log verbosity level. 1 is everything being logged. 10 is only high level messages, above 10 will hardly log anything", default = "10")
     parser.add_argument("--throw", action="store_true", help="Throw exception on error", default=False)

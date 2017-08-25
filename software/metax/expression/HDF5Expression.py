@@ -24,6 +24,7 @@ def _structure(folder):
     for file in files:
         if _exregex.search(file):
             name = _exregex.match(file).group(1)
+            name = name.replace("-","_")
         else:
             continue
         path = os.path.join(folder, file)

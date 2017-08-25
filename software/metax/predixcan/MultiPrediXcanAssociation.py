@@ -46,6 +46,7 @@ def multi_predixcan_association(gene_, context):
     e = pandas.DataFrame(e)
     e["y"] = context.get_pheno()
     e_ = e.dropna()
+
     y, X = dmatrices("y ~ {}".format(" + ".join(model_keys)), data=e_, return_type="dataframe")
     model = sm.OLS(y, X)
     result = model.fit()

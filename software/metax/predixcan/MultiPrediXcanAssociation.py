@@ -15,39 +15,44 @@ class MTPF(object):
     """Multi-Tissue PrediXcan format"""
     GENE = 0
     PVALUE =1
-    N = 2
-    BEST_GWAS_P = 3
-    BEST_GWAS_M = 4
-    WORST_GWAS_P = 5
-    WORST_GWAS_M = 6
+    N_MODELS = 2
+    N_SAMPLES = 3
+    BEST_GWAS_P = 4
+    BEST_GWAS_M = 5
+    WORST_GWAS_P = 6
+    WORST_GWAS_M = 7
 
 
 
     K_GENE = "gene"
     K_PVALUE = "pvalue"
-    K_N = "n"
+    K_N_MODELS = "n_models"
+    K_N_SAMPLES = "n_samples"
     K_BEST_GWAS_P = "p_i_best"
     K_BEST_GWAS_M = "m_i_best"
     K_WORST_GWAS_P = "p_i_worst"
     K_WORST_GWAS_M = "m_i_worst"
 
-    order=[(GENE,K_GENE), (PVALUE, K_PVALUE), (N,K_N), (BEST_GWAS_P, K_BEST_GWAS_P), (BEST_GWAS_M, K_BEST_GWAS_M), (WORST_GWAS_P, K_WORST_GWAS_P), (WORST_GWAS_M, K_WORST_GWAS_M),]
+    order=[(GENE,K_GENE), (PVALUE, K_PVALUE), (N_MODELS,K_N_MODELS), (N_SAMPLES, K_N_SAMPLES), (BEST_GWAS_P, K_BEST_GWAS_P), (BEST_GWAS_M, K_BEST_GWAS_M), (WORST_GWAS_P, K_WORST_GWAS_P), (WORST_GWAS_M, K_WORST_GWAS_M),]
 
 
 def multi_predixcan_association(gene_, context):
-    gene, pvalue, n, p_i_best, m_i_best, p_i_worst,  m_i_worst = None, None, None, None, None, None, None
+    gene, pvalue, n_models, n_samples, p_i_best, m_i_best, p_i_worst,  m_i_worst = None, None, None, None, None, None, None, None
     gene = gene_
 
     e = context.expression_for_gene(gene)
-    n = len(e.keys())
+    n_models = len(e.keys())
     model_keys = sorted(e.keys())
 
     #{specific
     e = pandas.DataFrame(e)
     e["y"] = context.get_pheno()
-    y, X = dmatrices("y ~ {}".format(" + ".join(model_keys)), data=e, return_type="dataframe")
+    e_ = e.dropna()
+    y, X = dmatrices("y ~ {}".format(" + ".join(model_keys)), data=e_, return_type="dataframe")
     model = sm.OLS(y, X)
     result = model.fit()
+
+    n_samples = e_.shape[0]
 
     p_i_ = result.pvalues[result.pvalues.index[1:]]
     p_i_best = p_i_.min()
@@ -58,7 +63,7 @@ def multi_predixcan_association(gene_, context):
     pvalue = result.f_pvalue
     #specific}
 
-    return gene, pvalue, n, p_i_best, m_i_best, p_i_worst,  m_i_worst
+    return gene, pvalue, n_models, n_samples, p_i_best, m_i_best, p_i_worst,  m_i_worst
 
 def dataframe_from_results(results):
     results = zip(*results)

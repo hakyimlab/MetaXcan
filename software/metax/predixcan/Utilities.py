@@ -1,5 +1,6 @@
 import logging
 import pandas
+import numpy
 
 from MultiPrediXcanAssociation import Context
 from .. expression import HDF5Expression
@@ -32,12 +33,14 @@ class HDF5Context(Context):
     def get_pheno(self):
         return self.pheno
 
-def _pheno_from_file_and_column(file, column):
-    x = pandas.read_table(file)
+def _pheno_from_file_and_column(path, column):
+    x = pandas.read_table(path)
+    p = pandas.Series(x[column])
+    p.loc[numpy.isclose(p, -999.0, atol=1e-6, rtol=0)] = numpy.nan
     p = x[column].values
     return p
 
-def context_from_args(args):
+def mp_context_from_args(args):
     logging.info("Preparing context")
 
     context = HDF5Context(args)

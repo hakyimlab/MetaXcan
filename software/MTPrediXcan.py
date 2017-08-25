@@ -18,7 +18,7 @@ def run(args):
         logging.info("%s already exists, you have to move it or delete it if you want it done again", args.output)
         return
 
-    with MultiPrediXcanUtilities.context_from_args(args) as context:
+    with MultiPrediXcanUtilities.mp_context_from_args(args) as context:
         genes = context.get_genes()
         n_genes = len(genes)
         reporter = Utilities.PercentReporter(logging.INFO, n_genes)
@@ -28,8 +28,6 @@ def run(args):
             r = MultiPrediXcanAssociation.multi_predixcan_association(gene, context)
             results.append(r)
             reporter.update(i, "%d %% of model's genes processed so far")
-
-            if i>10:break
 
         results = MultiPrediXcanAssociation.dataframe_from_results(results)
         results.to_csv(args.output, index=False)

@@ -30,7 +30,7 @@ def run(args):
             reporter.update(i, "%d %% of model's genes processed so far")
 
         results = MultiPrediXcanAssociation.dataframe_from_results(results)
-        results.to_csv(args.output, index=False)
+        results.to_csv(args.output, index=False, sep="\t")
 
     end = timer()
     logging.info("Ran multi tissue predixcan in %s seconds" % (str(end - start)))

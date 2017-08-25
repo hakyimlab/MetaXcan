@@ -22,8 +22,6 @@ class MTPF(object):
     WORST_GWAS_P = 6
     WORST_GWAS_M = 7
 
-
-
     K_GENE = "gene"
     K_PVALUE = "pvalue"
     K_N_MODELS = "n_models"

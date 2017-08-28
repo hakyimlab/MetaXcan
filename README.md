@@ -8,9 +8,15 @@ Almost all of the software here is command-line based.
 S-PrediXcan is an extension of [PrediXcan](https://github.com/hakyimlab/PrediXcan), that infers PrediXcan's results using only summary statistics. It is a component of MetaXcan.
 A manuscript desribing S-PrediXcan and the MetaXcan framework and application can be found [here](http://www.biorxiv.org/content/early/2017/05/21/045260).
 
+## Application to over a 100 complex traits
+
+We have ran MetaXcan on over a 100 complex traits in publicly available GWAS summary statistics using models trained on GTEx data. 
+We make the results available in an SQLite database [here](https://s3.amazonaws.com/imlab-open/Data/MetaXcan/results/metaxcan_results_database_v0.1.tar.gz). An usage example in R is provided.
+If you plan to use that data in a publication, please be sure to take a look at that package's README and make sure you are compliant with the data usage restrictions.
+
 ## Prerequisites
 
-The software is developed and tested in Linux and Max OS environments. The main S-PrediXcan script is supported in Windows.
+The software is developed and tested in Linux and Mac OS environments. The main S-PrediXcan script is also supported in Windows.
 
 To run S-PrediXcan, you need  [Python 2.7](https://www.python.org/), [numpy (>=1.11.1)](http://www.numpy.org/), [scipy (>=0.18.1)](http://www.scipy.org/), [pandas (>=0.18.1)](http://pandas.pydata.org/) . There is also a GUI done in TKInter.
 [mock](https://github.com/testing-cabal/mock) is needed for the unit tests.

@@ -25,15 +25,12 @@ def run(args):
         reporter.update(0, "%d %% of model's genes processed so far", force=True)
         results = []
         for i,gene in enumerate(genes):
-            try:
-                r = MultiPrediXcanAssociation.multi_predixcan_association(gene, context)
-                results.append(r)
-                reporter.update(i, "%d %% of model's genes processed so far")
-            except:
-                logging.info("%s", gene)
-                exit(0)
+            r = MultiPrediXcanAssociation.multi_predixcan_association(gene, context)
+            results.append(r)
+            reporter.update(i, "%d %% of model's genes processed so far")
 
         results = MultiPrediXcanAssociation.dataframe_from_results(results)
+
         results.to_csv(args.output, index=False, sep="\t")
 
     end = timer()

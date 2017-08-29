@@ -242,7 +242,7 @@ class _ModelManager(ModelManagerBase):
     def get_model_labels(self, gene = None):
         if not gene:
             labels = set()
-            for gene,tissues in self.models:
+            for gene,tissues in self.models.iteritems():
                 labels.update(tissues.keys())
             return labels
 

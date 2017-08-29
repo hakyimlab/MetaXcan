@@ -31,6 +31,9 @@ class SimpleContext(ContextMixin, Context):
     def get_n_genes(self):
         return len(self.get_genes())
 
+    def check(self):
+        pass
+
 class ExpressionStreamedContext(ContextMixin, Context):
     """
     A context that works by streaming the snps covariance file, one gene at a time.
@@ -57,6 +60,12 @@ class ExpressionStreamedContext(ContextMixin, Context):
 
     def get_n_genes(self):
         return len(self.model_manager.get_genes())
+
+    def check(self):
+        a = self.model_manager.get_model_labels()
+        b = self.metaxcan_results_manager.get_model_labels()
+        if len(a.intersection(b)) == 0:
+            raise Exceptions.ReportableException("No intersection between model names in MetaXcan Results and Prediction Models. Please verify your input")
 
 def _index(matrix_manager):
     labels = matrix_manager.model_labels()
@@ -169,5 +178,6 @@ def context_from_args(args):
         cutoff = _cutoff(args)
         metaxcan_manager = MetaXcanResultsManager.build_manager(args.metaxcan_folder, filters=args.metaxcan_filter)
         context = ExpressionStreamedContext(metaxcan_manager, snp_covariance_streamer, model_manager, genes, cutoff, args.regularization)
+        context.check()
     return context
 

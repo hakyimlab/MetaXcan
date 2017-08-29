@@ -15,6 +15,7 @@ class Context(object):
     def get_model_matrix(self, gene, tissues): raise  Exceptions.NotImplemented("Context: get_model_matrix")
     def get_cutoff(self, matrix): raise  Exceptions.NotImplemented("Context: get_cutoff")
     def get_gene_name(self, gene): raise  Exceptions.NotImplemented("Context: get_gene_name")
+    def check(self): raise Exceptions.NotImplemented("Context: check")
 
 class ContextMixin(object):
     def __init__(self):

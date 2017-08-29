@@ -10,9 +10,10 @@ from .. import Utilities
 
 class MetaXcanResultsManager(object):
     def __init__(self, data):
-        data, genes = _build_data(data)
+        data, genes, models = _build_data(data)
         self.data = data
         self.genes = genes
+        self.models = models
 
     def results_for_gene(self, gene):
         if not gene in self.data: return None, None
@@ -23,6 +24,9 @@ class MetaXcanResultsManager(object):
 
     def get_genes(self):
         return self.genes
+
+    def get_model_labels(self):
+        return self.models
 
 def build_manager(folder, filters=[".*csv"]):
     files = Utilities.target_files(folder, file_filters=filters)
@@ -45,6 +49,7 @@ def _load_results(files):
 def _build_data(data):
     logging.log(9,"Building data")
     genes = set()
+    models = set()
     result = {}
     for k, df in data.iteritems():
         logging.log(9, "Processing %s", k)
@@ -56,7 +61,8 @@ def _build_data(data):
             gene_entries = result[row.gene]
             gene_entries[row.tissue] = row.zscore
             genes.add(row.gene)
-    return result, genes
+            models.add(row.tissue)
+    return result, genes, models
 
 def _get_columns(data):
     logging.info("Getting columns")

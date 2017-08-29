@@ -176,7 +176,7 @@ def context_from_args(args):
         snp_covariance_streamer = DataFrameStreamer.data_frame_streamer(args.snp_covariance, "GENE", additional_skip_row_check= lambda x: _check_in(x, intersection))
 
         cutoff = _cutoff(args)
-        metaxcan_manager = MetaXcanResultsManager.build_manager(args.metaxcan_folder, filters=args.metaxcan_filter)
+        metaxcan_manager = MetaXcanResultsManager.build_manager(args.metaxcan_folder, filters=args.metaxcan_filter, file_name_pattern=args.metaxcan_file_name_parse_pattern)
         context = ExpressionStreamedContext(metaxcan_manager, snp_covariance_streamer, model_manager, genes, cutoff, args.regularization)
         context.check()
     return context

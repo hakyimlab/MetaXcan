@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 
 import numpy
 import pandas
@@ -28,19 +29,29 @@ class MetaXcanResultsManager(object):
     def get_model_labels(self):
         return self.models
 
-def build_manager(folder, filters=[".*csv"]):
+def build_manager(folder, filters=[".*csv"], file_name_pattern=None):
     files = Utilities.target_files(folder, file_filters=filters)
-    results = _load_results(files)
+    results = _load_results(files, file_name_pattern)
     manager = MetaXcanResultsManager(results)
     return manager
 
-def _load_results(files):
+def _parse_name(name, file_name_pattern):
+    if not file_name_pattern:
+        pheno, model, model_tag, model_type = NamingConventions.parse_file_name(name)
+        return pheno, model
+
+    r = re.compile(file_name_pattern)
+    g = r.match(name).groups()
+    pheno, model = g[0], g[1]
+    return pheno, model
+
+def _load_results(files, file_name_pattern):
     results = {}
     for file in sorted(files):
         logging.log(9, "Loading metaxcan %s", file)
         e = pandas.read_csv(file)
         root, name = os.path.split(file)
-        pheno, model, model_tag, model_type  = NamingConventions.parse_file_name(name)
+        pheno, model = _parse_name(name, file_name_pattern)
         e["pheno"] = pheno
         e["tissue"] = model
         results[model] = e

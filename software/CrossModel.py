@@ -54,6 +54,7 @@ if __name__ == "__main__":
     parser.add_argument("--cutoff_trace_ratio", help="ratio to use when truncating SVD", default=None, type=float)
     parser.add_argument("--metaxcan_folder", help="path to metaxcan files", default=None)
     parser.add_argument("--metaxcan_filter", help="regular expression to filter results files", default=[".*csv"], type=str, nargs='+')
+    parser.add_argument("--metaxcan_file_name_parse_pattern", help="Optional regular expression to get phenotype name and model name from MetaXcan result files.", default = None)
     parser.add_argument("--model_product", help="path to file with model feature product", default=None)
     parser.add_argument("--permissive_model_product", action="store_true", help="Tells the Model Product to need some slack, entires may be missing on numerical problems", default=False)
     parser.add_argument("--snp_covariance", help="path  to snp covariance", default=None)

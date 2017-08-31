@@ -42,7 +42,7 @@ def run(args, _gwas=None):
 
     reporter.update(len(snps_found), "%d %% of model's snps used", force=True)
     results = AssociationCalculation.dataframe_from_results(zip(*results))
-    results = MetaxcanUtilities.format_output(results, context, args.keep_ens_version)
+    results = MetaxcanUtilities.format_output(results, context, args.remove_ens_version)
     results.to_csv(args.output_file, index=False)
     end = timer()
     logging.info("Sucessfully processed metaxcan association in %s seconds"%(str(end - start)))
@@ -71,8 +71,8 @@ if __name__ == "__main__":
                         help="Log verbosity level. 1 is everything being logged. 10 is only high level messages, above 10 will hardly log anything",
                         default = "10")
 
-    parser.add_argument("--keep_ens_version",
-                        help="If set, will keep the -version- postfix in gene id.",
+    parser.add_argument("--remove_ens_version",
+                        help="If set, will drop the -version- postfix in gene id.",
                     action="store_true",
                     default=False)
 

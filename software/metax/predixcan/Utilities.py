@@ -2,8 +2,9 @@ import logging
 import pandas
 import numpy
 
-from MultiPrediXcanAssociation import Context
+from MultiPrediXcanAssociation import Context, MTPMode
 from .. expression import HDF5Expression
+from .. import Exceptions
 
 class HDF5Context(Context):
     def __init__(self, args):
@@ -18,6 +19,10 @@ class HDF5Context(Context):
 
         logging.info("Accquiring phenotype")
         self.pheno = _pheno_from_file_and_column(self.args.input_phenos_file, self.args.input_phenos_column)
+        if self.args.mode == MTPMode.K_LOGISTIC:
+            v = set([str(float(x)) for x in self.pheno])
+            if v != {'0.0', '1.0', 'nan'}:
+                raise Exceptions.InvalidArguments("Logistic regression was asked but phenotype is not binomial")
 
         return self
 
@@ -33,16 +38,24 @@ class HDF5Context(Context):
     def get_pheno(self):
         return self.pheno
 
+    def get_mode(self):
+        return self.args.mode
+
 def _pheno_from_file_and_column(path, column):
-    x = pandas.read_table(path)
-    p = pandas.Series(x[column])
-    p.loc[numpy.isclose(p, -999.0, atol=1e-6, rtol=0)] = numpy.nan
-    p = x[column].values
+    x = pandas.read_table(path, usecols=[column])
+    p = x[column]
+    p.loc[numpy.isclose(p, -999.0, atol=1e-3, rtol=0)] = numpy.nan
+    p = p.values
     return p
+
+def _check_args(args):
+    if not args.mode in MTPMode.K_MODES:
+        raise Exceptions.InvalidArguments("Invalid mode")
 
 def mp_context_from_args(args):
     logging.info("Preparing context")
 
+    _check_args(args)
     context = HDF5Context(args)
 
     return context

@@ -32,8 +32,9 @@ def run_metaxcan(args, context):
         reporter.update(len(snps_found), "%d %% of model's snps found so far in the gwas study")
 
     reporter.update(len(snps_found), "%d %% of model's snps used", force=True)
+
     results = AssociationCalculation.dataframe_from_results(results)
-    results = MetaxcanUtilities.format_output(results, context, args.keep_ens_version)
+    results = MetaxcanUtilities.format_output(results, context, args.remove_ens_version)
 
     if args.output_file:
         Utilities.ensure_requisite_folders(args.output_file)

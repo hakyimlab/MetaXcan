@@ -41,6 +41,7 @@ class DummyArgs(object):
         self.verbosity = logging.ERROR
         self.throw = True
         self.model_db_path = None
+        self.handle_empty_columns = False
 
 def base_args(path="tests/_td/GWAS/scz2"):
     args = DummyArgs()

@@ -41,9 +41,9 @@ if __name__ == "__main__":
     GWASUtilities.add_gwas_arguments_to_parser(parser)
 
 # ZScore calculation
-    parser.add_argument("--covariance", help="name of file containing covariance data", default="intermediate/cov/covariance.txt.gz")
+    parser.add_argument("--covariance", help="name of file containing covariance data", default=None)
     parser.add_argument("--output_file", help="name of output file", default=None)
-    parser.add_argument("--keep_ens_version", help="If set, will keep the -version- postfix in gene id.", action="store_true", default=False)
+    parser.add_argument("--remove_ens_version", help="If set, will drop the -version- postfix in gene id.", action="store_true", default=False)
     parser.add_argument("--verbosity", help="Log verbosity level. 1 is everything being logged. 10 is only high level messages, above 10 will hardly log anything", default = "10")
     parser.add_argument("--throw", action="store_true", help="Throw exception on error", default=False)
     parser.add_argument("--overwrite", help="If set, will overwrite the results file if it exists.", action="store_true", default=False)

@@ -234,7 +234,7 @@ def _to_int(d):
         pass
     return r
 
-def format_output(results, context, keep_ens_version):
+def format_output(results, context, remove_ens_version):
     results = results.drop("n_snps_in_model",1)
 
     # Dodge the use of cdf on non finite values
@@ -245,7 +245,7 @@ def format_output(results, context, keep_ens_version):
     model_info = pandas.DataFrame(context.get_model_info())
 
     merged = pandas.merge(results, model_info, how="inner", on="gene")
-    if not keep_ens_version:
+    if remove_ens_version:
         merged.gene = merged.gene.str.split(".").str.get(0)
 
     K = Constants

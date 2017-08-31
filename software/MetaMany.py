@@ -131,10 +131,11 @@ arguments --covariance_directory and --covariance_suffix. """)
     parser.add_argument("--output_directory", help="name of output file", default="results")
     parser.add_argument("--output_file_prefix", help="name of output file", default="results")
     parser.add_argument("--additional_output", help="If set, will output additional information.", default=None)
-    parser.add_argument("--keep_ens_version", help="If set, will keep the -version- postfix in gene id.", action="store_true", default=False)
+    parser.add_argument("--remove_ens_version", help="If set, will keep the -version- postfix in gene id.", action="store_true", default=False)
     parser.add_argument("--overwrite", help="If set, will overwrite the results file if it exists.", action="store_true", default=False)
     parser.add_argument("--verbosity", help="Log verbosity level. 1 is everything being logged. 10 is only high level messages, above 10 will hardly log anything", default = "10")
     parser.add_argument("--throw", action="store_true", help="Throw exception on error", default=False)
+
 
     if "-v" in sys.argv or "--verbose" in sys.argv:
         print metax.__version__
@@ -150,4 +151,3 @@ arguments --covariance_directory and --covariance_suffix. """)
             run(args)
         except Exceptions.ReportableException, e:
             logging.error(e.msg)
-        

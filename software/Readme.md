@@ -1,6 +1,12 @@
 # MetaXcan
 
-MetaXcan: summary statistics based gene-level association test
+MetaXcan is a set of tools to perform integrative gene mapping studies.
+Almost all of the software here is command-line based.
+
+## S-PrediXcan
+
+S-PrediXcan is an extension of [PrediXcan](https://github.com/hakyimlab/PrediXcan), that infers PrediXcan's results using only summary statistics. It is a component of MetaXcan.
+A manuscript desribing S-PrediXcan and the MetaXcan framework and application can be found [here](http://www.biorxiv.org/content/early/2017/05/21/045260).
 
 # Software Description
 
@@ -26,18 +32,18 @@ is needed for some optional statistics and charts.
 
 # Overview
 
-MetaXcan is concerned with obtaining gene-level association tests from ordinary GWAS data.
+S-PrediXcan is concerned with obtaining gene-level association tests from ordinary GWAS data.
 
 Ordinarily, a user would need to obtain/download support data sets comprising of:
 - A Transcriptome Prediction Model database (an example is [here](https://s3.amazonaws.com/imlab-open/Data/MetaXcan/sample_data/DGN-WB_0.5.db))
 - A file with the covariance matrices of the SNPs within each gene model (such as [this one](https://s3.amazonaws.com/imlab-open/Data/MetaXcan/sample_data/covariance.DGN-WB_0.5.txt.gz))
 
-And use them to run MetaXcan analysis on:
+And use them to run S-PrediXcan analysis on:
 - GWAS results (such as [these](https://s3.amazonaws.com/imlab-open/Data/MetaXcan/sample_data/GWAS.tar.gz), from  a randomly generated phenotype)
 
 However, if you have access to interesting data,
 you can build your own Transcriptome Prediction Model database 
-(using tools such as [PredictDB](https://github.com/hakyimlab/PrediXmod/tree/master/PredictDB)), 
+(using tools such as [PredictDB](http://predictdb.org)), 
 and your own covariance (using tools from this repository).
 
 More detailed information and usage documentation can be found at the [Wiki](https://github.com/hakyimlab/MetaXcan/wiki),
@@ -47,7 +53,7 @@ where more specific coverage is given to the tools contained here.
 
 Scripts **M00_prerequisites.py**, **M01_covariances_correlations.py**, **M02_variances.py**, **M03_betas.py**
 and **M04_zscores.py** are steps in a MetaXcan pipeline, although tipically a user will only need to
-use the last three. For ease of use, there is a script that performs these last two steps at once, **MetaXcan.py**.
+use the last two. For ease of use, there is a script that performs these last two steps at once, **MetaXcan.py**.
 There is also a GUI app, **MetaXcanUI.py**, that offers a simplified operation for **MetaXcan.py**'s functionality.
 
 All of these runable scripts take different number of command line parameters. Run them with
@@ -107,7 +113,7 @@ when running it.
 
 ## M04_zscores.py
 
-This performs the actual MetaXcan calculation. It needs a genetic expression model database,
+This performs the actual S-PrediXcan calculation. It needs a genetic expression model database,
 the covariance matrices from this model measured on a specific population, and GWAS data
 as in the output of **M03_betas.py**.
 
@@ -116,7 +122,7 @@ of your gwas pipeline (optionally using **M03_betas.py**).
 
 ## MetaXcan.py
 
-Thin wrapper over **M03_betas.py** and **M04_zscores.py**; it is merely a convenience for running the most usual of MetaXcan's steps in a single command.
+Thin wrapper over **M03_betas.py** and **M04_zscores.py**; it is merely a convenience for running the most frequent S-PrediXcan's steps in a single command.
 
 ## MetaXcanUI.py
 
@@ -128,7 +134,7 @@ but might be friendlier to non technical users.
 
 ## MetaMany
 
-MetaMany is a script that serially performs MetaXcan analysis on a GWAS data set using on multiple tissue models in a single command.
+MetaMany is a script that serially performs S-PrediXcan analysis on a GWAS data set using on multiple tissue models in a single command.
 
 
 ## Useful Data

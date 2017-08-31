@@ -8,6 +8,7 @@ kk*
 _kk*
 support_data*
 build*
-_scripts*
+
+_prof
+_scripts
 _test
-_prof*

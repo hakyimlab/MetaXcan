@@ -36,10 +36,10 @@ class MTPF(object):
 
 ########################################################################################################################
 class MTPMode(object):
-    K_LINEAL="lineal"
+    K_LINEAR= "linear"
     K_LOGISTIC="logistic"
 
-    K_MODES = [K_LINEAL, K_LOGISTIC]
+    K_MODES = [K_LINEAR, K_LOGISTIC]
 
 def _ols_pvalue(result): return  result.f_pvalue
 def _logit_pvalue(result): return result.llr_pvalue
@@ -52,7 +52,7 @@ K_FIT="fit"
 K_PVALUE="pvalue"
 
 _mode = {
-    MTPMode.K_LINEAL: {
+    MTPMode.K_LINEAR: {
         K_METHOD:sm.OLS,
         K_FIT:_ols_fit,
         K_PVALUE:_ols_pvalue

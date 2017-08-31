@@ -42,7 +42,7 @@ class HDF5Context(Context):
         return self.args.mode
 
 def _pheno_from_file_and_column(path, column):
-    x = pandas.read_table(path, usecols=[column])
+    x = pandas.read_table(path, usecols=[column], sep="\s+")
     p = x[column]
     p.loc[numpy.isclose(p, -999.0, atol=1e-3, rtol=0)] = numpy.nan
     p = p.values

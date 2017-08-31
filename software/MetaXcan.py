@@ -58,15 +58,15 @@ if __name__ == "__main__":
 # ZScore calculation
     parser.add_argument("--covariance",
                         help="name of file containing covariance data",
+                        default=None)
                         #default="intermediate/1000GP_Phase3_chr_cov")
-                        default="intermediate/cov/covariance.txt.gz")
 
     parser.add_argument("--output_file",
                         help="name of output file",
                         default="results/zscores.csv")
 
-    parser.add_argument("--keep_ens_version",
-                    help="If set, will keep the -version- postfix in gene id.",
+    parser.add_argument("--remove_ens_version",
+                        help="If set, will drop the -version- postfix in gene id.",
                     action="store_true",
                     default=False)
 

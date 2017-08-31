@@ -152,8 +152,8 @@ arguments --covariance_directory and --covariance_suffix. """)
                         default="results")
 
 
-    parser.add_argument("--keep_ens_version",
-                    help="If set, will keep the -version- postfix in gene id.",
+    parser.add_argument("--remove_ens_version",
+                        help="If set, will drop the -version- postfix in gene id.",
                     action="store_true",
                     default=False)
 

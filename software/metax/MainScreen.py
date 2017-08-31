@@ -331,7 +331,7 @@ class MainScreen(object):
                 self.throw = True
 
                 self.verbosity = "10"
-                self.keep_ens_version = False
+                self.remove_ens_version = False
                 self.model_db_path = source.weight_db_path
                 self.output_file = source.output_path
                 self.covariance = source.covariance_file

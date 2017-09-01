@@ -1,9 +1,10 @@
-from .. import Exceptions
+import logging
+import pandas
 
 from patsy import dmatrices
 import statsmodels.api as sm
 
-import pandas
+from .. import Exceptions
 
 class Context(object):
     def __init__(self): raise Exceptions.ReportableException("Tried to instantiate abstract Multi Tissue PrediXcan context")
@@ -22,6 +23,7 @@ class MTPF(object):
     BEST_GWAS_M = 5
     WORST_GWAS_P = 6
     WORST_GWAS_M = 7
+    STATUS = 8
 
     K_GENE = "gene"
     K_PVALUE = "pvalue"
@@ -31,10 +33,15 @@ class MTPF(object):
     K_BEST_GWAS_M = "m_i_best"
     K_WORST_GWAS_P = "p_i_worst"
     K_WORST_GWAS_M = "m_i_worst"
+    K_STATUS = "status"
 
-    order=[(GENE,K_GENE), (PVALUE, K_PVALUE), (N_MODELS,K_N_MODELS), (N_SAMPLES, K_N_SAMPLES), (BEST_GWAS_P, K_BEST_GWAS_P), (BEST_GWAS_M, K_BEST_GWAS_M), (WORST_GWAS_P, K_WORST_GWAS_P), (WORST_GWAS_M, K_WORST_GWAS_M),]
+    order=[(GENE,K_GENE), (PVALUE, K_PVALUE), (N_MODELS,K_N_MODELS), (N_SAMPLES, K_N_SAMPLES), (BEST_GWAS_P, K_BEST_GWAS_P), (BEST_GWAS_M, K_BEST_GWAS_M), (WORST_GWAS_P, K_WORST_GWAS_P), (WORST_GWAS_M, K_WORST_GWAS_M),
+           (STATUS, K_STATUS),]
 
 ########################################################################################################################
+class MTPStatus(object):
+    K_MLE_DID_NOT_CONVERGE="MLE_did_not_converge"
+
 class MTPMode(object):
     K_LINEAR= "linear"
     K_LOGISTIC="logistic"
@@ -45,55 +52,75 @@ def _ols_pvalue(result): return  result.f_pvalue
 def _logit_pvalue(result): return result.llr_pvalue
 
 def _ols_fit(model): return model.fit()
-def _logit_fit(model): return model.fit(disp=False)
+def _logit_fit(model): return model.fit(disp=False, maxiter=100)
+
+def _ols_status(result): return None
+def _logit_status(result):
+    if not result.mle_retvals['converged']:
+        return MTPStatus.K_MLE_DID_NOT_CONVERGE
+
+    return None
+
 
 K_METHOD="method"
 K_FIT="fit"
 K_PVALUE="pvalue"
+K_STATUS="status"
 
 _mode = {
-    MTPMode.K_LINEAR: {
+    MTPMode.K_LINEAR:{
         K_METHOD:sm.OLS,
         K_FIT:_ols_fit,
-        K_PVALUE:_ols_pvalue
+        K_PVALUE:_ols_pvalue,
+        K_STATUS:_ols_status
     },
     MTPMode.K_LOGISTIC:{
-        K_METHOD:sm.Logit,
-        K_FIT:_logit_fit,
-        K_PVALUE:_logit_pvalue
+        K_METHOD: sm.Logit,
+        K_FIT: _logit_fit,
+        K_PVALUE: _logit_pvalue,
+        K_STATUS: _logit_status
     }
 }
 
 ########################################################################################################################
 
 def multi_predixcan_association(gene_, context):
-    gene, pvalue, n_models, n_samples, p_i_best, m_i_best, p_i_worst,  m_i_worst = None, None, None, None, None, None, None, None
+    gene, pvalue, n_models, n_samples, p_i_best, m_i_best, p_i_worst,  m_i_worst, status = None, None, None, None, None, None, None, None, None
     gene = gene_
 
     e = context.expression_for_gene(gene)
     n_models = len(e.keys())
-    model_keys = sorted(e.keys())
+
 
     e = pandas.DataFrame(e)
     e["y"] = context.get_pheno()
     e_ = e.dropna()
+    # discard columns where expression is zero for all individuals. Mostly happens in UKB diseases.
+    e_ = e_[e_.columns[~(e_ == 0).all()]]
 
-    y, X = dmatrices("y ~ {}".format(" + ".join(model_keys)), data=e_, return_type="dataframe")
-    specifics =  _mode[context.get_mode()]
-    model = specifics[K_METHOD](y, X)
-    result = specifics[K_FIT](model)
+    model_keys = list(e_.columns.values)
+    model_keys.remove("y")
 
-    n_samples = e_.shape[0]
+    try:
+        y, X = dmatrices("y ~ {}".format(" + ".join(model_keys)), data=e_, return_type="dataframe")
+        specifics =  _mode[context.get_mode()]
+        model = specifics[K_METHOD](y, X)
+        result = specifics[K_FIT](model)
 
-    p_i_ = result.pvalues[result.pvalues.index[1:]]
-    p_i_best = p_i_.min()
-    m_i_best = p_i_.idxmin()
-    p_i_worst = p_i_.max()
-    m_i_worst = p_i_.idxmax()
+        n_samples = e_.shape[0]
 
-    pvalue = specifics[K_PVALUE](result)
+        p_i_ = result.pvalues[result.pvalues.index[1:]]
+        p_i_best = p_i_.min()
+        m_i_best = p_i_.idxmin()
+        p_i_worst = p_i_.max()
+        m_i_worst = p_i_.idxmax()
 
-    return gene, pvalue, n_models, n_samples, p_i_best, m_i_best, p_i_worst,  m_i_worst
+        pvalue = specifics[K_PVALUE](result)
+        status = specifics[K_STATUS](result)
+    except Exception as ex:
+        status = ex.message.replace(" ", "_").replace(",", "_")
+
+    return gene, pvalue, n_models, n_samples, p_i_best, m_i_best, p_i_worst,  m_i_worst, status
 
 def dataframe_from_results(results):
     results = zip(*results)

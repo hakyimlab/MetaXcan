@@ -25,13 +25,14 @@ def run(args):
         reporter.update(0, "%d %% of model's genes processed so far", force=True)
         results = []
         for i,gene in enumerate(genes):
+            logging.log(7, "Processing gene %s", gene)
             r = MultiPrediXcanAssociation.multi_predixcan_association(gene, context)
             results.append(r)
             reporter.update(i, "%d %% of model's genes processed so far")
 
         results = MultiPrediXcanAssociation.dataframe_from_results(results)
-
-        results.to_csv(args.output, index=False, sep="\t")
+        results = results.fillna("NA")
+        results.to_csv(args.output, index=False, sep="\t", quotechar='"')
 
     end = timer()
     logging.info("Ran multi tissue predixcan in %s seconds" % (str(end - start)))

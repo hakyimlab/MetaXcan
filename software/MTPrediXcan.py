@@ -29,9 +29,10 @@ def run(args):
             r = MultiPrediXcanAssociation.multi_predixcan_association(gene, context)
             results.append(r)
             reporter.update(i, "%d %% of model's genes processed so far")
-
+        reporter.update(i, "%d %% of model's genes processed so far")
         results = MultiPrediXcanAssociation.dataframe_from_results(results)
         results = results.fillna("NA")
+        results = results.sort_values(by="pvalue")
         results.to_csv(args.output, index=False, sep="\t", quotechar='"')
 
     end = timer()

@@ -168,7 +168,7 @@ def _ensure_columns(d):
 def _ensure_z(d):
     if ZSCORE in d:
         logging.log(9, "Using declared zscore")
-        return
+        return d
 
     z = None
 

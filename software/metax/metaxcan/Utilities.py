@@ -248,7 +248,7 @@ def format_output(results, context, remove_ens_version):
     # Dodge the use of cdf on non finite values
     i = numpy.isfinite(results.zscore)
     results[Constants.PVALUE] = numpy.nan
-    results.loc[i, Constants.PVALUE] = 2 * stats.norm.cdf(-numpy.abs(results.loc[i, Constants.ZSCORE].values))
+    results.loc[i, Constants.PVALUE] = 2 * stats.norm.sf(numpy.abs(results.loc[i, Constants.ZSCORE].values))
 
     model_info = pandas.DataFrame(context.get_model_info())
 

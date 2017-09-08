@@ -6,7 +6,7 @@ Almost all of the software here is command-line based.
 ## S-PrediXcan
 
 S-PrediXcan is an extension of [PrediXcan](https://github.com/hakyimlab/PrediXcan), that infers PrediXcan's results using only summary statistics. It is a component of MetaXcan.
-A manuscript desribing S-PrediXcan and the MetaXcan framework and application can be found [here](http://www.biorxiv.org/content/early/2017/05/21/045260).
+A manuscript desribing S-PrediXcan and the MetaXcan framework with an application can be found [here](http://www.biorxiv.org/content/early/2017/05/21/045260).
 
 ## Application to over a 100 complex traits
 
@@ -142,9 +142,21 @@ Ensemble Id for some, while some others (mainly DGN Whole Blood) provide [Genqua
 (where *W* is the vector of SNP weights in a gene's model,
 *W'* is its transpose, and *G* is the covariance matrix)
 
-S-PrediXcan supports a large amount of command line parameters.
+## A remark on input GWAS formats
+
+S-PrediXcan supports a large number of input GWAS formats through command line arguments. By specifying the appropriate 
+input file column name, S-PrediXcan will analize the file without extra need for input conversion. Input GWAS files can be plain text files or gzip-compressed.
+
+For example, you can specify an effect allele column and a standard error column, or a pvalue column and an odds ratio column, or only a GWAS zscore column. 
+S-PrediXcan will try  to use the following (in that order) if available from the command line arguments and input GWAS file:
+ 
+1) use a z-score column if available from the arguments and input file;
+2) use a p-value column and either effect, odd ratio or direction column;
+3) use effect size (or odd ratio) and standard error columns if available.
+
 Check the Github's ' wiki for those that work best for your data,
-and interpreting the results.
+and interpreting the results. For example, if your GWAS has p-values that are too small (i.e 1e-350),
+then you should avoid specifying a p-value column because numerical problems might arise; you should use effect size and standard error instead.
 
 ## S-PrediXcan on windows
 
@@ -193,7 +205,7 @@ For the time being, the only way to use old transcriptome models is to use older
 ## Where to go from here
 
 Check [this](https://github.com/hakyimlab/MetaXcan/tree/master/software) if you want to learn
-about more general or advanced usages of MetaXcan.
+about more general or advanced usages of S-PrediXcan.
 
 Check out the [Wiki](https://github.com/hakyimlab/MetaXcan/wiki) for exhaustive usage information.
 

@@ -6,7 +6,7 @@ Almost all of the software here is command-line based.
 ## S-PrediXcan
 
 S-PrediXcan is an extension of [PrediXcan](https://github.com/hakyimlab/PrediXcan), that infers PrediXcan's results using only summary statistics. It is a component of MetaXcan.
-A manuscript desribing S-PrediXcan and the MetaXcan framework with an application can be found [here](http://www.biorxiv.org/content/early/2017/05/21/045260).
+A manuscript describing S-PrediXcan and the MetaXcan framework with an application can be found [here](http://www.biorxiv.org/content/early/2017/05/21/045260).
 
 ## Application to over a 100 complex traits
 

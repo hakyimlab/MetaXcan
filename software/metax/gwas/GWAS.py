@@ -115,6 +115,8 @@ def load_gwas(source, gwas_format, strict=True, separator=None, skip_until_heade
         d = _enforce_numeric_columns(d)
         d = _ensure_columns(d)
         d = _keep_gwas_columns(d)
+        if numpy.any(~ numpy.isfinite(d[ZSCORE])):
+            logging.warning("Some GWAS snp zscores are not finite.")
 
     return d
 
@@ -187,13 +189,15 @@ def _enforce_numeric_columns(d):
 def _ensure_z(d):
     if ZSCORE in d:
         logging.log(9, "Using declared zscore")
-        return
+        return d
 
     z = None
 
     if PVALUE in d:
         logging.log(9, "Calculating zscore from pvalue")
         p = d[PVALUE]
+        if numpy.any(p == 0):
+            logging.warning("Encountered GWAS pvalues equal to zero. This might be caused by numerical resolution. Please consider using another scheme such as -beta- and -se- columns, or checking your input gwas for zeros.")
         s = _beta_sign(d)
         abs_z = -stats.norm.ppf(p/2)
         z = abs_z*s

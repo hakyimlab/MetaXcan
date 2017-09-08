@@ -57,8 +57,9 @@ def association(gene, context, return_snps=False):
         variances = numpy.diag(cov)
         i_sigma_l = numpy.sqrt(variances)
 
-        #da calculeishon
+        #da calcooleishon
         sigma_g_2 = float(d(d(i_weight,cov),i_weight))
+
         if sigma_g_2 >0:
             try:
                 zscore = numpy.sum(i_weight * i_zscore * i_sigma_l) / numpy.sqrt(sigma_g_2)

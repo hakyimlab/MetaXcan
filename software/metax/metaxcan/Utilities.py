@@ -13,6 +13,7 @@ import AssociationCalculation
 
 class SimpleContext(AssociationCalculation.Context):
     def __init__(self, gwas, model, covariance):
+        gwas = gwas.loc[numpy.isfinite(gwas[Constants.ZSCORE])]
         self.gwas = gwas
         self.model = model
         self.covariance = covariance
@@ -167,6 +168,7 @@ def _prepare_gwas(gwas):
 
 def _prepare_gwas_data(gwas):
     gwas = gwas[[Constants.SNP, Constants.ZSCORE, Constants.BETA]]
+    gwas = gwas.loc[numpy.isfinite(gwas[Constants.ZSCORE])]
     data = {}
     for x in gwas.values:
         data[x[0]] = x

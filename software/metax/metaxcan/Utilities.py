@@ -13,7 +13,7 @@ import AssociationCalculation
 
 class SimpleContext(AssociationCalculation.Context):
     def __init__(self, gwas, model, covariance):
-        gwas = gwas.loc[numpy.isfinite(gwas[Constants.ZSCORE])]
+        gwas = _sanitized_gwas(gwas)
         self.gwas = gwas
         self.model = model
         self.covariance = covariance
@@ -149,6 +149,13 @@ def _data_intersection_2(weight_data, gwas_data):
                 snps.add(s)
     return genes, snps
 
+def _sanitized_gwas(gwas):
+    gwas = gwas[[Constants.SNP, Constants.ZSCORE, Constants.BETA]]
+    if numpy.any(~ numpy.isfinite(gwas[Constants.ZSCORE])):
+        logging.warning("Discarding non finite GWAS zscores")
+        gwas = gwas.loc[numpy.isfinite(gwas[Constants.ZSCORE])]
+    return gwas
+
 def _prepare_gwas(gwas):
     #If zscore is numeric, then everything is fine with us.
     # if not, try to remove "NA" strings.
@@ -167,8 +174,7 @@ def _prepare_gwas(gwas):
     return gwas
 
 def _prepare_gwas_data(gwas):
-    gwas = gwas[[Constants.SNP, Constants.ZSCORE, Constants.BETA]]
-    gwas = gwas.loc[numpy.isfinite(gwas[Constants.ZSCORE])]
+    gwas = _sanitized_gwas(gwas)
     data = {}
     for x in gwas.values:
         data[x[0]] = x

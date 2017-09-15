@@ -105,7 +105,7 @@ def load_gwas(source, gwas_format, strict=True, sep='\s+'):
     if strict:
         d = _ensure_columns(d)
         d = _keep_gwas_columns(d)
-        if numpy.any(~ numpy.isfinite(d[ZSCORE])):
+        if d.shape[0] >0 and numpy.any(~ numpy.isfinite(d[ZSCORE])):
             logging.warning("Some GWAS snp zscores are not finite.")
 
     return d

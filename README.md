@@ -113,7 +113,7 @@ The example command parameters mean:
 ...This allows to ignore several support files that might be generated at your GWAS analysis, such as plink logs.
 * *--snp_column* Argument with the name of the column containing the RSIDs.
 * *--effect_allele_column* Argument with the name of the column containing the effect allele (i.e. the one being regressed on).
-* *--no_effect_allele_column* Argument with the name of the column containing the non effect allele.
+* *--non_effect_allele_column* Argument with the name of the column containing the non effect allele.
 * *--beta_column* Tells the program the name of a column containing -phenotype beta data for each SNP- in the input GWAS files.
 * *--pvalue_column* Tells the program the name of a column containing -PValue for each SNP- in the input GWAS files.
 * *--output_file* Path where results will be saved to.

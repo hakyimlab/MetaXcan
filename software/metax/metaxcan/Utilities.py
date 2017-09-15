@@ -13,7 +13,6 @@ import AssociationCalculation
 
 class SimpleContext(AssociationCalculation.Context):
     def __init__(self, gwas, model, covariance):
-        gwas = _sanitized_gwas(gwas)
         self.gwas = gwas
         self.model = model
         self.covariance = covariance
@@ -163,18 +162,19 @@ def _prepare_gwas(gwas):
         i = gwas.zscore.str.contains("NA")
         i = i.fillna(False)
         i = ~i
-        gwas = gwas[i]
+        gwas = gwas.loc[i]
+        gwas = pandas.DataFrame(gwas)
+        gwas.loc[:,Constants.ZSCORE] = gwas.zscore.astype(numpy.float64)
     except Exception as e:
-        logging.log(9, "Unexpected issue preparing gwas... %s", str(e))
+        logging.info("Unexpected issue preparing gwas... %s", str(e))
         pass
 
     if not Constants.BETA in gwas:
-        gwas[Constants.BETA] = numpy.nan
+        gwas.loc[:,Constants.BETA] = numpy.nan
 
     return gwas
 
 def _prepare_gwas_data(gwas):
-    gwas = _sanitized_gwas(gwas)
     data = {}
     for x in gwas.values:
         data[x[0]] = x
@@ -225,12 +225,14 @@ def build_context(args, gwas):
 
 def _build_context(model, covariance_manager, gwas):
     gwas = _prepare_gwas(gwas)
+    gwas = _sanitized_gwas(gwas)
     context = OptimizedContext(gwas, model, covariance_manager)
     return context
 
 def _build_simple_context(model, covariance_manager, gwas):
     model = _prepare_model(model)
     gwas = _prepare_gwas(gwas)
+    gwas = _sanitized_gwas(gwas)
     context = SimpleContext(gwas, model, covariance_manager)
     return context
 

@@ -94,12 +94,12 @@ def gwas_filtered_source(path, snps=None, snp_column_name=None, skip_until_heade
         for i,line in enumerate(file):
             comps = line.strip(strip_c).split(separator)
 
-            if snps and not comps[index] in snps:
-                continue
-
             #Yeah, there are those kinds of files
             if not len(comps) == len(header_comps):
                 logging.log(8, "Found line with less components than headers, line %i", i)
+                continue
+
+            if snps and not comps[index] in snps:
                 continue
 
             # Load only the first column if in presence of duplicated columns. Yuck!

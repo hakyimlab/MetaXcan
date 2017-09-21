@@ -1,3 +1,5 @@
+Version 0.5.6.2:
+    * Fixed another corner case with input gwas files (empty line in gwas file)
 Version 0.5.6.1:
     * Fixed some corner cases with input gwas files
 Version 0.5.5

@@ -1,4 +1,4 @@
-__version__ = "0.5.6.1"
+__version__ = "0.5.6.2"
 
 def exitIf(doExit, Exception, msg):
     if doExit:

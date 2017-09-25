@@ -12,6 +12,7 @@ class Context(object):
     def expression_for_gene(self, gene): raise  Exceptions.NotImplemented("MT Predixcan Context: expression for genes")
     def get_pheno(self): raise  Exceptions.NotImplemented("MT Predixcan Context: get pheno")
     def get_mode(self): raise Exceptions.NotImplemented("MT Predixcan Context: get mode")
+    def get_covariates(self): raise Exceptions.NotImplemented("MT Predixcan Context: get covariates")
 
 class MTPF(object):
     """Multi-Tissue PrediXcan format"""
@@ -84,32 +85,50 @@ _mode = {
 
 ########################################################################################################################
 
-def multi_predixcan_association(gene_, context):
-    gene, pvalue, n_models, n_samples, p_i_best, m_i_best, p_i_worst,  m_i_worst, status = None, None, None, None, None, None, None, None, None
-    gene = gene_
-
+def _acquire(gene, context):
     e = context.expression_for_gene(gene)
-    n_models = len(e.keys())
-
-
     e = pandas.DataFrame(e)
-    e["y"] = context.get_pheno()
+
+    e["pheno"] = context.get_pheno()
     e_ = e.dropna()
     # discard columns where expression is zero for all individuals. Mostly happens in UKB diseases.
     e_ = e_[e_.columns[~(e_ == 0).all()]]
 
     model_keys = list(e_.columns.values)
-    model_keys.remove("y")
+    model_keys.remove("pheno")
+
+    return model_keys, e_
+
+def _design_matrices(e_, keys, context):
+    formula = "pheno ~ {}".format(" + ".join(keys))
+    if context.get_covariates() is not None:
+        # If context used covariates, then the intercept was regressed out with them
+        formula += " - 1"
+    y, X = dmatrices(formula, data=e_, return_type="dataframe")
+    return y, X
+
+def _pvalues(result, context):
+    if context.get_covariates() is None:
+        return  result.pvalues[result.pvalues.index[1:]]
+
+    return result.pvalues
+
+def multi_predixcan_association(gene_, context):
+    gene, pvalue, n_models, n_samples, p_i_best, m_i_best, p_i_worst,  m_i_worst, status = None, None, None, None, None, None, None, None, None
+    gene = gene_
+
+    model_keys, e_ = _acquire(gene_, context)
+    n_models = len(model_keys)
 
     try:
-        y, X = dmatrices("y ~ {}".format(" + ".join(model_keys)), data=e_, return_type="dataframe")
+        y, X = _design_matrices(e_, model_keys, context)
         specifics =  _mode[context.get_mode()]
         model = specifics[K_METHOD](y, X)
         result = specifics[K_FIT](model)
 
         n_samples = e_.shape[0]
 
-        p_i_ = result.pvalues[result.pvalues.index[1:]]
+        p_i_ = _pvalues(result, context)
         p_i_best = p_i_.min()
         m_i_best = p_i_.idxmin()
         p_i_worst = p_i_.max()

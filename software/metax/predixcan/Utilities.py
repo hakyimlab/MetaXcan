@@ -78,7 +78,7 @@ def mp_context_from_args(args):
     return context
 
 def _get_covariates(args):
-    covariates = pandas.read_table(args.covariates_file)[args.covariates]
+    covariates = pandas.read_table(args.covariates_file, sep="\s+")[args.covariates]
     columns = covariates.columns.values
     for c in columns:
         covariates.loc[ numpy.isclose(covariates[c], -999.0, atol=1e-3, rtol=0), c] = numpy.nan

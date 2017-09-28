@@ -12,3 +12,4 @@ build*
 _prof
 _scripts
 _test
+*.cprof

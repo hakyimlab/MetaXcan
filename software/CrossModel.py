@@ -26,6 +26,7 @@ def run(args):
     logging.info("Processing")
     reporter.update(0, "%d %% of model's genes processed so far")
     for i,gene in enumerate(context.get_genes()):
+        logging.log(7, "Gene: %s", gene)
         result = JointAnalysis.joint_analysis(context, gene)
         results.append(result)
         reporter.update(i, "%d %% of model's genes processed so far")
@@ -44,8 +45,8 @@ if __name__ == "__main__":
 
     parser.add_argument("--cleared_snps", help="SNPS to analyze. If you don't provide this, you must provide GWAS and models.")
     parser.add_argument("--models_folder", help="Path to folder with prediction models")
-    parser.add_argument("--gwas_folder", help="name of folder containing GWAS data. All files in the folder are assumed to belong to a single study.", default="data/GWAS")
-    parser.add_argument("--gwas_file_pattern", help="Pattern to recognice GWAS files in folders (in case there are extra files and you don't want them selected).", default=None)
+    parser.add_argument("--gwas_folder", help="name of folder containing GWAS data. All files in the folder are assumed to belong to a single study.")
+    parser.add_argument("--gwas_file_pattern", help="Pattern to recognice GWAS files in folders (in case there are extra files and you don't want them selected).")
     GWASUtilities.add_gwas_arguments_to_parser(parser)
 
     parser.add_argument("--regularization", help="Add a regularization term to correct for singularity", default=None, type=float)

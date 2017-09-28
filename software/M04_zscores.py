@@ -51,7 +51,7 @@ def run_additional(args, context):
         results.append(stats_)
 
     results = AssociationCalculation.dataframe_from_aditional_stats(results)
-    results = MetaxcanUtilities.format_additional_output(results, context, args.keep_ens_version)
+    results = MetaxcanUtilities.format_additional_output(results, context, args.remove_ens_version)
 
     if args.additional_output:
         Utilities.ensure_requisite_folders(args.additional_output)

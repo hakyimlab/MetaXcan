@@ -159,13 +159,10 @@ def _prepare_gwas(gwas):
     #If zscore is numeric, then everything is fine with us.
     # if not, try to remove "NA" strings.
     try:
-        if "NA" in gwas.zscore:
-            i = gwas.zscore.str.contains("NA")
-            i = i.fillna(False)
-            i = ~i
-            gwas = gwas.loc[i]
-            gwas = pandas.DataFrame(gwas)
-            gwas.loc[:,Constants.ZSCORE] = gwas.zscore.astype(numpy.float64)
+        i = gwas.zscore != "NA"
+        gwas = gwas.loc[i]
+        gwas = pandas.DataFrame(gwas)
+        gwas.loc[:,Constants.ZSCORE] = gwas.zscore.astype(numpy.float64)
     except Exception as e:
         logging.info("Unexpected issue preparing gwas... %s", str(e))
         pass

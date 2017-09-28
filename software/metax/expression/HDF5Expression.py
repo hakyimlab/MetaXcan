@@ -2,7 +2,7 @@ import os
 import re
 import numpy
 import logging
-import h5py_cache
+import h5py
 
 class ExpressionManager(object):
     def __init__(self, gene_map, h5, code_999=False):
@@ -24,8 +24,6 @@ def _structure(folder):
     h5 = {}
     gene_map = {}
 
-    HDF5_CACHE = int(500 * (1024 ** 2))
-
     for file in files:
         if _exregex.search(file):
             name = _exregex.match(file).group(1)
@@ -33,7 +31,7 @@ def _structure(folder):
         else:
             continue
         path = os.path.join(folder, file)
-        file = h5py_cache.File(path, 'r', chunk_cache_mem_size=HDF5_CACHE)
+        file = h5py.File(path, 'r')
 
         genes = [g for g in file['genes']]
         for i,gene in enumerate(genes):

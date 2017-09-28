@@ -62,6 +62,8 @@ if __name__ == "__main__":
     parser.add_argument("--output", help="where you want the output", default=None)
     parser.add_argument("--verbosity", help="Log verbosity level. 1 is everything being logged. 10 is only high level messages, above 10 will hardly log anything", default = "10")
     parser.add_argument("--throw", action="store_true", help="Throw exception on error", default=False)
+    parser.add_argument("--full_ensemble_id", action="store_true", help="Keep full ensemble ids", default=False)
+
 
     args = parser.parse_args()
 

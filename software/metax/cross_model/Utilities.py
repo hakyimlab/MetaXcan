@@ -17,7 +17,11 @@ class SimpleContext(ContextMixin, Context):
         self.metaxcan_results_manager = metaxcan_results_manager
         self.matrix_manager = matrix_manager
         self.model_name_index = _index(matrix_manager)
+
+        #Todo: maybe fix?
+        self.full_ensemble_id = False
         self.gene_names = self._process_genes(genes)
+
         # Yeah, a callable object. Go figure.
         self.cutoff = cutoff
         self.epsilon = epsilon
@@ -41,11 +45,14 @@ class ExpressionStreamedContext(ContextMixin, Context):
     but since it holds snp covariance data one gene at a time, it won work if you sort it.
     So, use it as it comes.
     """
-    def __init__(self, metaxcan_results_manager, snp_covariance_streamer, model_manager, genes, cutoff, epsilon):
+    def __init__(self, metaxcan_results_manager, snp_covariance_streamer, model_manager, genes, cutoff, epsilon, full_ensemble_id=False):
         self.metaxcan_results_manager = metaxcan_results_manager
         self.snp_covariance_streamer = snp_covariance_streamer
         self.model_manager = model_manager
+
+        self.full_ensemble_id = full_ensemble_id
         self.gene_names = self._process_genes(genes)
+
         # Yeah, a callable object. Go figure.
         self.cutoff = cutoff
         self.epsilon = epsilon
@@ -53,7 +60,8 @@ class ExpressionStreamedContext(ContextMixin, Context):
 
     def get_genes(self):
         for d in self.snp_covariance_streamer:
-            d.GENE = d.GENE.str.split(".").str.get(0)
+            if not self.full_ensemble_id:
+                d.GENE = d.GENE.str.split(".").str.get(0)
             g = d.GENE.values[0]
             self.matrix_manager = GeneExpressionMatrixManager._GeneExpressionMatrixManager(d, self.model_manager)
             yield g
@@ -168,7 +176,8 @@ def context_from_args(args):
         if len(intersection) == 0:
             raise Exceptions.ReportableException("No intersection of snps between GWAS and models.")
 
-        model_manager = PredictionModel.load_model_manager(args.models_folder, trim_ensemble_version=True, Klass=PredictionModel._ModelManager)
+        trim = not args.full_ensemble_id
+        model_manager = PredictionModel.load_model_manager(args.models_folder, trim_ensemble_version=trim, Klass=PredictionModel._ModelManager)
 
         def _check_in(comps, intersection):
             return comps[1] not in intersection or comps[2] not in intersection
@@ -177,7 +186,7 @@ def context_from_args(args):
 
         cutoff = _cutoff(args)
         metaxcan_manager = MetaXcanResultsManager.build_manager(args.metaxcan_folder, filters=args.metaxcan_filter, file_name_pattern=args.metaxcan_file_name_parse_pattern)
-        context = ExpressionStreamedContext(metaxcan_manager, snp_covariance_streamer, model_manager, genes, cutoff, args.regularization)
+        context = ExpressionStreamedContext(metaxcan_manager, snp_covariance_streamer, model_manager, genes, cutoff, args.regularization, args.full_ensemble_id)
         context.check()
     return context
 

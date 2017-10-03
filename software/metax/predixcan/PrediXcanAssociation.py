@@ -95,14 +95,11 @@ def _acquire(gene, context):
 
 def _design_matrices(e_,  context):
     formula = "pheno ~ expression"
-    if context.get_covariates() is not None:
-        # If context used covariates, then the intercept was regressed out with them
-        formula += " - 1"
     y, X = dmatrices(formula, data=e_, return_type="dataframe")
     return y, X
 
 def _results(result, context):
-    idx = 1 if context.get_covariates() is None else 0
+    idx = 1
 
     effect = result.params[idx]
     se = result.bse[idx]
@@ -122,7 +119,6 @@ def predixcan_association(gene_, context):
         specifics =  _mode[context.get_mode()]
         model = specifics[K_METHOD](y, X)
         result = specifics[K_FIT](model)
-
         n_samples = e_.shape[0]
         effect_size, se, zscore, pvalue = _results(result, context)
         status = specifics[K_STATUS](result)

@@ -101,17 +101,11 @@ def _acquire(gene, context):
 
 def _design_matrices(e_, keys, context):
     formula = "pheno ~ {}".format(" + ".join(keys))
-    if context.get_covariates() is not None:
-        # If context used covariates, then the intercept was regressed out with them
-        formula += " - 1"
     y, X = dmatrices(formula, data=e_, return_type="dataframe")
     return y, X
 
 def _pvalues(result, context):
-    if context.get_covariates() is None:
-        return  result.pvalues[result.pvalues.index[1:]]
-
-    return result.pvalues
+    return  result.pvalues[result.pvalues.index[1:]]
 
 def multi_predixcan_association(gene_, context):
     gene, pvalue, n_models, n_samples, p_i_best, m_i_best, p_i_worst,  m_i_worst, status = None, None, None, None, None, None, None, None, None

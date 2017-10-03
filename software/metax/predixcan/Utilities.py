@@ -5,11 +5,14 @@ import numpy
 from patsy import dmatrices
 import statsmodels.api as sm
 
-from MultiPrediXcanAssociation import Context, MTPMode
+from MultiPrediXcanAssociation import Context as MTPContext, MTPMode
+from PrediXcanAssociation import Context as PContext, PMode
 from .. expression import HDF5Expression
 from .. import Exceptions
 
-class HDF5Context(Context):
+########################################################################################################################
+
+class HDF5MTPContext(MTPContext):
     def __init__(self, args):
         self.args = args
         self.h5 = None
@@ -18,25 +21,11 @@ class HDF5Context(Context):
         self.pheno = None
 
     def __enter__(self):
-        logging.info("Acquiring HDF5 expression caches")
         gene_map, h5 = HDF5Expression._structure(self.args.hdf5_expression_folder)
         self.h5 = h5
         self.expression = HDF5Expression.ExpressionManager(gene_map, h5)
 
-        logging.info("Accquiring phenotype")
-        self.pheno = _pheno_from_file_and_column(self.args.input_phenos_file, self.args.input_phenos_column)
-        if self.args.mode == MTPMode.K_LOGISTIC:
-            v = set([str(float(x)) for x in self.pheno])
-            if v != {'0.0', '1.0', 'nan'}:
-                raise Exceptions.InvalidArguments("Logistic regression was asked but phenotype is not binomial")
-
-        self.mode = self.args.mode
-        if self.args.covariates_file and self.args.covariates:
-            self.mode = MTPMode.K_LINEAR
-            logging.info("Acquiring covariates")
-            self.covariates = _get_covariates(self.args)
-            logging.info("Replacing phenotype with residuals")
-            self.pheno = _get_residual(self.pheno, self.covariates)
+        _prepare_phenotype(self)
 
         return self
 
@@ -44,7 +33,7 @@ class HDF5Context(Context):
         HDF5Expression._close(self.h5)
 
     def get_genes(self):
-        return self.expression.gene_map.keys()
+        return self.expression.get_genes()
 
     def expression_for_gene(self, gene):
         return self.expression.expression_for_gene(gene)
@@ -58,24 +47,85 @@ class HDF5Context(Context):
     def get_covariates(self):
         return self.covariates
 
+def _check_args(args):
+    if not args.mode in MTPMode.K_MODES:
+        raise Exceptions.InvalidArguments("Invalid mode")
+
+def mp_context_from_args(args):
+    logging.info("Preparing Multi-Tissue PrediXcan HDF5 context")
+    _check_args(args)
+    context = HDF5MTPContext(args)
+    return context
+
+########################################################################################################################
+
+class HDF5PContext(PContext):
+    def __init__(self, args):
+        self.args = args
+        self.h5 = None
+        self.mode = None
+        self.covariates = None
+        self.pheno = None
+
+    def __enter__(self):
+        genes, h5 = HDF5Expression._structure_file(self.args.hdf5_expression_file)
+        self.h5 = h5
+        self.expression = HDF5Expression.Expression(genes, h5)
+        _prepare_phenotype(self)
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        HDF5Expression._close_file(self.h5)
+
+    def get_genes(self):
+        return self.expression.get_genes()
+
+    def expression_for_gene(self, gene):
+        return self.expression.expression_for_gene(gene)
+
+    def get_pheno(self):
+        return self.pheno
+
+    def get_mode(self):
+        return self.mode
+
+    def get_covariates(self):
+        return self.covariates
+
+def _check_args_file(args):
+    if not args.mode in PMode.K_MODES:
+        raise Exceptions.InvalidArguments("Invalid mode")
+
+def p_context_from_args(args):
+    logging.info("Preparing PrediXcan HDF5 context")
+    _check_args_file(args)
+    context = HDF5PContext(args)
+    return context
+
+########################################################################################################################
+
+def _prepare_phenotype(context):
+    logging.info("Accquiring phenotype")
+    context.pheno = _pheno_from_file_and_column(context.args.input_phenos_file, context.args.input_phenos_column)
+    if context.args.mode == MTPMode.K_LOGISTIC:
+        v = set([str(float(x)) for x in context.pheno])
+        if v != {'0.0', '1.0', 'nan'}:
+            raise Exceptions.InvalidArguments("Logistic regression was asked but phenotype is not binomial")
+
+    context.mode = context.args.mode
+    if context.args.covariates_file and context.args.covariates:
+        context.mode = MTPMode.K_LINEAR
+        logging.info("Acquiring covariates")
+        context.covariates = _get_covariates(context.args)
+        logging.info("Replacing phenotype with residuals")
+        context.pheno = _get_residual(context.pheno, context.covariates)
+
 def _pheno_from_file_and_column(path, column):
     x = pandas.read_table(path, usecols=[column], sep="\s+")
     p = x[column]
     p.loc[numpy.isclose(p, -999.0, atol=1e-3, rtol=0)] = numpy.nan
     p = p.values
     return p
-
-def _check_args(args):
-    if not args.mode in MTPMode.K_MODES:
-        raise Exceptions.InvalidArguments("Invalid mode")
-
-def mp_context_from_args(args):
-    logging.info("Preparing context")
-
-    _check_args(args)
-    context = HDF5Context(args)
-
-    return context
 
 def _get_covariates(args):
     covariates = pandas.read_table(args.covariates_file, sep="\s+")[args.covariates]

@@ -57,7 +57,8 @@ def run(args):
     names.sort() #cosmetic, because different filesystems/OS yield folders in different order
 
     if len(names) == 0:
-        raise Exceptions.ReportableException("No GWAS files found on %s with pattern %s" % (args.gwas_folder, args.gwas_regexp.pattern,))
+        msg = "No GWAS files found on %s with pattern %s" % (args.gwas_folder, args.gwas_file_pattern,)
+        raise Exceptions.ReportableException(msg)
 
     gwas_format = GWASUtilities.gwas_format_from_args(args)
     GWAS.validate_format_basic(gwas_format)

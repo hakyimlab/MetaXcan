@@ -26,6 +26,7 @@ def run_metaxcan(args, context):
 
     results = []
     for gene in i_genes:
+        logging.log(7, "Processing gene %s", gene)
         r, snps = AssociationCalculation.association(gene, context, return_snps=True)
         results.append(r)
         snps_found.update(snps)

@@ -159,7 +159,7 @@ def _prepare_gwas(gwas):
     #If zscore is numeric, then everything is fine with us.
     # if not, try to remove "NA" strings.
     try:
-        i = gwas.zscore != "NA"
+        i = gwas.zscore.apply(lambda x: x != "NA")
         gwas = gwas.loc[i]
         gwas = pandas.DataFrame(gwas)
         gwas.loc[:,Constants.ZSCORE] = gwas.zscore.astype(numpy.float64)

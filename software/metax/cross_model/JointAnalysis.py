@@ -82,23 +82,16 @@ def plot(merged):
     plt.show()
 
 def joint_analysis(context, gene):
-    g, g_n, pvalue, n, n_indep, p_i_best, t_i_best, p_i_worst, t_i_worst, eigen_max, eigen_min, z_min, z_max, z_mean, z_sd, tmi, status \
-        = None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, CalculationStatus.NO_DATA
+    g, g_n, pvalue, n, n_indep, p_i_best, t_i_best, p_i_worst, t_i_worst, eigen_max, eigen_min, eigen_min_kept, z_min, z_max, z_mean, z_sd, tmi, status \
+        = None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, CalculationStatus.NO_DATA
     g = gene if context.get_full_ensemble_id() else gene.split(".")[0]
     g_n = context.get_gene_name(g)
-
-    if DEBUG:
-        if not g in ["ENSG00000171824"]:
-        #if not g in ["ENSG00000053371"]: #this is close, previous is not
-            return g, g_n, pvalue, n, n_indep, p_i_best, t_i_best, p_i_worst, t_i_worst, eigen_max, eigen_min, z_min, z_max, z_mean, z_sd, tmi, status
-        print "a"
-        from IPython import embed; embed()
 
     ####################################################################################################################
     zscores, tissue_labels = context.get_metaxcan_zscores(gene)
     if not zscores or len(zscores) == 0:
         status = CalculationStatus.NO_METAXCAN_RESULTS
-        return g, g_n, pvalue, n, n_indep, p_i_best, t_i_best, p_i_worst, t_i_worst, eigen_max, eigen_min, z_min, z_max, z_mean, z_sd, tmi, status
+        return g, g_n, pvalue, n, n_indep, p_i_best, t_i_best, p_i_worst, t_i_worst, eigen_max, eigen_min, eigen_min_kept, z_min, z_max, z_mean, z_sd, tmi, status
     n = len(zscores)
     z_min = numpy.min(zscores)
     z_max = numpy.max(zscores)
@@ -111,15 +104,15 @@ def joint_analysis(context, gene):
 
     if not labels or len(labels) == 0:
         status = CalculationStatus.NO_PRODUCT
-        return g, g_n, pvalue, n, n_indep, p_i_best, t_i_best, p_i_worst, t_i_worst, eigen_max, eigen_min, z_min, z_max, z_mean, z_sd, tmi, status
+        return g, g_n, pvalue, n, n_indep, p_i_best, t_i_best, p_i_worst, t_i_worst, eigen_max, eigen_min, eigen_min_kept, z_min, z_max, z_mean, z_sd, tmi, status
 
     # also, check that the matrix actually makes sense. We are currently returning it just in case but matrices with complex covariance are suspicious.
-    e, v = numpy.linalg.eig(matrix)
+    e, v = numpy.linalg.eigh(matrix)
     if numpy.imag(e).any():
         status = CalculationStatus.COMPLEX_COVARIANCE
         e = numpy.real(e)
         eigen_max, eigen_min = numpy.max(e), numpy.min(e)
-        return g, g_n, pvalue, n, n_indep, p_i_best, t_i_best, p_i_worst, t_i_worst, eigen_max, eigen_min, z_min, z_max, z_mean, z_sd, tmi, status
+        return g, g_n, pvalue, n, n_indep, p_i_best, t_i_best, p_i_worst, t_i_worst, eigen_max, eigen_min, eigen_min_kept, z_min, z_max, z_mean, z_sd, tmi, status
 
     eigen_max, eigen_min = numpy.max(e), numpy.min(e)
 
@@ -127,6 +120,8 @@ def joint_analysis(context, gene):
     _d = {tissue_labels[i]:zscores[i] for i in xrange(0, len(tissue_labels))}
     zscores = array([_d[l] for l in labels])
     inv, n_indep, eigen = Math.capinv(matrix, cutoff, context.epsilon)
+
+    eigen_min_kept = numpy.min([x for x in eigen if x>cutoff])
 
     _absz = numpy.abs(zscores)
     _maxzi = numpy.argmax(_absz)
@@ -141,17 +136,12 @@ def joint_analysis(context, gene):
 
     #TODO: implement a better heuristic
     try:
-        eigen_w, eigen_v = numpy.linalg.eig(inv)
+        eigen_w, eigen_v = numpy.linalg.eigh(inv)
     except:
         #WTCCC 'ENSG00000204560.5'
         logging.log(8, "Problems with inverse for %s, skipping", gene)
         status = CalculationStatus.INVERSE_ERROR
-        return g, g_n, pvalue, n, n_indep, p_i_best, t_i_best, p_i_worst, t_i_worst, eigen_max, eigen_min, z_min, z_max, z_mean, z_sd, tmi, status
-
-    # if numpy.max(eigen_w) > 1e10:
-    #     logging.log(8, "gene %s has a suspicious covariance, skipping", gene)
-    #     status = CalculationStatus.SINGULAR_COVARIANCE
-    #     return g, pvalue, n, n_indep, p_i_best, t_i_best, p_i_worst, t_i_worst, eigen_max, eigen_min, z_min, z_max, z_mean, z_sd, tmi, status
+        return g, g_n, pvalue, n, n_indep, p_i_best, t_i_best, p_i_worst, t_i_worst, eigen_max, eigen_min, eigen_min_kept, z_min, z_max, z_mean, z_sd, tmi, status
 
     ####################################################################################################################
     w = float(dot(dot(zscores, inv), zscores))
@@ -167,18 +157,11 @@ def joint_analysis(context, gene):
 
     pvalue = chi2_p
 
-    if DEBUG:
-        from IPython import embed; embed();
-
-    return g, g_n, pvalue, n, n_indep, p_i_best, t_i_best, p_i_worst, t_i_worst, eigen_max, eigen_min, z_min, z_max, z_mean, z_sd, tmi, status
+    return g, g_n, pvalue, n, n_indep, p_i_best, t_i_best, p_i_worst, t_i_worst, eigen_max, eigen_min, eigen_min_kept, z_min, z_max, z_mean, z_sd, tmi, status
 
 def format_results(results):
-    columns = ["gene", "gene_name", "pvalue", "n", "n_indep", "p_i_best", "t_i_best", "p_i_worst", "t_i_worst", "eigen_max", "eigen_min", "z_min", "z_max", "z_mean", "z_sd", "tmi",  "status"]
+    columns = ["gene", "gene_name", "pvalue", "n", "n_indep", "p_i_best", "t_i_best", "p_i_worst", "t_i_worst", "eigen_max", "eigen_min", "eigen_min_kept", "z_min", "z_max", "z_mean", "z_sd", "tmi",  "status"]
     results = Utilities.to_dataframe(results, columns)
     results = results.sort_values(by=["pvalue", "status"])
     results = results.fillna("NA")
-    if DEBUG:
-        print "b"
-        from IPython import embed; embed()
-        exit()
     return results

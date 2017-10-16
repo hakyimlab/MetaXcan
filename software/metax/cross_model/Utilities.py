@@ -89,7 +89,7 @@ def _cutoff(args):
             # conceptual shotcut
             if self.cutoff_ratio == 0:
                 return 0.0
-            w, v = numpy.linalg.eig(matrix)
+            w, v = numpy.linalg.eigh(matrix)
             w = -numpy.sort(-w)
             cutoff = self.cutoff_ratio * w[0]
             return cutoff
@@ -114,7 +114,7 @@ def _cutoff(args):
             #conceptual shotcut
             if self.cutoff_threshold== 0:
                 return 0.0
-            eigen = sorted(numpy.linalg.eig(matrix)[0], reverse=True)
+            eigen = sorted(numpy.linalg.eigh(matrix)[0], reverse=True)
             trace = numpy.sum(eigen)
             cumsum = numpy.cumsum(eigen)
             objective = trace*(1-self.cutoff_threshold)
@@ -132,6 +132,8 @@ def _cutoff(args):
         cutoff = CutoffTraceRatio(args.cutoff_trace_ratio)
     elif args.cutoff_threshold is not None:
         cutoff = CutoffThreshold(args.cutoff_threshold)
+    elif args.condition_number is not None:
+        cutoff = CutoffEigenRatio(1.0/args.condition_number)
     else:
         raise Exceptions.InvalidArguments("Specify either cutoff_ratio or cutoff_threshold")
     return cutoff

@@ -50,7 +50,7 @@ if __name__ == "__main__":
     GWASUtilities.add_gwas_arguments_to_parser(parser)
 
     parser.add_argument("--regularization", help="Add a regularization term to correct for singularity", default=None, type=float)
-    parser.add_argument("--condition_number", help="condition number of eigen values to use when truncating SVD", default=None, type=float)
+    parser.add_argument("--cutoff_condition_number", help="condition number of eigen values to use when truncating SVD", default=None, type=float)
     parser.add_argument("--cutoff_eigen_ratio", help="ratio to use when truncating SVD", default=None, type=float)
     parser.add_argument("--cutoff_threshold", help="threshold of variance when truncating SVD", default=None, type=float)
     parser.add_argument("--cutoff_trace_ratio", help="ratio to use when truncating SVD", default=None, type=float)

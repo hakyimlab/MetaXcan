@@ -132,8 +132,8 @@ def _cutoff(args):
         cutoff = CutoffTraceRatio(args.cutoff_trace_ratio)
     elif args.cutoff_threshold is not None:
         cutoff = CutoffThreshold(args.cutoff_threshold)
-    elif args.condition_number is not None:
-        cutoff = CutoffEigenRatio(1.0/args.condition_number)
+    elif args.cutoff_condition_number is not None:
+        cutoff = CutoffEigenRatio(1.0/args.cutoff_condition_number)
     else:
         raise Exceptions.InvalidArguments("Specify either cutoff_ratio or cutoff_threshold")
     return cutoff

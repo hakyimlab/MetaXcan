@@ -67,6 +67,8 @@ def _filter_eigen_values_from_max(s, ratio):
 def _filter_from_args(args):
     if args.pc_condition_number:
         return lambda x:_filter_eigen_values_from_max(x, 1.0/args.pc_condition_number)
+    elif args.pc_eigen_ratio:
+        return lambda x:_filter_eigen_values_from_max(x, args.pc_eigen_ratio)
     return None
 
 ########################################################################################################################

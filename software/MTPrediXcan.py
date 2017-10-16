@@ -53,6 +53,7 @@ if __name__ == "__main__":
     parser.add_argument("--throw", action="store_true", help="Throw exception on error", default=False)
     parser.add_argument("--mode", help="Type of regression. Can be: {}".format(MultiPrediXcanAssociation.MTPMode.K_MODES), default=MultiPrediXcanAssociation.MTPMode.K_LINEAR)
     parser.add_argument("--pc_condition_number", help="Principal components condition number", type=int)
+    parser.add_argument("--pc_eigen_ratio", help="Principal components filter, cutoff at proportion to max eigenvalue", type=float)
 
     args = parser.parse_args()
 

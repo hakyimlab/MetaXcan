@@ -7,6 +7,7 @@ from numpy import dot as _dot, diag as _diag
 import statsmodels.api as sm
 
 from .. import Exceptions
+from ..misc import Math
 
 class Context(object):
     def __init__(self): raise Exceptions.ReportableException("Tried to instantiate abstract Multi Tissue PrediXcan context")
@@ -28,6 +29,9 @@ class MTPF(object):
     WORST_GWAS_M = 7
     STATUS = 8
     N_USED=9
+    MAX_EIGEN=10
+    MIN_EIGEN=11
+    MIN_EIGEN_KEPT=12
 
     K_GENE = "gene"
     K_PVALUE = "pvalue"
@@ -39,9 +43,12 @@ class MTPF(object):
     K_WORST_GWAS_M = "m_i_worst"
     K_STATUS = "status"
     K_N_USED="n_used"
+    K_MAX_EIGEN="max_eigen"
+    K_MIN_EIGEN = "min_eigen"
+    K_MIN_EIGEN_KEPT = "min_eigen_kept"
 
     order=[(GENE,K_GENE), (PVALUE, K_PVALUE), (N_MODELS,K_N_MODELS), (N_SAMPLES, K_N_SAMPLES), (BEST_GWAS_P, K_BEST_GWAS_P), (BEST_GWAS_M, K_BEST_GWAS_M), (WORST_GWAS_P, K_WORST_GWAS_P), (WORST_GWAS_M, K_WORST_GWAS_M),
-           (STATUS, K_STATUS), (N_USED, K_N_USED)]
+           (STATUS, K_STATUS), (N_USED, K_N_USED), (MAX_EIGEN,K_MAX_EIGEN), (MIN_EIGEN, K_MIN_EIGEN), (MIN_EIGEN_KEPT,K_MIN_EIGEN_KEPT)]
 
 ########################################################################################################################
 class MTPStatus(object):
@@ -111,34 +118,44 @@ def _design_matrices(e_, keys, context):
 def _pvalues(result, context):
     return  result.pvalues[result.pvalues.index[1:]]
 
-def _pca_data(e_, model_keys):
+def _get_pc_input(e_, model_keys):
+    Xc = []
+    for key in model_keys:
+        x = Math.standardize(e_[key])
+        if x is not None:
+            Xc.append(x)
+    return Xc
+
+def _pca_data(e_, model_keys, pc_filter):
     if e_.shape[1] == 2:
-        return e_, model_keys
+        return e_, model_keys, 1, 1, 1
     #numpy.svd can't handle typical data size in UK Biobank. So we do PCA through the covariance matrix
     # That is: we compute ths SVD of a covariance matrix, and use those coefficients to get the SVD of input data
     # Shamelessly designed from https://stats.stackexchange.com/questions/134282/relationship-between-svd-and-pca-how-to-use-svd-to-perform-pca
-    Xc = [e_[x]-numpy.mean(e_[x]) for x in model_keys]
+    Xc = _get_pc_input(e_, model_keys)
     k = numpy.cov(Xc)
     u, s, vt = numpy.linalg.svd(k)
     # we want to keep only those components with significant variance, to reduce dimensionality
-    selected = [i for i,x in enumerate(s) if x > s[0]*0.01]
+    selected = pc_filter(s)
     # In numpy.cov, each row is a variable and each column an observation. Exactly opposite to standard PCA notation.
     Xc_ = _dot(vt[selected], Xc)
     _data = {"pc{}".format(i):x for i,x in enumerate(Xc_)}
     pca_keys = _data.keys()
     _data["pheno"] = e_.pheno
     pca_data = pandas.DataFrame(_data)
-    return pca_data, pca_keys
+    return pca_data, pca_keys, numpy.max(s), numpy.min(s), numpy.min(s[selected])
 
 def multi_predixcan_association(gene_, context):
-    gene, pvalue, n_models, n_samples, p_i_best, m_i_best, p_i_worst,  m_i_worst, status, n_used = None, None, None, None, None, None, None, None, None, None
+    gene, pvalue, n_models, n_samples, p_i_best, m_i_best, p_i_worst,  m_i_worst, status, n_used, max_eigen, min_eigen, min_eigen_kept = None, None, None, None, None, None, None, None, None, None, None, None, None
     gene = gene_
 
     model_keys, e_ = _acquire(gene_, context)
     n_models = len(model_keys)
 
+    pc_filter = context.get_pc_filter()
     try:
-        e_, model_keys = _pca_data(e_, model_keys)
+        if pc_filter is not None:
+            e_, model_keys, max_eigen, min_eigen, min_eigen_kept = _pca_data(e_, model_keys, pc_filter)
         n_used = len(model_keys)
         y, X = _design_matrices(e_, model_keys, context)
         specifics =  _mode[context.get_mode()]
@@ -158,13 +175,14 @@ def multi_predixcan_association(gene_, context):
     except Exception as ex:
         status = ex.message.replace(" ", "_").replace(",", "_")
 
-    return gene, pvalue, n_models, n_samples, p_i_best, m_i_best, p_i_worst,  m_i_worst, status, n_used
+    return gene, pvalue, n_models, n_samples, p_i_best, m_i_best, p_i_worst,  m_i_worst, status, n_used, max_eigen, min_eigen, min_eigen_kept
 
-def dataframe_from_results(results):
+def dataframe_from_results(results, context):
     results = zip(*results)
     if len(results) == 0:
         return pandas.DataFrame({key:[] for order,key in MTPF.order})
 
-    r = pandas.DataFrame({key: results[order] for order, key in MTPF.order})
-    r = r[[key for order,key in MTPF.order]]
+    ORDER = MTPF.order if context.get_pc_filter() is not None else MTPF.order[0:MTPF.N_USED]
+    r = pandas.DataFrame({key: results[order] for order, key in ORDER})
+    r = r[[key for order,key in ORDER]]
     return r

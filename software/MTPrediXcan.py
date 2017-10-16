@@ -30,7 +30,7 @@ def run(args):
             results.append(r)
             reporter.update(i, "%d %% of model's genes processed so far")
         reporter.update(i, "%d %% of model's genes processed so far")
-        results = MultiPrediXcanAssociation.dataframe_from_results(results)
+        results = MultiPrediXcanAssociation.dataframe_from_results(results, context)
         results = results.fillna("NA")
         results = results.sort_values(by="pvalue")
         results.to_csv(args.output, index=False, sep="\t", quotechar='"')
@@ -52,6 +52,7 @@ if __name__ == "__main__":
     parser.add_argument("--verbosity", help="Log verbosity level. 1 is everything being logged. 10 is only high level messages, above 10 will hardly log anything", default = "10")
     parser.add_argument("--throw", action="store_true", help="Throw exception on error", default=False)
     parser.add_argument("--mode", help="Type of regression. Can be: {}".format(MultiPrediXcanAssociation.MTPMode.K_MODES), default=MultiPrediXcanAssociation.MTPMode.K_LINEAR)
+    parser.add_argument("--pc_condition_number", help="Principal components condition number", type=int)
 
     args = parser.parse_args()
 

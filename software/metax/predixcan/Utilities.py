@@ -19,6 +19,7 @@ class HDF5MTPContext(MTPContext):
         self.mode = None
         self.covariates = None
         self.pheno = None
+        self.pc_filter = _filter_from_args(args)
 
     def __enter__(self):
         gene_map, h5 = HDF5Expression._structure(self.args.hdf5_expression_folder)
@@ -47,6 +48,9 @@ class HDF5MTPContext(MTPContext):
     def get_covariates(self):
         return self.covariates
 
+    def get_pc_filter(self):
+        return self.pc_filter
+
 def _check_args(args):
     if not args.mode in MTPMode.K_MODES:
         raise Exceptions.InvalidArguments("Invalid mode")
@@ -56,6 +60,14 @@ def mp_context_from_args(args):
     _check_args(args)
     context = HDF5MTPContext(args)
     return context
+
+def _filter_eigen_values_from_max(s, ratio):
+    return [i for i,x in enumerate(s) if x > s[0]*ratio]
+
+def _filter_from_args(args):
+    if args.pc_condition_number:
+        return lambda x:_filter_eigen_values_from_max(x, 1.0/args.pc_condition_number)
+    return None
 
 ########################################################################################################################
 

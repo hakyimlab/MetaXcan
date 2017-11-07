@@ -25,6 +25,8 @@ def run(args):
         reporter.update(0, "%d %% of model's genes processed so far", force=True)
         results = []
         for i,gene in enumerate(genes):
+            if i>20:
+                break
             logging.log(7, "Processing gene %s", gene)
             r = MultiPrediXcanAssociation.multi_predixcan_association(gene, context)
             results.append(r)
@@ -43,7 +45,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='MTPrediXcan.py %s:'
         'Multi Tissue PrediXcan' % (__version__))
 
-    parser.add_argument("--hdf5_expression_folder", help="Folder with predicted gene expressions.")
+    parser.add_argument("--hdf5_expression_folder", help="Folder with predicted gene expressions. (HDF5 format)")
+    parser.add_argument("--expression_folder", help="Folder with predicted gene expressions. (plain text file format)")
+    parser.add_argument("--expression_pattern", help="Patterns to select expression files", default=None)
     parser.add_argument("--input_phenos_file", help="A text file where on column will be used as phenotype")
     parser.add_argument('--covariates', type=str, nargs='+',help='Names of covariates in the file', default=[])
     parser.add_argument('--covariates_file', help="File with covariate data. If provided, will force OLS regression")

@@ -22,7 +22,7 @@ class HDF5MTPContext(MTPContext):
         self.pc_filter = _filter_from_args(args)
 
     def __enter__(self):
-        gene_map, h5 = HDF5Expression._structure(self.args.hdf5_expression_folder)
+        gene_map, h5 = HDF5Expression._structure(self.args.hdf5_expression_folder, self.args.expression_pattern)
         self.h5 = h5
         self.expression = HDF5Expression.ExpressionManager(gene_map, h5)
 
@@ -62,7 +62,8 @@ def mp_context_from_args(args):
     return context
 
 def _filter_eigen_values_from_max(s, ratio):
-    return [i for i,x in enumerate(s) if x > s[0]*ratio]
+    s_max = numpy.max(s)
+    return [i for i,x in enumerate(s) if x > s_max*ratio]
 
 def _filter_from_args(args):
     if args.pc_condition_number:

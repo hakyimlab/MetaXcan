@@ -25,15 +25,17 @@ class ExpressionManager(object):
         return self.gene_map.keys()
 
 _exregex = re.compile("pred_TW_(.*)_0.5_hrc_hapmap.h5")
-def _structure(folder):
+def _structure(folder, pattern=None):
     logging.info("Acquiring HDF5 expression files")
     files = os.listdir(folder)
     h5 = {}
     gene_map = {}
 
+    _regex = _exregex if not pattern else re.compile(pattern)
+
     for file in files:
-        if _exregex.search(file):
-            name = _exregex.match(file).group(1)
+        if _regex.search(file):
+            name = _regex.match(file).group(1)
             name = name.replace("-","_")
         else:
             continue

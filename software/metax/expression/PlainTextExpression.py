@@ -54,11 +54,11 @@ def _structure(folder, pattern=None):
         if _regex:
             if _regex.search(file):
                 name = _regex.match(file).group(1)
-                name = name.replace("-","_")
             else:
                 continue
         else:
             name = file
+        name = name.replace("-", "_")
         path = os.path.join(folder, file)
         _o = gzip.open if ".gz" in file else open
         with _o(path) as f:

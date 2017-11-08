@@ -6,7 +6,7 @@ from patsy import dmatrices
 import statsmodels.api as sm
 
 from MultiPrediXcanAssociation import Context as _MTPContext, MTPMode
-from PrediXcanAssociation import Context as PContext, PMode
+from PrediXcanAssociation import Context as _PContext, PMode
 from .. expression import HDF5Expression, PlainTextExpression
 from .. import Exceptions
 
@@ -52,7 +52,7 @@ def _check_args(args):
     if not args.mode in MTPMode.K_MODES:
         raise Exceptions.InvalidArguments("Invalid mode")
 
-def _expression_from_args(args):
+def _expression_manager_from_args(args):
     if args.hdf5_expression_folder:
         logging.info("Preparing expression from HDF5 files")
         expression = HDF5Expression.ExpressionManager(args.hdf5_expression_folder, args.expression_pattern)
@@ -63,13 +63,13 @@ def _expression_from_args(args):
         logging.info("Loading expression manager from text files")
         expression = PlainTextExpression.ExpressionManager(args.expression_folder, args.expression_pattern)
     else:
-        raise RuntimeError("Could not build expression from context")
+        raise RuntimeError("Could not build context from arguments")
     return expression
 
 def mp_context_from_args(args):
     logging.info("Preparing Multi-Tissue PrediXcan context")
     _check_args(args)
-    expression = _expression_from_args(args)
+    expression = _expression_manager_from_args(args)
     context = MTPContext(args, expression)
     return context
 
@@ -86,13 +86,13 @@ def _filter_from_args(args):
 
 ########################################################################################################################
 
-class _PContext(PContext):
-    def __init__(self, args):
+class PContext(_PContext):
+    def __init__(self, args, expression):
         self.args = args
         self.mode = None
         self.covariates = None
         self.pheno = None
-        self.expression = None
+        self.expression = expression
 
     def get_genes(self):
         return self.expression.get_genes()
@@ -109,46 +109,33 @@ class _PContext(PContext):
     def get_covariates(self):
         return self.covariates
 
-class HDF5PContext(_PContext):
-    def __init__(self, args):
-        super(HDF5PContext, self).__init__(args)
-        self.h5 = None
-
     def __enter__(self):
-        genes, h5 = HDF5Expression._structure_file(self.args.hdf5_expression_file)
-        self.h5 = h5
-        self.expression = HDF5Expression.Expression(genes, h5)
+        self.expression.enter()
         _prepare_phenotype(self)
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        HDF5Expression._close_file(self.h5)
-
-class PlainTextPContext(_PContext):
-    def __init__(self, args):
-        super(PlainTextPContext, self).__init__(args)
-
-    def __enter__(self):
-        self.expression = PlainTextExpression.Expression(self.args.expression_file)
-        _prepare_phenotype(self)
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        pass
+        self.expression.exit()
 
 def _check_args_file(args):
     if not args.mode in PMode.K_MODES:
         raise Exceptions.InvalidArguments("Invalid mode")
 
-def p_context_from_args(args):
-    _check_args_file(args)
+def expression_from_args(args):
     if args.hdf5_expression_file:
         logging.info("Preparing PrediXcan HDF5 context")
-        context = HDF5PContext(args)
+        expression = HDF5Expression.Expression(args.hdf5_expression_file)
     elif args.expression_file:
         logging.info("Preparing PrediXcan context")
-        context = PlainTextPContext(args)
+        expression = PlainTextExpression.Expression(args.expression_file)
+    else:
+        raise RuntimeError("Could not build context from arguments")
+    return expression
 
+def p_context_from_args(args):
+    _check_args_file(args)
+    expression = expression_from_args(args)
+    context = PContext(args, expression)
     return context
 
 ########################################################################################################################

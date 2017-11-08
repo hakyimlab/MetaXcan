@@ -5,11 +5,11 @@ import logging
 import h5py
 import h5py_cache
 
-import Expression
+import Expression as _Expression
 
 ########################################################################################################################
 
-class ExpressionManager(Expression.ExpressionManager):
+class ExpressionManager(_Expression.ExpressionManager):
     def __init__(self, folder, pattern=None, code_999=False):
         self.gene_map = None
         self.h5 = None
@@ -85,13 +85,13 @@ def _code_999(k):
 
 ########################################################################################################################
 
-class Expression(object):
-    def __init__(self, genes, h5, code_999=False):
-        self.genes = genes
-        self.h5 = h5
-        self.own = False
+class Expression(_Expression.Expression):
+    def __init__(self, path, code_999=False):
+        self.path = path
+        self.genes = None
+        self.h5 = None
+        self.gene_idx = None
         self.code_999 = code_999
-        self.gene_idx = {gene:id for id,gene in enumerate(genes)}
 
     def expression_for_gene(self, gene):
         k = self.h5[self.gene_idx[gene]]
@@ -101,6 +101,15 @@ class Expression(object):
 
     def get_genes(self):
         return self.genes
+
+    def enter(self):
+        genes, h5 = _structure_file(self.path)
+        self.h5 = h5
+        self.genes = genes
+        self.gene_idx = {gene: id for id, gene in enumerate(genes)}
+
+    def exit(self):
+        _close_file(self.h5)
 
 def _code_999_b(k):
     logged_ = []

@@ -77,7 +77,8 @@ def _structure(folder, pattern=None):
 
 class Expression(object):
     def __init__(self, path):
-        self.d = pandas.read_table(path)
+        self.path = path
+        self.d = None
 
     def expression_for_gene(self, gene):
         k = self.d[gene].values
@@ -85,3 +86,9 @@ class Expression(object):
 
     def get_genes(self):
         return self.d.columns.values
+
+    def enter(self):
+        self.d = pandas.read_table(self.path)
+
+    def exit(self):
+        pass

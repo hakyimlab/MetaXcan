@@ -5,20 +5,20 @@ import numpy
 from patsy import dmatrices
 import statsmodels.api as sm
 
-from MultiPrediXcanAssociation import Context as MTPContext, MTPMode
+from MultiPrediXcanAssociation import Context as _MTPContext, MTPMode
 from PrediXcanAssociation import Context as PContext, PMode
 from .. expression import HDF5Expression, PlainTextExpression
 from .. import Exceptions
 
 ########################################################################################################################
-class _MTPContext(MTPContext):
-    def __init__(self, args):
+class MTPContext(_MTPContext):
+    def __init__(self, args, expression):
         self.args = args
         self.mode = None
         self.covariates = None
         self.pheno = None
         self.pc_filter = _filter_from_args(args)
-        self.expression = None
+        self.expression = expression
 
     def get_genes(self):
         return self.expression.get_genes()
@@ -38,55 +38,39 @@ class _MTPContext(MTPContext):
     def get_pc_filter(self):
         return self.pc_filter
 
-class HDF5MTPContext(_MTPContext):
-    def __init__(self, args):
-        super(HDF5MTPContext, self).__init__(args)
-        self.h5 = None
-
     def __enter__(self):
-        gene_map, h5 = HDF5Expression._structure(self.args.hdf5_expression_folder, self.args.expression_pattern)
-        self.h5 = h5
-        self.expression = HDF5Expression.ExpressionManager(gene_map, h5)
-
-        _prepare_phenotype(self)
-
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        HDF5Expression._close(self.h5)
-
-class PlainTextMTPContext(_MTPContext):
-    def __init__(self, args):
-        super(PlainTextMTPContext, self).__init__(args)
-
-    def __enter__(self):
-        gene_map, file_map = PlainTextExpression._structure(self.args.expression_folder, self.args.expression_pattern)
-        if self.args.memory_efficient:
-            logging.info("Loading memory efficient expression manager")
-            self.expression = PlainTextExpression.ExpressionManagerMemoryEfficient(gene_map, file_map)
-        else:
-            logging.info("Loading expression manager")
-            self.expression = PlainTextExpression.ExpressionManager(gene_map, file_map)
+        logging.info("Entering Multi-tissue PrediXcan context")
+        self.expression.enter()
         _prepare_phenotype(self)
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        pass
+        logging.info("Exiting Multi-tissue PrediXcan context")
+        self.expression.exit()
 
 def _check_args(args):
     if not args.mode in MTPMode.K_MODES:
         raise Exceptions.InvalidArguments("Invalid mode")
 
-def mp_context_from_args(args):
-    _check_args(args)
+def _expression_from_args(args):
     if args.hdf5_expression_folder:
-        logging.info("Preparing Multi-Tissue PrediXcan HDF5 context")
-        context = HDF5MTPContext(args)
+        logging.info("Preparing expression from HDF5 files")
+        expression = HDF5Expression.ExpressionManager(args.hdf5_expression_folder, args.expression_pattern)
+    elif args.memory_efficient and args.expression_folder:
+        logging.info("Loading expression manager from text files (memory efficient)")
+        expression = PlainTextExpression.ExpressionManagerMemoryEfficient(args.expression_folder, args.expression_pattern)
     elif args.expression_folder:
-        logging.info("Preparing Multi-Tissue PrediXcan context")
-        context = PlainTextMTPContext(args)
+        logging.info("Loading expression manager from text files")
+        expression = PlainTextExpression.ExpressionManager(args.expression_folder, args.expression_pattern)
     else:
         raise RuntimeError("Could not build expression from context")
+    return expression
+
+def mp_context_from_args(args):
+    logging.info("Preparing Multi-Tissue PrediXcan context")
+    _check_args(args)
+    expression = _expression_from_args(args)
+    context = MTPContext(args, expression)
     return context
 
 def _filter_eigen_values_from_max(s, ratio):

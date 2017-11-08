@@ -5,13 +5,16 @@ import logging
 import h5py
 import h5py_cache
 
+import Expression
+
 ########################################################################################################################
 
-class ExpressionManager(object):
-    def __init__(self, gene_map, h5, code_999=False):
-        self.gene_map = gene_map
-        self.h5 = h5
-        self.own = False
+class ExpressionManager(Expression.ExpressionManager):
+    def __init__(self, folder, pattern=None, code_999=False):
+        self.gene_map = None
+        self.h5 = None
+        self.folder = folder
+        self.pattern = pattern
         self.code_999 = code_999
 
     def expression_for_gene(self, gene):
@@ -24,21 +27,31 @@ class ExpressionManager(object):
     def get_genes(self):
         return self.gene_map.keys()
 
-_exregex = re.compile("pred_TW_(.*)_0.5_hrc_hapmap.h5")
+    def enter(self):
+        gene_map, h5 = _structure(self.folder, self.pattern)
+        self.gene_map = gene_map
+        self.h5 = h5
+
+    def exit(self):
+        _close(self.h5)
+
 def _structure(folder, pattern=None):
     logging.info("Acquiring HDF5 expression files")
     files = os.listdir(folder)
     h5 = {}
     gene_map = {}
 
-    _regex = _exregex if not pattern else re.compile(pattern)
+    _regex = re.compile(pattern) if pattern else None
 
     for file in files:
-        if _regex.search(file):
-            name = _regex.match(file).group(1)
-            name = name.replace("-","_")
+        if _regex:
+            if _regex.search(file):
+                name = _regex.match(file).group(1)
+                name = name.replace("-", "_")
+            else:
+                continue
         else:
-            continue
+            name = file
         path = os.path.join(folder, file)
         file = h5py.File(path, 'r')
 
@@ -109,7 +122,6 @@ def _structure_file(file_path):
     file =  h5py_cache.File(file_path, 'r', chunk_cache_mem_size=HDF5_CACHE, w0=1.0, dtype='float32')
     genes = [g for g in file['genes']]
     h5 = file['pred_expr']
-
     return genes, h5
 
 def _close_file(h5):

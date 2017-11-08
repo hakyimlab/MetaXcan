@@ -3,13 +3,15 @@ import logging
 import os
 import gzip
 import pandas
+import Expression
 
 ########################################################################################################################
-class ExpressionManager(object):
-    def __init__(self, gene_map, file_map):
+class ExpressionManager(Expression.ExpressionManager):
+    def __init__(self, folder, pattern=None):
+        gene_map, file_map = _structure(folder, pattern)
         self.gene_map = gene_map
         self.file_map = file_map
-        self.d = {name:pandas.read_table(path) for name,path in self.file_map.iteritems()}
+        self.d = None
 
     def expression_for_gene(self, gene):
         m_ = self.gene_map[gene]
@@ -19,8 +21,15 @@ class ExpressionManager(object):
     def get_genes(self):
         return self.gene_map.keys()
 
-class ExpressionManagerMemoryEfficient(object):
-    def __init__(self, gene_map, file_map):
+    def enter(self):
+        self.d = {name: pandas.read_table(path) for name, path in self.file_map.iteritems()}
+
+    def exit(self):
+        pass
+
+class ExpressionManagerMemoryEfficient(Expression.ExpressionManager):
+    def __init__(self, folder, pattern):
+        gene_map, file_map = _structure(folder, pattern)
         self.gene_map = gene_map
         self.file_map = file_map
 
@@ -39,14 +48,17 @@ def _structure(folder, pattern=None):
     gene_map = {}
     file_map = {}
 
-    _regex = _exregex if not pattern else re.compile(pattern)
+    _regex = re.compile(pattern) if pattern else None
 
     for file in files:
-        if _regex.search(file):
-            name = _regex.match(file).group(1)
-            name = name.replace("-","_")
+        if _regex:
+            if _regex.search(file):
+                name = _regex.match(file).group(1)
+                name = name.replace("-","_")
+            else:
+                continue
         else:
-            continue
+            name = file
         path = os.path.join(folder, file)
         _o = gzip.open if ".gz" in file else open
         with _o(path) as f:

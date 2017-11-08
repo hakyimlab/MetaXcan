@@ -18,6 +18,11 @@ def run(args):
         logging.info("%s already exists, you have to move it or delete it if you want it done again", args.output)
         return
 
+    if (args.hdf5_expression_folder and args.expression_folder) or \
+        (not args.hdf5_expression_folder and not args.expression_folder):
+        logging.info("Provide either hdf5 expression folder or plain text expression folder")
+        return
+
     with MultiPrediXcanUtilities.mp_context_from_args(args) as context:
         genes = context.get_genes()
         n_genes = len(genes)
@@ -25,8 +30,6 @@ def run(args):
         reporter.update(0, "%d %% of model's genes processed so far", force=True)
         results = []
         for i,gene in enumerate(genes):
-            if i>20:
-                break
             logging.log(7, "Processing gene %s", gene)
             r = MultiPrediXcanAssociation.multi_predixcan_association(gene, context)
             results.append(r)
@@ -47,6 +50,7 @@ if __name__ == "__main__":
 
     parser.add_argument("--hdf5_expression_folder", help="Folder with predicted gene expressions. (HDF5 format)")
     parser.add_argument("--expression_folder", help="Folder with predicted gene expressions. (plain text file format)")
+    parser.add_argument("--memory_efficient", help="If using plain text expression files, be memory efficient about it. Will be slower.", action="store_true", default=False)
     parser.add_argument("--expression_pattern", help="Patterns to select expression files", default=None)
     parser.add_argument("--input_phenos_file", help="A text file where on column will be used as phenotype")
     parser.add_argument('--covariates', type=str, nargs='+',help='Names of covariates in the file', default=[])

@@ -18,6 +18,11 @@ def run(args):
         logging.info("%s already exists, you have to move it or delete it if you want it done again", args.output)
         return
 
+    if (args.hdf5_expression_file and args.expression_file) or \
+        (not args.hdf5_expression_file and not args.expression_file):
+        logging.info("Provide either hdf5 expression file or plain text expression file")
+        return
+
     with PrediXcanUtilities.p_context_from_args(args) as context:
         genes = context.get_genes()
         n_genes = len(genes)
@@ -44,6 +49,7 @@ if __name__ == "__main__":
         'Multi Tissue PrediXcan' % (__version__))
 
     parser.add_argument("--hdf5_expression_file", help="Folder with predicted gene expressions.")
+    parser.add_argument("--expression_file", help="Folder with predicted gene expressions.")
     parser.add_argument("--input_phenos_file", help="A text file where on column will be used as phenotype")
     parser.add_argument('--covariates', type=str, nargs='+',help='Names of covariates in the file', default=[])
     parser.add_argument('--covariates_file', help="File with covariate data. If provided, will force OLS regression")

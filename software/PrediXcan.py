@@ -38,6 +38,8 @@ def run(args):
         results = PrediXcanAssociation.dataframe_from_results(results)
         results = results.fillna("NA")
         results = results.sort_values(by="pvalue")
+
+        Utilities.ensure_requisite_folders(args.output)
         results.to_csv(args.output, index=False, sep="\t", quotechar='"')
 
     end = timer()

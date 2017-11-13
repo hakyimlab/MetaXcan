@@ -72,6 +72,7 @@ def sanitize_component(c):
     elif c == "NA": c = None
     elif c == ".": c = None
     elif c == "\N": c = None
+    elif c == "": c= None
 
     return c
 

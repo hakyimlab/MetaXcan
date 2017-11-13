@@ -31,6 +31,9 @@ def add_gwas_arguments_to_parser(parser):
                     help="Some files have empty columns, with values not even coded to missing. This instructs the parser to handle those lines."
                          "Be sur eyou want to use this.")
 
+    parser.add_argument("--input_pvalue_fix", help="If input GWAS pvalues are too small to handle, replace with these significance level. Use -0- to disable this behaviour and discard problematic snps.", type=int, default=1e-50)
+
+
 def add_gwas_format_json_to_parser(parser):
     parser.add_argument("--input_gwas_format_json",
                         help="File containing a json description of the gwas.")
@@ -101,7 +104,7 @@ def load_plain_gwas_from_args(args):
     names.sort()  # cosmetic, because different filesystems/OS yield folders in different order
     files = [os.path.join(args.gwas_folder,x) for x in names]
     _l = lambda x: GWAS.load_gwas(x, gwas_format, skip_until_header=args.skip_until_header,
-            separator=args.separator, handle_empty_columns=args.handle_empty_columns)
+            separator=args.separator, handle_empty_columns=args.handle_empty_columns, input_pvalue_fix=args.input_pvalue_fix)
     files = [_l(x) for x in files]
     gwas = pandas.concat(files)
     return gwas

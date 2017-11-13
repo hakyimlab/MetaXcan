@@ -58,7 +58,7 @@ def build_betas(args, model, gwas_format, name):
         snp_column_name = args.snp_column if model else None
         load_from = GWASUtilities.gwas_filtered_source(load_from, snps=snps, snp_column_name=snp_column_name, skip_until_header=args.skip_until_header, separator=args.separator)
     sep = '\s+' if args.separator is None else args.separator
-    b = GWAS.load_gwas(load_from, gwas_format, sep=sep)
+    b = GWAS.load_gwas(load_from, gwas_format, sep=sep, input_pvalue_fix=args.input_pvalue_fix)
 
     if model is not None:
         PF = PredictionModel.WDBQF

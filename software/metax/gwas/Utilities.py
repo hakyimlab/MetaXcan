@@ -21,6 +21,7 @@ def add_gwas_arguments_to_parser(parser):
     parser.add_argument("--se_column", help="Name of snp association's -beta standard error- column in GWAS input file", default=None)
     parser.add_argument("--zscore_column", help="Name of snp association's -Z-Score ratio column- in GWAS input file", default=None)
     parser.add_argument("--pvalue_column", help="Name of snp association's -p-value column- in GWAS input file", default=None)
+    parser.add_argument("--input_pvalue_fix", help="If input GWAS pvalues are too small to handle, replace with these significance level. Use -0- to disable this behaviour and discard problematic snps.", type=int, default=1e-50)
 
 def add_gwas_format_json_to_parser(parser):
     parser.add_argument("--input_gwas_format_json",
@@ -122,6 +123,7 @@ def sanitize_component(c):
     if non_en_number.match(c): c = c.replace(",",".")
     if c == "NA": c = None
     if c == ".": c = None
+    if c == "": c = None
     return c
 
 

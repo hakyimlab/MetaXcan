@@ -41,6 +41,7 @@ class DummyArgs(object):
         self.verbosity = logging.ERROR
         self.throw = True
         self.model_db_path = None
+        self.input_pvalue_fix = 1e-30
 
 def base_args(path="tests/_td/GWAS/scz2"):
     args = DummyArgs()
@@ -62,6 +63,11 @@ def assert_beta_bse(unit_test, r):
     numpy.testing.assert_array_equal(r[SNP], scz2_sample.expected_snp)
     numpy.testing.assert_allclose(r[ZSCORE], scz2_sample.expected_zscore_1, rtol=0.001)
     numpy.testing.assert_allclose(r[BETA], scz2_sample.expected_beta, rtol=0.001)
+
+def assert_beta_pb_fix(unit_test, r):
+    numpy.testing.assert_array_equal(r[SNP], scz2_sample.expected_snp)
+    numpy.testing.assert_allclose(r[ZSCORE], scz2_sample.expected_zscore_fix, rtol=0.001)
+    numpy.testing.assert_allclose(r[BETA], scz2_sample.expected_beta_fix, rtol=0.001)
 
 def assert_model_beta_pb(unit_test, r):
     expected_snp = pandas.concat([scz2_sample.expected_snp[0:3],scz2_sample.expected_snp[-2:]]).values
@@ -160,6 +166,8 @@ class TestM03(unittest.TestCase):
         assert_model_beta_pb(self, r)
 
     def test_split_with_model(self):
+        op = ".kk_test"
+        if os.path.exists(op): shutil.rmtree(op)
         args = base_args("tests/_td/GWAS/scz2b")
         args.gwas_file_pattern = ".*gz"
         args.pvalue_column = "P"
@@ -203,6 +211,17 @@ class TestM03(unittest.TestCase):
 
         assert_beta_pb(self, r)
         shutil.rmtree(op)
+
+    def test_fix_pvalue(self):
+        op = ".kk_test"
+        if os.path.exists(op): shutil.rmtree(op)
+        args = base_args("tests/_td/GWAS/scz2d")
+        args.gwas_file_pattern = ".*gz"
+        args.pvalue_column = "P"
+        args.or_column = "OR"
+        r = M03_betas.run(args)
+        assert_beta_pb_fix(self, r)
+
 
     def test_align(self):
         pass

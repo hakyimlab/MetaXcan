@@ -75,7 +75,7 @@ def validate_format_for_strict(format):
     if not ok:
         raise Exceptions.InvalidArguments("Arguments missing. Either -zscore-, -pvalue and one in [beta,beta sign,or]-, or -standard error and one in [beta, or]- must be provided")
 
-def load_gwas(source, gwas_format, strict=True, sep='\s+'):
+def load_gwas(source, gwas_format, strict=True, sep='\s+', input_pvalue_fix=None):
     """
     Attempts to read a GWAS summary statistics file, and load it into a uniform format,
     in a pandas dataframe.
@@ -103,7 +103,7 @@ def load_gwas(source, gwas_format, strict=True, sep='\s+'):
         d = d[d[SNP].str.contains("rs")]
 
     if strict:
-        d = _ensure_columns(d)
+        d = _ensure_columns(d, input_pvalue_fix)
         d = _keep_gwas_columns(d)
         if d.shape[0] >0 and numpy.any(~ numpy.isfinite(d[ZSCORE])):
             logging.warning("Some GWAS snp zscores are not finite.")
@@ -140,7 +140,7 @@ def _rename_columns(d, gwas_format):
 
     return d
 
-def _ensure_columns(d):
+def _ensure_columns(d, input_pvalue_fix):
     if d.shape[0] == 0:
         if OR in d: d[BETA] = None
         if BETA_SIGN in d: d[BETA_SIGN] = None
@@ -160,12 +160,12 @@ def _ensure_columns(d):
         b = b.apply(lambda x: 1.0 if x == "+" else -1.0)
         d[BETA_SIGN] = b
 
-    _ensure_z(d)
+    _ensure_z(d, input_pvalue_fix)
 
     d[ZSCORE] = numpy.array(d[ZSCORE], dtype=numpy.float32)
     return d
 
-def _ensure_z(d):
+def _ensure_z(d, input_pvalue_fix):
     if ZSCORE in d:
         logging.log(9, "Using declared zscore")
         return d
@@ -174,19 +174,34 @@ def _ensure_z(d):
 
     if PVALUE in d:
         logging.log(9, "Calculating zscore from pvalue")
-        p = d[PVALUE]
-        if numpy.any(p == 0):
-            logging.warning("Encountered GWAS pvalues equal to zero. This might be caused by numerical resolution. Please consider using another scheme such as -beta- and -se- columns, or checking your input gwas for zeros.")
-        s = _beta_sign(d)
-        abs_z = -stats.norm.ppf(p/2)
-        z = abs_z*s
+        z = _z_from_p(d, input_pvalue_fix)
     elif SE in d and BETA in d:
         logging.info("Calculating zscore from se and beta")
-        z= d[BETA]/d[SE]
+        z = d[BETA] / d[SE]
 
     if z is None: raise Exceptions.ReportableException("Couldn't get zscore from GWAS")
     d[ZSCORE] = z
     return d
+
+def _z_from_p(d, input_pvalue_fix):
+    p = d[PVALUE].values
+    if numpy.any(p == 0):
+        logging.warning("Encountered GWAS pvalues equal to zero. This might be caused by numerical resolution. Please consider using another scheme such as -beta- and -se- columns, or checking your input gwas for zeros.")
+
+    s = _beta_sign(d)
+    abs_z = -stats.norm.ppf(p / 2)
+
+    if numpy.any(numpy.isinf(abs_z)) and input_pvalue_fix:
+        logging.warning("Applying thresholding to divergent zscores. You can disable this behavior by using '--input_pvalue_fix 0' in the command line")
+        the_min = numpy.min(p[numpy.logical_and(numpy.isfinite(abs_z),p != 0)])
+        if input_pvalue_fix < the_min:
+            the_min = input_pvalue_fix
+        fix_z = -stats.norm.ppf(the_min / 2)
+        logging.warning("Using %f to fill in divergent zscores", fix_z)
+        abs_z[numpy.isinf(abs_z)] = fix_z
+
+    z = abs_z * s
+    return z
 
 def _beta_sign(d):
     b = None
@@ -204,8 +219,7 @@ def _or_to_beta(odd):
     if numpy.any(numpy.where(odd < 0)):
         raise Exceptions.InvalidArguments("Odd Ratios include negative values.")
     if numpy.any(numpy.where(odd == 0)):
-        logging.info("Odd Ratios column holds some [0] values")
-        odd = odd.replace(0, numpy.nan)
+        logging.warning("Odd Ratios column holds some [0] values")
     return numpy.log(odd)
 
 def extract(gwas, snps):

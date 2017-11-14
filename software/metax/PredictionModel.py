@@ -181,8 +181,8 @@ class ModelManager(ModelManagerBase):
     def get_model_labels(self, gene = None):
         w = self.models if not gene else self.models.loc[gene]
         i = 1 if not gene else 0
-        snps = set(w.index.get_level_values(i))
-        return snps
+        labels = set(w.index.get_level_values(i))
+        return labels
 
     def get_models(self, gene):
         return self.models.loc[gene]

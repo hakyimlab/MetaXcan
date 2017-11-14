@@ -23,10 +23,10 @@ class ContextMixin(object):
         self.matrix_manager = None
         self.cutoff = None
         self.gene_names = None
-        self.full_ensemble_id = None
+        self.trimmed_ensemble_id = None
 
     def get_metaxcan_zscores(self, gene):
-        if not self.full_ensemble_id and "." in gene:
+        if self.trimmed_ensemble_id and "." in gene:
             gene = gene.split(".")[0]
         results = self.metaxcan_results_manager.results_for_gene(gene)
         return results
@@ -40,14 +40,14 @@ class ContextMixin(object):
     def get_gene_name(self, gene):
         return self.gene_names[gene]
 
-    def get_full_ensemble_id(self):
-        return self.full_ensemble_id
+    def get_trimmed_ensemble_id(self):
+        return self.trimmed_ensemble_id
 
     def _process_genes(self, genes):
-        if self.full_ensemble_id:
-            g = {t.gene: t.gene_name for t in genes.itertuples()}
-        else:
+        if self.trimmed_ensemble_id:
             g = {t.gene.split(".")[0]: t.gene_name for t in genes.itertuples()}
+        else:
+            g = {t.gene: t.gene_name for t in genes.itertuples()}
         return g
 
 class CalculationStatus(object):
@@ -84,7 +84,7 @@ def plot(merged):
 def joint_analysis(context, gene):
     g, g_n, pvalue, n, n_indep, p_i_best, t_i_best, p_i_worst, t_i_worst, eigen_max, eigen_min, eigen_min_kept, z_min, z_max, z_mean, z_sd, tmi, status \
         = None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, CalculationStatus.NO_DATA
-    g = gene if context.get_full_ensemble_id() else gene.split(".")[0]
+    g = gene.split(".")[0] if context.get_trimmed_ensemble_id() else gene
     g_n = context.get_gene_name(g)
 
     ####################################################################################################################

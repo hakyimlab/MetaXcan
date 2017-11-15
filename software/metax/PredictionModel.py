@@ -95,7 +95,7 @@ class ModelDB(object):
         try:
             results = self.cursor.execute(query, params)
         except sqlite3.OperationalError as e:
-            print str(e)
+            logging.info(str(e))
             raise Exceptions.ReportableException("Could not read input tissue database. Please try updating the tissue model files.")
         except Exception as e:
             raise e
@@ -121,11 +121,15 @@ class Model(object):
         return set(snps)
 
 def dataframe_from_weight_data(w):
+    if len(w) == 0:
+        w = [[] for key, order in WDBQF.ORDER]
     weights = pandas.DataFrame({key: w[order] for key, order in WDBQF.ORDER})
     weights = weights[[key for key,order in WDBQF.ORDER]]
     return weights
 
 def dataframe_from_extra_data(e):
+    if len(e) == 0:
+        e = [[] for key, order in WDBEQF.ORDER]
     extra = pandas.DataFrame({key: e[order] for key, order in WDBEQF.ORDER})
     extra = extra[[key for key, order in WDBEQF.ORDER]]
     return extra

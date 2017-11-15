@@ -20,7 +20,7 @@ def get_weights_in_models(path):
     for f_ in f:
         p_ = os.path.join(path,f_)
         weights = pandas.read_table(p_)
-        weights["model"] = f_.split(".")[0]
+        weights["model"] = f_.split(".weights")[0]
         r.append(weights)
     return pandas.concat(r)
 
@@ -30,10 +30,28 @@ def _compare(unit_test, m, w):
     numpy.testing.assert_array_equal(w.loc[m.index.values].eff_allele, m.eff_allele)
     numpy.testing.assert_array_almost_equal(w.loc[m.index.values].weight, m.weight)
 
+def _compare_o(unit_test, m, w):
+    for t in w.itertuples():
+        numpy.testing.assert_almost_equal(m[t.model][t.rsid], t.weight)
+
 def compare_model_manager_models_to_weights(unit_test,model_manager, weights, model, gene):
     w = weights[(weights.model == model) & (weights.gene == gene)][["rsid", "ref_allele", "eff_allele", "weight"]].set_index("rsid")
     m = model_manager.models.loc[gene, model].rename(columns={"effect_allele":"eff_allele", "non_effect_allele":"ref_allele"})
     _compare(unit_test, m, w)
+
+def _assert_optimized_manager(unit_test, model_manager, weights, genes):
+    unit_test.assertEqual(model_manager.get_genes(), genes)
+    unit_test.assertEqual(model_manager.get_rsids(), set(weights.rsid))
+    unit_test.assertEqual(model_manager.get_model_labels(), set(weights.model))
+    #
+    for gene in set(weights.gene):
+        w = weights[weights.gene == gene]
+        m = model_manager.get_models(gene)
+        _compare_o(unit_test, m, w)
+
+    #
+    for gene in set(weights.gene):
+        unit_test.assertEqual(model_manager.get_model_labels(gene), set(weights[weights.gene == gene].model))
 
 class TestPredictionModelDB(unittest.TestCase):
 
@@ -85,7 +103,7 @@ class TestPredictionModelDB(unittest.TestCase):
         numpy.testing.assert_array_equal(snp_model.weights[PredictionModel.WDBQF.K_NON_EFFECT_ALLELE], e_w[PredictionModel.WDBQF.K_NON_EFFECT_ALLELE])
         numpy.testing.assert_array_equal(snp_model.weights[PredictionModel.WDBQF.K_EFFECT_ALLELE], e_w[PredictionModel.WDBQF.K_EFFECT_ALLELE])
 
-    def test_load_model_manager(self):
+    def test_model_manager(self):
         model_manager = PredictionModel.load_model_manager("tests/_td/dbs_2")
         weights = get_weights_in_models("tests/_td/dbs_2")
         models_ = weights[["model", "gene"]].drop_duplicates()
@@ -94,6 +112,7 @@ class TestPredictionModelDB(unittest.TestCase):
         #
         self.assertEqual(model_manager.get_genes(), {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K'})
         self.assertEqual(model_manager.get_rsids(), set(weights.rsid))
+        self.assertEqual(model_manager.get_model_labels(), {"model_sim_1", "model_sim_2"})
         #
         for rsid in set(weights.rsid):
             self.assertEqual(model_manager.snp_keys[rsid], set(weights[weights.rsid == rsid].gene))
@@ -103,11 +122,46 @@ class TestPredictionModelDB(unittest.TestCase):
             m = model_manager.get_models(gene).rename(columns={"effect_allele":"eff_allele", "non_effect_allele":"ref_allele"})
             for m_ in set(m.index.get_level_values(0)):
                 _compare(self, m.loc[m_], w.loc[m_])
-        #
-        self.assertEqual(model_manager.get_model_labels(), {"model_sim_1", "model_sim_2"})
+
         #
         for gene in set(weights.gene):
             self.assertEqual(model_manager.get_model_labels(gene), set(weights[weights.gene == gene].model))
+
+    def test_optimized_model_manager(self):
+        model_manager = PredictionModel.load_model_manager("tests/_td/dbs_2", Klass=PredictionModel._ModelManager)
+        weights = get_weights_in_models("tests/_td/dbs_2")
+
+        #
+        self.assertEqual(model_manager.get_genes(), {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K'})
+        self.assertEqual(model_manager.get_rsids(), set(weights.rsid))
+        self.assertEqual(model_manager.get_model_labels(), {"model_sim_1", "model_sim_2"})
+        #
+        for gene in set(weights.gene):
+            w = weights[weights.gene == gene]
+            m = model_manager.get_models(gene)
+            _compare_o(self, m, w)
+
+        #
+        for gene in set(weights.gene):
+            self.assertEqual(model_manager.get_model_labels(gene), set(weights[weights.gene == gene].model))
+
+    def test_optimized_model_manager_gtex(self):
+        model_manager = PredictionModel.load_model_manager("tests/_td/dbs_3", Klass=PredictionModel._ModelManager)
+        weights = get_weights_in_models("tests/_td/dbs_3")
+        weights.model = weights.model.str.extract("TW_(.*)_0.5", expand=False)
+
+        #
+        _assert_optimized_manager(self, model_manager, weights, {"ENSG00000107937.14", "ENSG00000107959.11", "ENSG00000234745.5"})
+
+    def test_optimized_model_manager_gtex_trimmed(self):
+        model_manager = PredictionModel.load_model_manager("tests/_td/dbs_3", trim_ensemble_version=True, Klass=PredictionModel._ModelManager)
+        weights = get_weights_in_models("tests/_td/dbs_3")
+        weights.model = weights.model.str.extract("TW_(.*)_0.5", expand=False)
+        weights.gene = weights.gene.str.split(".").str.get(0)
+
+        #
+        _assert_optimized_manager(self, model_manager, weights, {"ENSG00000107937", "ENSG00000107959", "ENSG00000234745"})
+
 
 if __name__ == '__main__':
     unittest.main()

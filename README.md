@@ -8,10 +8,14 @@ Almost all of the software here is command-line based.
 S-PrediXcan is an extension of [PrediXcan](https://github.com/hakyimlab/PrediXcan), that infers PrediXcan's results using only summary statistics. It is a component of MetaXcan.
 A manuscript describing S-PrediXcan and the MetaXcan framework with an application can be found [here](http://www.biorxiv.org/content/early/2017/05/21/045260).
 
+## Web Application
+
+You can try our web version of the application [here](https://cloud.hakyimlab.org). You will need to create a user or log in using a Google account.
+
 ## Application to over a 100 complex traits
 
 We have ran MetaXcan on over a 100 complex traits in publicly available GWAS summary statistics using models trained on GTEx data. 
-We make the results available in an SQLite database [here](https://s3.amazonaws.com/imlab-open/Data/MetaXcan/results/metaxcan_results_database_v0.1.tar.gz). An usage example in R is provided.
+An SQLite database can be downloaded [here](https://s3.amazonaws.com/imlab-open/Data/MetaXcan/results/metaxcan_results_database_v0.1.tar.gz)(1.3GB). An usage example in R is provided.
 If you plan to use that data in a publication, please be sure to take a look at that package's README and make sure you are compliant with the data usage restrictions.
 
 ## Prerequisites

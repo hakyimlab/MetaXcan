@@ -12,24 +12,24 @@ def add_gwas_arguments_to_parser(parser):
     parser.add_argument("--snp_column", help="Name of -snp column- in GWAS input file", default="SNP")
     parser.add_argument("--effect_allele_column", help="Name of -effect allele column- in GWAS input file", default="A1")
     parser.add_argument("--non_effect_allele_column", help="Name of -non effect allele column- in GWAS input file", default="A2")
-    parser.add_argument("--chromosome_column", help="Name of -chromosome column- in GWAS input file", default=None)
-    parser.add_argument("--position_column", help="Name of -base position column- in GWAS input file", default=None)
-    parser.add_argument("--freq_column", help="Name of -frequency column- in GWAS input file", default=None)
-    parser.add_argument("--beta_column", help="Name of snp association's -beta column- in GWAS input file", default=None)
-    parser.add_argument("--beta_sign_column", help="Name of snp association's -sign of beta column- in GWAS input file", default=None)
-    parser.add_argument("--or_column", help="Name of snp association's -odds ratio column- in GWAS input file", default=None)
-    parser.add_argument("--se_column", help="Name of snp association's -beta standard error- column in GWAS input file", default=None)
-    parser.add_argument("--zscore_column", help="Name of snp association's -Z-Score ratio column- in GWAS input file", default=None)
-    parser.add_argument("--pvalue_column", help="Name of snp association's -p-value column- in GWAS input file", default=None)
-    parser.add_argument("--separator", help="Character or string separating fields in input file. Defaults to any whitespace.", default=None)
+    parser.add_argument("--chromosome_column", help="Name of -chromosome column- in GWAS input file")
+    parser.add_argument("--position_column", help="Name of -base position column- in GWAS input file")
+    parser.add_argument("--freq_column", help="Name of -frequency column- in GWAS input file")
+    parser.add_argument("--beta_column", help="Name of snp association's -beta column- in GWAS input file")
+    parser.add_argument("--beta_sign_column", help="Name of snp association's -sign of beta column- in GWAS input file")
+    parser.add_argument("--or_column", help="Name of snp association's -odds ratio column- in GWAS input file")
+    parser.add_argument("--se_column", help="Name of snp association's -beta standard error- column in GWAS input file")
+    parser.add_argument("--zscore_column", help="Name of snp association's -Z-Score ratio column- in GWAS input file")
+    parser.add_argument("--pvalue_column", help="Name of snp association's -p-value column- in GWAS input file")
+    parser.add_argument("--separator", help="Character or string separating fields in input file. Defaults to any whitespace.")
 
-    parser.add_argument("--skip_until_header", default=None,
+    parser.add_argument("--skip_until_header",
                         help="Some files may be malformed and contain unespecified bytes in the beggining."
-                             " Specify this option (string value) to identify a header up to which file contents should be skipped.")
+                        " Specify this option (string value) to identify a header up to which file contents should be skipped.")
 
     parser.add_argument("--handle_empty_columns", default=False, action="store_true",
                     help="Some files have empty columns, with values not even coded to missing. This instructs the parser to handle those lines."
-                         "Be sur eyou want to use this.")
+                    "Be sur eyou want to use this.")
 
     parser.add_argument("--input_pvalue_fix", help="If input GWAS pvalues are too small to handle, replace with these significance level. Use -0- to disable this behaviour and discard problematic snps.", type=int, default=1e-50)
 

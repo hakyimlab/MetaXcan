@@ -1,3 +1,5 @@
+Version 0.5.8:
+    * Added --gwas_file to MetaXcan so that a single GWAS file can be used as input (alternative to --gwas_folder and --gwas_file_pattern)
 Version 0.5.7:
     * Now input GWAS p-values that are too small (i.e. numerical resolution doesn't yield a finite zscore) can be thresholded as approximation.
 Version 0.5.6.4:

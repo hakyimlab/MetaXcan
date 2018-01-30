@@ -56,16 +56,20 @@ __author__ = 'heroico, Eric Torstenson'
    """
 
 def get_name_prefix(args):
-    regexp = re.compile(args.gwas_file_pattern) if args.gwas_file_pattern else None
-    names = Utilities.contentsWithRegexpFromFolder(args.gwas_folder, regexp)
-    name = names[0]
-    report_prefix = get_result_prefix(args, name)
+    if args.gwas_folder:
+        regexp = re.compile(args.gwas_file_pattern) if args.gwas_file_pattern else None
+        names = Utilities.contentsWithRegexpFromFolder(args.gwas_folder, regexp)
+        name = names[0]
+        report_prefix = get_result_prefix(args, name)
+    else:
+        report_prefix = get_result_prefix(args, args.gwas_file)
     return report_prefix
 
 def get_result_prefix(args, name):
     if args.output_file_prefix:
         return args.output_file_prefix
-    return name.split("/")[-1].split(".")[0]
+    n = os.path.splitext(args.gwas_file)[0] if "." in args.gwas_file else args.gwas_file
+    return n
 
 def process(args, db_filename):
     filebase = os.path.basename(db_filename).replace(".db", "")
@@ -119,11 +123,12 @@ arguments --covariance_directory and --covariance_suffix. """)
     parser.add_argument('weight_dbs', metavar='DB', type=argparse.FileType('r'), nargs='+', help="weight dbs to be used")
 
 #GWAS betas
-    parser.add_argument("--gwas_folder", help="name of folder containing GWAS data. All files in the folder are assumed to belong to a single study.", default="data/GWAS")
-    parser.add_argument("--gwas_file_pattern", help="Pattern to recognice GWAS files in folders (in case there are extra files and you don't want them selected).", default=None)
+    parser.add_argument("--gwas_file", help="Load a single GWAS file. (Alternative to providing a gwas_folder and gwas_file_pattern)")
+
+    parser.add_argument("--gwas_folder", help="name of folder containing GWAS data. All files in the folder are assumed to belong to a single study.")
+    parser.add_argument("--gwas_file_pattern", help="Pattern to recognice GWAS files in folders (in case there are extra files and you don't want them selected).")
 
     GWASUtilities.add_gwas_arguments_to_parser(parser)
-
 
 # ZScore calculation
     parser.add_argument("--covariance_directory", help="directory where covariance files can be found (or SAME if covariance sits beside the .db file", default="SAME")

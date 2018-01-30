@@ -84,14 +84,14 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description='M04_zscores.py %s: Build ZScores from GWAS data.' % (__version__,))
 
-    parser.add_argument("--model_db_path", help="name of weight db in data folder", default=None)
-    parser.add_argument("--covariance", help="name of file containing covariance data", default=None)
-    parser.add_argument("--beta_folder", help="name of folder containing GWAS effect data", default=None)
-    parser.add_argument("--output_file", help="name of output file", default=None)
+    parser.add_argument("--model_db_path", help="name of weight db in data folder")
+    parser.add_argument("--covariance", help="name of file containing covariance data")
+    parser.add_argument("--beta_folder", help="name of folder containing GWAS effect data")
+    parser.add_argument("--output_file", help="name of output file")
     parser.add_argument("--verbosity", help="Log verbosity level. 1 is everything being logged. 10 is only high level messages, above 10 will hardly log anything", default = "10")
     parser.add_argument("--remove_ens_version", help="If set, will drop the -version- postfix in gene id.", action="store_true", default=False)
     parser.add_argument("--overwrite", help="If set, will overwrite the results file if it exists.", action="store_true", default=False)
-    parser.add_argument("--additional_output", help="If set, will output additional information.", default=None)
+    parser.add_argument("--additional_output", help="If set, will output additional information.")
     parser.add_argument("--throw", action="store_true", help="Throw exception on error", default=False)
 
     args = parser.parse_args()

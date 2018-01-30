@@ -57,7 +57,9 @@ Some precalculated data is needed, that must be set up prior to S-PrediXcan exec
 The gist of S-PrediXcan's input is:
 - A Transcriptome Prediction Model database (an example is [here](https://s3.amazonaws.com/imlab-open/Data/MetaXcan/sample_data/DGN-WB_0.5.db))
 - A file with the covariance matrices of the SNPs within each gene model (such as [this one](https://s3.amazonaws.com/imlab-open/Data/MetaXcan/sample_data/covariance.DGN-WB_0.5.txt.gz))
-- GWAS results (such as [these](https://s3.amazonaws.com/imlab-open/Data/MetaXcan/sample_data/GWAS.tar.gz), which are just randomly generated). GWAS results can belong to a single file or be split into multiple ones (i.e. split by chromosome).
+- GWAS results (such as [these](https://s3.amazonaws.com/imlab-open/Data/MetaXcan/sample_data/GWAS.tar.gz), which are just randomly generated). 
+GWAS results can belong to a single file or be split into multiple ones (i.e. split by chromosome).
+You can specify the necessary columns via command line arguments (i.e. which column holds snps, which holds p-values, etc)
 
 You can use precalculated databases, or generate new ones with tools available in [PredictDB repository](https://github.com/hakyimlab/PredictDBPipeline).
 GTEx-based tissues and 1000 Genomes covariances precalculated data can be found [here](http://predictdb.hakyimlab.org).

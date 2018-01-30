@@ -52,7 +52,8 @@ def align_data_to_alleles(data, base, left_on, right_on):
 
 def build_betas(args, model, gwas_format, name):
     logging.info("Building beta for %s and %s", name, args.model_db_path if args.model_db_path else "no database")
-    load_from = os.path.join(args.gwas_folder, name)
+    load_from = os.path.join(args.gwas_folder, name) if args.gwas_folder else name
+
     if model or args.skip_until_header:
         snps = model.snps() if model else None
         snp_column_name = args.snp_column if model else None
@@ -72,18 +73,23 @@ def build_betas(args, model, gwas_format, name):
     return b
 
 def validate(args):
-    if not args.gwas_folder: raise Exceptions.InvalidArguments("You need to provide an input folder containing GWAS files")
+    if (args.gwas_file and args.gwas_folder) or (not args.gwas_file and  not args.gwas_folder):
+        raise Exceptions.InvalidArguments("Provide either (--gwas_file) or (--gwas_folder [--gwas_file_pattern])")
 
 def run(args):
     start = timer()
     validate(args)
-    regexp = re.compile(args.gwas_file_pattern) if args.gwas_file_pattern else  None
-    names = Utilities.contentsWithRegexpFromFolder(args.gwas_folder, regexp)
-    names.sort() #cosmetic, because different filesystems/OS yield folders in different order
 
-    if len(names) == 0:
-        msg = "No GWAS files found on %s with pattern %s" % (args.gwas_folder, args.gwas_file_pattern,)
-        raise Exceptions.ReportableException(msg)
+    if args.gwas_folder:
+        regexp = re.compile(args.gwas_file_pattern) if args.gwas_file_pattern else  None
+        names = Utilities.contentsWithRegexpFromFolder(args.gwas_folder, regexp)
+        names.sort() #cosmetic, because different filesystems/OS yield folders in different order
+
+        if len(names) == 0:
+            msg = "No GWAS files found on %s with pattern %s" % (args.gwas_folder, args.gwas_file_pattern,)
+            raise Exceptions.ReportableException(msg)
+    else:
+        names = [args.gwas_file]
 
     gwas_format = GWASUtilities.gwas_format_from_args(args)
     GWAS.validate_format_basic(gwas_format)
@@ -123,31 +129,27 @@ if __name__ == "__main__":
     parser.add_argument("--model_db_path",
                         help="Name of model db in data folder. "
                              "If supplied, will filter input GWAS snps that are not present; this script will not produce output if any error is encountered."
-                             "If not supplied, will convert the input GWASas found, one line at a atime, until finishing or encountering an error.",
-                        default=None)
+                             "If not supplied, will convert the input GWAS as found, one line at a atime, until finishing or encountering an error.")
+
+    parser.add_argument("--gwas_file", help="Load a single GWAS file. (Alternative to providing a gwas_folder and gwas_file_pattern)")
 
     parser.add_argument("--gwas_folder",
-                        help="name of folder containing GWAS data. All files in the folder are assumed to belong to a single study.",
-                        default="data/GWAS")
+                        help="name of folder containing GWAS data. All files in the folder are assumed to belong to a single study."
+                        "If you provide this, you are likely to need to pass a --gwas_file_pattern argument value.")
 
     parser.add_argument("--gwas_file_pattern",
-                        help="Pattern to recognice GWAS files in folders (in case there are extra files and you don't want them selected).",
-                        default=None)
+                        help="Pattern to recognice GWAS files in folders (in case there are extra files and you don't want them selected).")
 
     parser.add_argument("--output_folder",
-                        help="name of folder to put results in",
-                        default=None)
+                        help="name of folder to put results in")
 
     GWASUtilities.add_gwas_arguments_to_parser(parser)
 
-    parser.add_argument("--separator",
-                        help="Character or string separating fields in input file. Defaults to any whitespace.",
-                        default=None)
+    parser.add_argument("--separator", help="Character or string separating fields in input file. Defaults to any whitespace.")
 
     parser.add_argument("--skip_until_header",
                         help="Some files may be malformed and contain unespecified bytes in the beggining."
-                             " Specify this option (string value) to identify a header up to which file contents should be skipped.",
-                        default=None)
+                             " Specify this option (string value) to identify a header up to which file contents should be skipped.")
 
     parser.add_argument("--verbosity",
                         help="Log verbosity level. 1 is everything being logged. 10 is only high level messages, above 10 will hardly log anything",

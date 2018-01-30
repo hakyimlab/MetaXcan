@@ -42,10 +42,12 @@ class DummyArgs(object):
         self.throw = True
         self.model_db_path = None
         self.input_pvalue_fix = 1e-30
+        self.gwas_file = None
 
-def base_args(path="tests/_td/GWAS/scz2"):
+def base_args(folder="tests/_td/GWAS/scz2", file=None):
     args = DummyArgs()
-    args.gwas_folder = path
+    args.gwas_folder = folder
+    args.gwas_file = file
     args.snp_column = "SNPID"
     args.effect_allele_column = "A1"
     args.non_effect_allele_column = "A2"
@@ -97,45 +99,58 @@ class TestM03(unittest.TestCase):
         patch_validate_strict.side_effect = RuntimeError()
         with self.assertRaises(RuntimeError) as c: M03_betas.run(args)
 
-    def test_run(self):
-        args = base_args()
+        patch_validate_basic.side_effect = None
+        patch_validate_strict.side_effect = None
+
+    def test_fail_incompatible_arguments(self):
+        args = base_args("tests/_td/GWAS/scz2", "tests/_td/GWAS/scz2/scz2.gwas.results.txt.gz")
+        with self.assertRaises(Exceptions.InvalidArguments) as c: M03_betas.run(args)
+
+    def test_run_folder(self):
+        self.run_folder_or_file("tests/_td/GWAS/scz2", None)
+
+    def test_run_file(self):
+        self.run_folder_or_file(None, "tests/_td/GWAS/scz2/scz2.gwas.results.txt.gz")
+
+    def run_folder_or_file(self, folder, file):
+        args = base_args(folder, file)
         args.pvalue_column = "P"
         args.or_column = "OR"
         r = M03_betas.run(args)
         assert_beta_pb(self, r)
 
-        args = base_args()
+        args = base_args(folder, file)
         args.pvalue_column = "P"
         args.beta_column = "BETA"
         r = M03_betas.run(args)
         assert_beta_pb(self, r)
 
-        args = base_args()
+        args = base_args(folder, file)
         args.pvalue_column = "P"
         args.beta_sign_column = "BETA_SIGN"
         r = M03_betas.run(args)
         assert_beta_p(self, r)
 
-        args = base_args()
+        args = base_args(folder, file)
         args.beta_column = "BETA"
         args.se_column = "SE"
         r = M03_betas.run(args)
         assert_beta_bse(self, r)
 
-        args = base_args()
+        args = base_args(folder, file)
         args.beta_column = "BETA"
         args.se_column = "SE"
         r = M03_betas.run(args)
         assert_beta_bse(self, r)
 
-        args = base_args()
+        args = base_args(folder, file)
         args.or_column = "OR"
         args.se_column = "SE"
         r = M03_betas.run(args)
         assert_beta_bse(self, r)
 
         #Should fail
-        args = base_args()
+        args = base_args(folder, file)
         args.or_column = "BETA"
         args.se_column = "SE"
         with self.assertRaises(Exception): M03_betas.run(args)

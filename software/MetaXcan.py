@@ -36,34 +36,26 @@ if __name__ == "__main__":
                         default=None)
 
 #GWAS betas
-    parser.add_argument("--gwas_folder",
-                        help="name of folder containing GWAS data. All files in the folder are assumed to belong to a single study.",
-                        default="data/GWAS")
-
+    parser.add_argument("--gwas_file", help="Load a single GWAS file. (Alternative to providing a gwas_folder and gwas_file_pattern)")
+    parser.add_argument("--gwas_folder", help="name of folder containing GWAS data. All files in the folder are assumed to belong to a single study.")
     parser.add_argument("--gwas_file_pattern",
-                        help="Pattern to recognice GWAS files in folders (in case there are extra files and you don't want them selected).",
-                        default=None)
+                        help="Pattern to recognice GWAS files in folders (in case there are extra files and you don't want them selected).")
 
     GWASUtilities.add_gwas_arguments_to_parser(parser)
 
     parser.add_argument("--separator",
-                        help="Character or string separating fields in input file. Defaults to any whitespace.",
-                        default=None)
+                        help="Character or string separating fields in input file. Defaults to any whitespace.")
 
     parser.add_argument("--skip_until_header",
                         help="Some files may be malformed and contain unespecified bytes in the beggining."
-                             " Specify this option (string value) to identify a header up to which file contents should be skipped.",
-                        default=None)
+                             " Specify this option (string value) to identify a header up to which file contents should be skipped.")
 
 # ZScore calculation
     parser.add_argument("--covariance",
-                        help="name of file containing covariance data",
-                        default=None)
-                        #default="intermediate/1000GP_Phase3_chr_cov")
+                        help="name of file containing covariance data")
 
     parser.add_argument("--output_file",
-                        help="name of output file",
-                        default="results/zscores.csv")
+                        help="name of output file")
 
     parser.add_argument("--remove_ens_version",
                         help="If set, will drop the -version- postfix in gene id.",

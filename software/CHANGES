@@ -1,3 +1,5 @@
+Version 0.5.9:
+    * Addressed edge case when the GWAS has no intersection with the prediciton model (most likely a naming issue)
 Version 0.5.8:
     * Added --gwas_file to MetaXcan so that a single GWAS file can be used as input (alternative to --gwas_folder and --gwas_file_pattern)
 Version 0.5.7:

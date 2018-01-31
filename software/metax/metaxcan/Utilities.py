@@ -162,13 +162,13 @@ def _prepare_gwas(gwas):
         i = gwas.zscore.apply(lambda x: x != "NA")
         gwas = gwas.loc[i]
         gwas = pandas.DataFrame(gwas)
-        gwas.loc[:,Constants.ZSCORE] = gwas.zscore.astype(numpy.float64)
+        gwas = gwas.assign(**{Constants.ZSCORE:gwas.zscore.astype(numpy.float64)})
     except Exception as e:
         logging.info("Unexpected issue preparing gwas... %s", str(e))
         pass
 
     if not Constants.BETA in gwas:
-        gwas.loc[:,Constants.BETA] = numpy.nan
+        gwas = gwas.assign(**{Constants.BETA: numpy.nan})
 
     return gwas
 

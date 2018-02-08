@@ -5,11 +5,15 @@ import os
 re_db = re.compile(".db$")
 re_tw = re.compile("^TW_")
 re_0_5 = re.compile("_0.5$")
+re_g_ = re.compile("^gtex_v7_")
+re_i_ = re.compile("_imputed_europeans_tw_0.5_signif.db$")
 def extract_model_name(path):
     p = os.path.split(path)[1]
     if re_db.search(p): p = re_db.sub("", p)
     if re_0_5.search(p): p = re_0_5.sub("", p)
     if re_tw.search(p): p = re_tw.sub("", p)
+    if re_g_.search(p): p = re_g_.sub("", p)
+    if re_i_.search(p): p = re_i_.sub("", p)
     return p
 
 def X_treatment(tissue_tag, token, fix):

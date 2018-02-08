@@ -19,6 +19,7 @@ def gtex_geno_header(gtex_file):
 
 def gtex_geno_lines(gtex_file, gtex_snp_file, snps=None):
     logging.log(9, "Loading GTEx snp file")
+    #TODO: change to something more flexible to support V7 naming
     gtex_snp = KeyedDataSource.load_data(gtex_snp_file, "VariantID", "RS_ID_dbSNP142_CHG37p13", numeric=False)
 
     logging.log(9, "Processing GTEx geno")

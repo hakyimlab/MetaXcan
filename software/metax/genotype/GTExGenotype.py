@@ -58,7 +58,9 @@ def gtex_geno_by_chromosome(gtex_file, gtex_snp_file, snps=None, gtex_release_ve
 
         _metadata = _data[0:GF.FIRST_DOSAGE]
         rsids = _metadata[GF.RSID]
-        chromosome = int(_metadata[GF.CHROMOSOME][0]) # I know I am gonna regret this cast
+
+        chr_ = _metadata[GF.CHROMOSOME][0].replace("chr", "")
+        chromosome = int(chr_) # I know I am gonna regret this cast UPDATE: I did regret it!
         _metadata = zip(*_metadata)
         metadata = Utilities.to_dataframe(_metadata, ["rsid", "chromosome", "position", "ref_allele", "alt_allele", "frequency"], to_numeric="ignore")
 

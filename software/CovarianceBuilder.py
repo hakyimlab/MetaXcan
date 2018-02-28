@@ -35,7 +35,7 @@ def run(args):
         reporter = Utilities.PercentReporter(9, len(genes))
         reporter.update(0, "%d %% of genes processed so far in chromosome " + str(chromosome))
         for i,gene in enumerate(genes):
-            logging.log(7, "%d/%d:%s", i+1, len(genes), gene)
+            logging.log(6, "%d/%d:%s", i+1, len(genes), gene)
             cov_data = GenotypeAnalysis.get_prediction_covariance(context, gene)
             cov_data = MatrixManager._flatten_matrix_data([cov_data])
             cov_data = Utilities.to_dataframe(cov_data, GenotypeAnalysis.COVARIANCE_COLUMNS, to_numeric="ignore", fill_na="NA")

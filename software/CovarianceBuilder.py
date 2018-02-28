@@ -22,7 +22,7 @@ def run(args):
     start = timer()
 
     logging.info("Loading models...")
-    model_manager = PredictionModel.load_model_manager(args.models_folder)
+    model_manager = PredictionModel.load_model_manager(args.models_folder, name_pattern=args.models_pattern)
     all_snps = model_manager.get_rsids()
 
     logging.info("processing genotype")
@@ -35,6 +35,7 @@ def run(args):
         reporter = Utilities.PercentReporter(9, len(genes))
         reporter.update(0, "%d %% of genes processed so far in chromosome " + str(chromosome))
         for i,gene in enumerate(genes):
+            logging.log(7, "%d/%d:%s", i+1, len(genes), gene)
             cov_data = GenotypeAnalysis.get_prediction_covariance(context, gene)
             cov_data = MatrixManager._flatten_matrix_data([cov_data])
             cov_data = Utilities.to_dataframe(cov_data, GenotypeAnalysis.COVARIANCE_COLUMNS, to_numeric="ignore", fill_na="NA")
@@ -59,8 +60,10 @@ if __name__ == "__main__":
         'Collect and process covariance of genotypes' % (__version__))
 
     parser.add_argument("--models_folder", help="Path to folder with prediction models")
+    parser.add_argument("--models_pattern", help="Regexp to extarct models with")
     parser.add_argument("--gtex_genotype_file", help="Path to gtex genotype file")
     parser.add_argument("--gtex_snp_file", help="Path to snp annotation file")
+    parser.add_argument("--gtex_release_version", help="none(which is v6p) or V8")
     parser.add_argument("--dosage_genotype_folder", help="Path to dosage folder")
     parser.add_argument("--dosage_genotype_pattern", help="Regexp-like pattern to select files")
     parser.add_argument("--snp_covariance_output", help="where you want the output", default=None)

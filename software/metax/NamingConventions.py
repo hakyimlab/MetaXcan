@@ -7,8 +7,14 @@ re_tw = re.compile("^TW_")
 re_0_5 = re.compile("_0.5$")
 re_g_ = re.compile("^gtex_v7_")
 re_i_ = re.compile("_imputed_europeans_tw_0.5_signif.db$")
-def extract_model_name(path):
+def extract_model_name(path, name_pattern=None):
     p = os.path.split(path)[1]
+
+    if name_pattern:
+        r = re.compile(name_pattern)
+        p = r.search(p).group(1)
+        return p
+
     if re_db.search(p): p = re_db.sub("", p)
     if re_0_5.search(p): p = re_0_5.sub("", p)
     if re_tw.search(p): p = re_tw.sub("", p)

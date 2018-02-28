@@ -275,13 +275,15 @@ def _prepare_models_2(models):
     return r, rsids, rsid_to_genes
 
 ###############################################################################
-def load_model_manager(path, trim_ensemble_version=False, Klass=ModelManager):
+def load_model_manager(path, trim_ensemble_version=False, Klass=ModelManager, name_pattern=None):
 
     def _get_models(paths, trim_ensemble_version=False):
         logging.log(9, "preloading models")
-        _m = {NamingConventions.extract_model_name(x): load_model(x) for x in paths}
-        for k,m in _m.iteritems():
+        _m = {NamingConventions.extract_model_name(x, name_pattern): load_model(x) for x in paths}
+        keys = sorted(_m.keys())
+        for i,k in enumerate(keys):
             logging.log(9, "processing %s", k)
+            m = _m[k]
             w = m.weights
             w["model"] = k
         _m = [x.weights for x in _m.values()]

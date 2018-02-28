@@ -5,6 +5,7 @@ import numpy
 
 from Genotype import GF
 from .. import Utilities
+from .. import Exceptions
 from ..misc import KeyedDataSource
 
 
@@ -17,10 +18,16 @@ def gtex_geno_header(gtex_file):
         header = file.readline().strip().split()
     return header
 
-def gtex_geno_lines(gtex_file, gtex_snp_file, snps=None):
+def gtex_geno_lines(gtex_file, gtex_snp_file, snps=None, gtex_release_version=None):
     logging.log(9, "Loading GTEx snp file")
     #TODO: change to something more flexible to support V7 naming
-    gtex_snp = KeyedDataSource.load_data(gtex_snp_file, "VariantID", "RS_ID_dbSNP142_CHG37p13", numeric=False)
+
+    if not gtex_release_version:
+        gtex_snp = KeyedDataSource.load_data(gtex_snp_file, "VariantID", "RS_ID_dbSNP142_CHG37p13", numeric=False)
+    elif gtex_release_version.lower() == "v8":
+        gtex_snp = KeyedDataSource.load_data(gtex_snp_file, "variant_id", "rs_id_dbSNP150_GRCh38p7", numeric=False)
+    else:
+        raise Exceptions.InvalidArguments("Unsupported GTEx relkease version")
 
     logging.log(9, "Processing GTEx geno")
     with gzip.open(gtex_file) as file:
@@ -42,7 +49,7 @@ def gtex_geno_lines(gtex_file, gtex_snp_file, snps=None):
 
             yield [rsid] + data + [frequency] + list(dosage)
 
-def gtex_geno_by_chromosome(gtex_file, gtex_snp_file, snps=None):
+def gtex_geno_by_chromosome(gtex_file, gtex_snp_file, snps=None, gtex_release_version=None):
     buffer = []
     last_chr = None
 
@@ -71,7 +78,7 @@ def gtex_geno_by_chromosome(gtex_file, gtex_snp_file, snps=None):
         return chromosome, metadata, dosage_data
 
     logging.log(8, "Starting to process lines")
-    for line in gtex_geno_lines(gtex_file, gtex_snp_file, snps):
+    for line in gtex_geno_lines(gtex_file, gtex_snp_file, snps, gtex_release_version):
 
         chromosome = line[GF.CHROMOSOME]
         if last_chr is None: last_chr = chromosome

@@ -5,6 +5,7 @@ import pandas
 import numpy
 
 import GWAS
+from .. import Exceptions
 from .. import Constants
 from .. import Utilities as BUtilities
 
@@ -100,11 +101,16 @@ def load_plain_gwas_from_args(args):
     GWAS.validate_format_basic(gwas_format)
     GWAS.validate_format_for_strict(gwas_format)
 
-    names = BUtilities.contentsWithRegexpFromFolder(args.gwas_folder, regexp)
-    names.sort()  # cosmetic, because different filesystems/OS yield folders in different order
-    files = [os.path.join(args.gwas_folder,x) for x in names]
     _l = lambda x: GWAS.load_gwas(x, gwas_format, skip_until_header=args.skip_until_header,
             separator=args.separator, handle_empty_columns=args.handle_empty_columns, input_pvalue_fix=args.input_pvalue_fix)
-    files = [_l(x) for x in files]
-    gwas = pandas.concat(files)
+    if args.gwas_folder:
+        names = BUtilities.contentsWithRegexpFromFolder(args.gwas_folder, regexp)
+        names.sort()  # cosmetic, because different filesystems/OS yield folders in different order
+        files = [os.path.join(args.gwas_folder,x) for x in names]
+        files = [_l(x) for x in files]
+        gwas = pandas.concat(files)
+    elif args.gwas_file:
+        gwas = _l(args.gwas_file)
+    else:
+        raise Exceptions.InvalidArguments("Provide either --gwas_file or (--gwas_folder with optional --gwas_file_pattern)")
     return gwas

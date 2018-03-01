@@ -179,7 +179,7 @@ def context_from_args(args):
             raise Exceptions.ReportableException("No intersection of snps between GWAS and models.")
 
 
-        model_manager = PredictionModel.load_model_manager(args.models_folder, trim_ensemble_version=args.trimmed_ensemble_id, Klass=PredictionModel._ModelManager)
+        model_manager = PredictionModel.load_model_manager(args.models_folder, trim_ensemble_version=args.trimmed_ensemble_id, Klass=PredictionModel._ModelManager, name_pattern=args.models_name_pattern)
 
         def _check_in(comps, intersection):
             return comps[1] not in intersection or comps[2] not in intersection

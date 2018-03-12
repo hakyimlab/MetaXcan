@@ -31,6 +31,7 @@ class ExpressionManager(_Expression.ExpressionManager):
         gene_map, h5 = _structure(self.folder, self.pattern)
         self.gene_map = gene_map
         self.h5 = h5
+        return self
 
     def exit(self):
         _close(self.h5)

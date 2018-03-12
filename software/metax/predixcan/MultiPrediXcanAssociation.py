@@ -132,14 +132,14 @@ def _pca_data(e_, model_keys, pc_filter):
     #numpy.svd can't handle typical data size in UK Biobank. So we do PCA through the covariance matrix
     # That is: we compute ths SVD of a covariance matrix, and use those coefficients to get the SVD of input data
     # Shamelessly designed from https://stats.stackexchange.com/questions/134282/relationship-between-svd-and-pca-how-to-use-svd-to-perform-pca
-    Xc = _get_pc_input(e_, model_keys)
-    k = numpy.cov(Xc)
+    # In numpy.cov, each row is a variable and each column an observation. Exactly opposite to standard PCA notation: it is transposed, then.
+    Xc_t = _get_pc_input(e_, model_keys)
+    k = numpy.cov(Xc_t)
     u, s, vt = numpy.linalg.svd(k)
     # we want to keep only those components with significant variance, to reduce dimensionality
     selected = pc_filter(s)
-    # In numpy.cov, each row is a variable and each column an observation. Exactly opposite to standard PCA notation.
-    Xc_ = _dot(vt[selected], Xc)
-    _data = {"pc{}".format(i):x for i,x in enumerate(Xc_)}
+    Xc_t_ = _dot(vt[selected], Xc_t)
+    _data = {"pc{}".format(i):x for i,x in enumerate(Xc_t_)}
     pca_keys = _data.keys()
     _data["pheno"] = e_.pheno
     pca_data = pandas.DataFrame(_data)

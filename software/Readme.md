@@ -141,12 +141,12 @@ MetaMany is a script that serially performs S-PrediXcan analysis on a GWAS data 
 ## PrediXcan.py
 
 This is a minimalistic implementation of PrediXcan method. It takes gene expression values (from a plain-text file or HDF5) and computes association to a phenotype vector. 
-It supports naive correction for arbitrary covariates (taken from a plain text file or HDF5).
+It supports naive correction for arbitrary covariates (taken from a plain text file or HDF5). there are tools to generate these files [in the main PrediXcan repository](https://github.com/hakyim/PrediXcan).
 
 ## MulTiXcan.py
 
 This is the main implementation of the Multi-Tissue association method. 
-It takes a collection of files containing gene expression (each file assumed to be a single tissue/study) and computes joint association to a vector phenotype
+It takes a collection of files containing gene expression (each file assumed to be a single tissue/study) and computes joint association to a vector phenotype. [The main PrediXcan repository](https://github.com/hakyim/PrediXcan) contaisn tools to generate gene expression files as used by this script.
 
 ## SMulTiXcan.py
 

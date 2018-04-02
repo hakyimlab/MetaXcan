@@ -24,6 +24,8 @@ def gtex_geno_lines(gtex_file, gtex_snp_file, snps=None, gtex_release_version=No
 
     if not gtex_release_version:
         gtex_snp = KeyedDataSource.load_data(gtex_snp_file, "VariantID", "RS_ID_dbSNP142_CHG37p13", numeric=False)
+    elif gtex_release_version.lower() == "v7":
+        gtex_snp = KeyedDataSource.load_data(gtex_snp_file, "variant_id", "rs_id_dbSNP147_GRCh37p13", numeric=False)
     elif gtex_release_version.lower() == "v8":
         gtex_snp = KeyedDataSource.load_data(gtex_snp_file, "variant_id", "rs_id_dbSNP150_GRCh38p7", numeric=False)
     else:

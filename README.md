@@ -23,7 +23,7 @@ If you plan to use that data in a publication, please be sure to take a look at 
 The software is developed and tested in Linux and Mac OS environments. The main S-PrediXcan script is also supported in Windows.
 
 To run S-PrediXcan, you need  [Python 2.7](https://www.python.org/), [numpy (>=1.11.1)](http://www.numpy.org/), [scipy (>=0.18.1)](http://www.scipy.org/), [pandas (>=0.18.1)](http://pandas.pydata.org/) . There is also a GUI done in TKInter.
-[mock](https://github.com/testing-cabal/mock) is needed for the unit tests.
+[mock](https://github.com/testing-cabal/mock) and **sqlalchemy** are needed for the unit tests.
 
 [R](https://www.r-project.org/) with [ggplot](http://ggplot2.org/) and [dplyr](https://cran.r-project.org/web/packages/dplyr/index.html) 
 is needed for some optional statistics and charts.
@@ -31,17 +31,15 @@ is needed for some optional statistics and charts.
 ## Project Layout
 
 **software** folder contains an implementation of S-PrediXcan's method and associated tools. 
-The following scripts from that folder constitute different steps in the MetaXcan pipeline:
+The following scripts from that folder constitute different components in the MetaXcan pipeline:
 
 ```bash
-M00_prerequisites.py
-M01_covariances_correlations.py
-M02_variances.py
-M03_betas.py
-M04_zscores.py
 MetaXcan.py
+PrediXcan.py
+MulTiXcan.py
+SMulTiXcan.py
 ```
-, although a typical user will only need `MetaXcan.py`. `MetaXcan.py` script contains the current implementation of S-PrediXcan.
+, although a typical user will only need `MetaXcan.py`. `MetaXcan.py` script contains the current implementation of S-PrediXcan. `MulTiXcan.py` and `SMulTiXcan.py` are the multiple-tissue methods.
 
 The rest of the scripts in **software** folder are python packaging support scripts,
 and convenience wrappers such as the GUI.
@@ -210,8 +208,8 @@ For the time being, the only way to use old transcriptome models is to use older
 
 ## Where to go from here
 
-Check [this](https://github.com/hakyimlab/MetaXcan/tree/master/software) if you want to learn
-about more general or advanced usages of S-PrediXcan.
+Check [software](https://github.com/hakyimlab/MetaXcan/tree/master/software) folder in this repository if you want to learn
+about more general or advanced usages of S-PrediXcan, or MulTiXcan and SMulTiXcan.
 
 Check out the [Wiki](https://github.com/hakyimlab/MetaXcan/wiki) for exhaustive usage information.
 

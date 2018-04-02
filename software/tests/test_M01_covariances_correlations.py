@@ -79,14 +79,14 @@ class TestM01(unittest.TestCase):
             expected_lines = ["GENE RSID1 RSID2 VALUE",
                             "A rs1 rs1 1.0",
                             "A rs1 rs2 0.0",
-                            "A rs1 rs3 -0.333333333333",
+                            "A rs1 rs3 -0.3333333333333333",
                             "A rs2 rs2 0.0",
                             "A rs2 rs3 0.0",
-                            "A rs3 rs3 0.333333333333",
+                            "A rs3 rs3 0.3333333333333333",
                             "C rs6 rs6 1.0",
                             "B rs4 rs4 0.0",
                             "B rs4 rs5 0.0",
-                            "B rs5 rs5 0.333333333333",
+                            "B rs5 rs5 0.3333333333333333",
                             "D rs1 rs1 1.0"]
             for i,expected_line in enumerate(expected_lines):
                 actual_line = f.readline().strip()

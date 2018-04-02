@@ -1,3 +1,4 @@
+
 # MetaXcan
 
 MetaXcan is a set of tools to perform integrative gene mapping studies.
@@ -57,9 +58,11 @@ use the last two. For ease of use, there is a script that performs these last tw
 There is also a GUI app, **MetaXcanUI.py**, that offers a simplified operation for **MetaXcan.py**'s functionality.
 
 All of these runable scripts take different number of command line parameters. Run them with
-**--help** option to see the options.
+**--help** option to see the options, or check the [Wiki](https://github.com/hakyimlab/MetaXcan/wiki) for examples.
 
 ## M00_prerequisites.py
+
+This script is considered deprecated and left here for future reference only.
 
 This script takes extensive genotype data sets such as Thousand Genomes Haplotypes 
 ([here](https://mathgen.stats.ox.ac.uk/impute/1000GP%20Phase%203%20haplotypes%206%20October%202014.html))
@@ -92,7 +95,7 @@ used at the covariance script step (**M01_covariances_correlations.py**).
 
 ## M01_covariances_correlations.py
 
-This script builds the covariance matrices needed at **M04_zscores.py**.
+This script is considered deprecated and left here for future reference only. This script builds the covariance matrices needed at **M04_zscores.py**.
 You will run it once in a while, if ever.
 It takes input from **M00_prerequisites.py**'s output, and a genetic expression model database, such as
 [this one](https://s3.amazonaws.com/imlab-open/Data/MetaXcan/sample_data/DGN-WB_0.5.db).
@@ -128,20 +131,33 @@ Thin wrapper over **M03_betas.py** and **M04_zscores.py**; it is merely a conven
 
 This script launches a desktop app that processes GWASinput and produces MetaXcan association results.
 It is basically a friendlier way to use functionality at **M03_betas.py** and **M04_zscores.py**.
-It doesn't support all of the options these scripts do (that as a matter of fact haven't been covered in this readme)
+It is deprecated and doesn't support all of the options in the previous scripts (that as a matter of fact haven't been covered in this readme)
 but might be friendlier to non technical users.
 
-
-## MetaMany
+## MetaMany.py
 
 MetaMany is a script that serially performs S-PrediXcan analysis on a GWAS data set using on multiple tissue models in a single command.
 
+## PrediXcan.py
+
+This is a minimalistic implementation of PrediXcan method. It takes gene expression values (from a plain-text file or HDF5) and computes association to a phenotype vector. 
+It supports naive correction for arbitrary covariates (taken from a plain text file or HDF5).
+
+## MulTiXcan.py
+
+This is the main implementation of the Multi-Tissue association method. 
+It takes a collection of files containing gene expression (each file assumed to be a single tissue/study) and computes joint association to a vector phenotype
+
+## SMulTiXcan.py
+
+This is the summary-data based implementation of MulTiXcan. 
+You need to run `MetaXcan.py` first for the collection of tissues you are interested in, and a reference LD file such as [this one for v6p models](https://s3.amazonaws.com/imlab-open/Data/MetaXcan/multixcan/snp_covariance.txt.gz)
 
 ## Useful Data
 
-We make available several GTEx tissue models and 1000 Genomes covariances [here](http://predictdb.hakyimlab.org).
+We make available several GTEx tissue models, covariances and 1000 Genomes covariances [here](http://predictdb.hakyimlab.org).
 <!-- old box https://app.box.com/s/gujt4m6njqjfqqc9tu0oqgtjvtz9860w  -->
-This files should be enough for running **M03_betas.py** and **M04_zscores.py** on practically any GWAS study.
+These files should be enough for running **MetaXcan.py**, **MulTiXcan.py** and **SMulTiXcan.py** on practically any GWAS study.
 
 ## The Rest
 

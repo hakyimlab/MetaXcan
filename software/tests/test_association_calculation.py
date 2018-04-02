@@ -5,6 +5,7 @@ import unittest
 import SampleData
 from metax import PredictionModel
 from metax import MatrixManager
+D = MatrixManager.GENE_SNP_COVARIANCE_DEFINITION
 
 from metax.metaxcan import Utilities
 from metax.metaxcan import AssociationCalculation
@@ -24,7 +25,7 @@ def _context():
     gwas = _gwas()
     model = _prediction_model()
     s = SampleData.dataframe_from_covariance(SampleData.sample_covariance_s_1())
-    covariance = MatrixManager.MatrixManager(s)
+    covariance = MatrixManager.MatrixManager(s, D)
     c = Utilities._build_context(model, covariance, gwas)
     return c
 
@@ -71,16 +72,16 @@ class TestAssociationCalculation(unittest.TestCase):
             ('A', 0.42313735862217716, 0.42845528455235105, 0.10250000000002803, 4, 4, 3),
             ('B', 1.904102672555114, 1.4285714285708686, 0.16333333333323405, 6, 6, 6),
             ('C', 0.089999999999999983, 0.049999999999999989, 0.013333333333320003, 3, 2, 1)]
-        results = zip(*results)
         d = AssociationCalculation.dataframe_from_results(results)
         A = AssociationCalculation.ARF
 
-        numpy.testing.assert_array_equal(d[A.K_GENE], results[A.GENE])
-        numpy.testing.assert_array_equal(d[A.K_ZSCORE], results[A.ZSCORE])
-        numpy.testing.assert_array_equal(d[A.K_EFFECT_SIZE], results[A.EFFECT_SIZE])
-        numpy.testing.assert_array_equal(d[A.K_N_SNPS_IN_MODEL], results[A.N_SNPS_IN_MODEL])
-        numpy.testing.assert_array_equal(d[A.K_N_SNPS_IN_COV], results[A.N_SNPS_IN_COV])
-        numpy.testing.assert_array_equal(d[A.K_N_SNPS_USED], results[A.N_SNPS_USED])
+        r_ = zip(*results)
+        numpy.testing.assert_array_equal(d[A.K_GENE], r_[A.GENE])
+        numpy.testing.assert_array_equal(d[A.K_ZSCORE], r_[A.ZSCORE])
+        numpy.testing.assert_array_equal(d[A.K_EFFECT_SIZE], r_[A.EFFECT_SIZE])
+        numpy.testing.assert_array_equal(d[A.K_N_SNPS_IN_MODEL], r_[A.N_SNPS_IN_MODEL])
+        numpy.testing.assert_array_equal(d[A.K_N_SNPS_IN_COV], r_[A.N_SNPS_IN_COV])
+        numpy.testing.assert_array_equal(d[A.K_N_SNPS_USED], r_[A.N_SNPS_USED])
 
 
 if __name__ == '__main__':

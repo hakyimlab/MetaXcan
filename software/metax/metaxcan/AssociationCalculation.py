@@ -2,6 +2,7 @@ import logging
 import pandas
 import numpy
 from numpy import dot as d
+from scipy import stats
 
 from .. import Constants
 from .. import Exceptions
@@ -27,6 +28,18 @@ class ARF(object):
     K_N_SNPS_USED = "n_snps_used"
 
     order=[(GENE,K_GENE), (ZSCORE,K_ZSCORE), (EFFECT_SIZE,K_EFFECT_SIZE), (SIGMA_G_2, K_VAR_G), (N_SNPS_IN_MODEL, K_N_SNPS_IN_MODEL), (N_SNPS_IN_COV, K_N_SNPS_IN_COV), (N_SNPS_USED,K_N_SNPS_USED)]
+
+class ASF(object):
+    """Additional Stats format"""
+    GENE = 0
+    BEST_GWAS_P = 1
+    LARGEST_WEIGHT = 2
+
+    K_GENE = "gene"
+    K_BEST_GWAS_P = "best_gwas_p"
+    K_LARGEST_WEIGHT = "largest_weight"
+
+    order=[(GENE,K_GENE), (BEST_GWAS_P, K_BEST_GWAS_P), (LARGEST_WEIGHT,K_LARGEST_WEIGHT)]
 
 class Context(object):
     def __init__(self): raise Exceptions.ReportableException("Tried to instantiate abstract context")
@@ -75,8 +88,39 @@ def association(gene, context, return_snps=False):
         return r
 
 def dataframe_from_results(results):
+    results = zip(*results)
     if len(results) == 0:
-        results = [[],[],[],[],[],[],[]]
+        return pandas.DataFrame({key:[] for order,key in ARF.order})
+
     r = pandas.DataFrame({key: results[order] for order, key in ARF.order})
     r = r[[key for order,key in ARF.order]]
+    return r
+
+def additional_stats(gene, context):
+    #capture context
+    n_snps_in_model, i, cov, snps = context.provide_calculation(gene)
+
+    #some stats
+    snps_used = i[Constants.SNP]
+    n_snps_used = len(snps_used)
+
+    if n_snps_used == 0:
+        return gene, numpy.nan, numpy.nan
+
+    i_zscore = i[Constants.ZSCORE]
+    best_zscore = numpy.max(numpy.abs(i_zscore))
+    p = 2 * stats.norm.cdf(-best_zscore)
+
+    i_weight = i[WDBQF.K_WEIGHT]
+    best_weight = numpy.max(numpy.abs(i_weight))
+
+    return gene, p, best_weight
+
+def dataframe_from_aditional_stats(stats):
+    stats = zip(*stats)
+    if len(stats) == 0:
+        return pandas.DataFrame({key:[] for order,key in ASF.order})
+
+    r = pandas.DataFrame({key: stats[order] for order, key in ASF.order})
+    r = r[[key for order,key in ASF.order]]
     return r

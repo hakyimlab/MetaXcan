@@ -5,9 +5,11 @@ intermediate*
 results*
 forensics*
 kk*
+_kk*
 support_data*
 build*
 
 _prof
 _scripts
 _test
+*.cprof

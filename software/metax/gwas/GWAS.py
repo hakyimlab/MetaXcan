@@ -1,9 +1,10 @@
 import pandas #likely to go away for a streaming approach
 import numpy
 import logging
-import os
 import gzip
 import scipy.stats as stats
+
+import GWASSpecialHandling
 
 from .. import  Exceptions
 
@@ -19,7 +20,6 @@ from ..Constants import BETA_SIGN
 from ..Constants import SE
 from ..Constants import PVALUE
 
-
 COLUMN_SNP="column_snp"
 COLUMN_EFFECT_ALLELE="column_effect_allele"
 COLUMN_NON_EFFECT_ALLELE="column_non_effect_allele"
@@ -32,6 +32,9 @@ COLUMN_PVALUE="column_pvalue"
 COLUMN_SE="column_se"
 COLUMN_OR="column_or"
 COLUMN_ZSCORE="column_zscore"
+
+########################################################################################################################
+# Format Management
 
 #format of raw results
 class GWASF(object):
@@ -75,7 +78,10 @@ def validate_format_for_strict(format):
     if not ok:
         raise Exceptions.InvalidArguments("Arguments missing. Either -zscore-, -pvalue and one in [beta,beta sign,or]-, or -standard error and one in [beta, or]- must be provided")
 
-def load_gwas(source, gwas_format, strict=True, sep='\s+', input_pvalue_fix=None):
+
+########################################################################################################################
+# Load a gwas
+def load_gwas(source, gwas_format, strict=True, separator=None, skip_until_header=False, snps=None, force_special_handling=False, handle_empty_columns=False, input_pvalue_fix=None):
     """
     Attempts to read a GWAS summary statistics file, and load it into a uniform format,
     in a pandas dataframe.
@@ -85,12 +91,15 @@ def load_gwas(source, gwas_format, strict=True, sep='\s+', input_pvalue_fix=None
         For example
     :return:
     """
-    if isinstance(source, str):
-        logging.info("Reading input gwas: %s", source)
-        d = pandas.read_table(source, sep)
+    if force_special_handling or skip_until_header or snps:
+        logging.info("Reading input gwas with special handling: %s", source)
+        snp_column_name = gwas_format[COLUMN_SNP]
+        d = GWASSpecialHandling.gwas_data_source(source, snps, snp_column_name, skip_until_header, separator, handle_empty_columns)
+        d = pandas.DataFrame(d)
     else:
-        logging.info("Reading input gwas from source")
-        d = pandas.DataFrame(source)
+        logging.info("Reading input gwas: %s", source)
+        if separator is None: separator = '\s+'
+        d = pandas.read_table(source, separator)
 
     logging.info("Processing input gwas")
     d = _rename_columns(d, gwas_format)
@@ -100,9 +109,11 @@ def load_gwas(source, gwas_format, strict=True, sep='\s+', input_pvalue_fix=None
 
     #keep only rsids
     if d.shape[0] > 0:
+        d = d[~ d[SNP].isnull()]
         d = d[d[SNP].str.contains("rs")]
 
     if strict:
+        d = _enforce_numeric_columns(d)
         d = _ensure_columns(d, input_pvalue_fix)
         d = _keep_gwas_columns(d)
         if d.shape[0] >0 and numpy.any(~ numpy.isfinite(d[ZSCORE])):
@@ -165,6 +176,17 @@ def _ensure_columns(d, input_pvalue_fix):
     d[ZSCORE] = numpy.array(d[ZSCORE], dtype=numpy.float32)
     return d
 
+_numeric_columns = [BETA, OR, SE, PVALUE, ZSCORE]
+def _enforce_numeric_columns(d):
+    for column in _numeric_columns:
+        if column in d:
+            a = d[column]
+            if a.dtype == numpy.object:
+                a = [str(x) for x in a]
+                a = [GWASSpecialHandling.sanitize_component(x) for x in a]
+            d[column] = numpy.array(a, dtype=numpy.float64)
+    return d
+
 def _ensure_z(d, input_pvalue_fix):
     if ZSCORE in d:
         logging.log(9, "Using declared zscore")
@@ -221,6 +243,9 @@ def _or_to_beta(odd):
     if numpy.any(numpy.where(odd == 0)):
         logging.warning("Odd Ratios column holds some [0] values")
     return numpy.log(odd)
+
+########################################################################################################################
+# General purpose methods
 
 def extract(gwas, snps):
     """Assumes that argument snps are there in the gwas."""

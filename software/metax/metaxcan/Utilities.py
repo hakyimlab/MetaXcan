@@ -23,10 +23,10 @@ class SimpleContext(AssociationCalculation.Context):
         return w
 
     def get_covariance(self, gene, snps):
-        return self.covariance.get(gene, snps, strict=False)
+        return self.covariance.get(gene, snps, strict_whitelist=False)
 
     def get_n_in_covariance(self, gene):
-        return self.covariance.n_snps(gene)
+        return self.covariance.n_ids(gene)
 
     def get_gwas(self, snps):
         g = self.gwas
@@ -162,13 +162,13 @@ def _prepare_gwas(gwas):
         i = gwas.zscore.apply(lambda x: x != "NA")
         gwas = gwas.loc[i]
         gwas = pandas.DataFrame(gwas)
-        gwas.loc[:,Constants.ZSCORE] = gwas.zscore.astype(numpy.float64)
+        gwas = gwas.assign(**{Constants.ZSCORE:gwas.zscore.astype(numpy.float64)})
     except Exception as e:
         logging.info("Unexpected issue preparing gwas... %s", str(e))
         pass
 
     if not Constants.BETA in gwas:
-        gwas.loc[:,Constants.BETA] = numpy.nan
+        gwas = gwas.assign(**{Constants.BETA: numpy.nan})
 
     return gwas
 
@@ -278,4 +278,14 @@ def format_output(results, context, remove_ens_version):
     merged.n_snps_in_cov = merged.n_snps_in_cov.apply(_to_int)
     merged = merged.sort_values(by=Constants.PVALUE)
 
+    return merged
+
+def format_additional_output(results, context, remove_ens_version):
+    model_info = pandas.DataFrame(context.get_model_info())[["gene", "gene_name"]]
+
+    merged = pandas.merge(results, model_info, how="inner", on="gene")
+    if remove_ens_version:
+        merged.gene = merged.gene.str.split(".").str.get(0)
+
+    merged = merged[["gene", "gene_name", "best_gwas_p", "largest_weight"]]
     return merged

@@ -12,6 +12,7 @@ import metax.ThousandGenomesUtilities as ThousandGenomesUtilities
 import metax.Logging as Logging
 import metax.Utilities as Utilities
 import metax.Formats as Formats
+from timeit import default_timer as timer
 
 
 def pathLeaf(path):
@@ -43,6 +44,8 @@ class ProcessWeightDB(object):
         self.max_snps_in_gene = int(args.max_snps_in_gene) if args.max_snps_in_gene else None
 
     def run(self):
+        start = timer()
+
         if not self.correlation_output and not self.covariance_output:
             logging.info("Provide --correlation_output or --covariance_output or both")
             return
@@ -53,7 +56,9 @@ class ProcessWeightDB(object):
         logging.info("Building files")
         self.buildFiles(weight_db_logic)
 
-        logging.info("Ran successfully")
+
+        end = timer()
+        logging.info("Ran successfully in %s seconds",  str(end-start))
 
     def buildFiles(self, weight_db_logic):
         do_correlations = self.correlation_output is not None
@@ -97,10 +102,11 @@ class ProcessWeightDB(object):
     def getSNPS(self, name, weight_db_logic):
         dosageLoader = None
         if self.input_format == Formats.IMPUTE:
+            #TODO: update
             dosageLoader = ThousandGenomesUtilities.IMPUTEDosageLoader(self.data_folder, name) #outdated code
         elif self.input_format == Formats.PrediXcan:
-            dosageName = Utilities.dosageName(name)
-            path = os.path.join(self.data_folder, dosageName)
+            #dosageName = Utilities.dosageName(name)
+            path = os.path.join(self.data_folder, name)
             dosageLoader = PrediXcanFormatUtilities.PrediXcanFormatDosageLoader(path, weight_db_logic)
         else:
             logging.info("Invalid input format: %s", self.input_format)

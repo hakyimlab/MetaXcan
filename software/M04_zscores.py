@@ -15,15 +15,8 @@ from metax.metaxcan import AssociationCalculation
 from metax.metaxcan import Utilities as MetaxcanUtilities
 
 
-def run(args, _gwas=None):
-    start = timer()
-    if not args.overwrite and os.path.exists(args.output_file):
-        logging.info("%s already exists, move it or delete it if you want it done again", args.output_file)
-        return
+def run_metaxcan(args, context):
     logging.info("Started metaxcan association")
-
-    context = MetaxcanUtilities.build_context(args, _gwas)
-
     model_snps = context.get_model_snps()
     total_snps = len(model_snps)
     snps_found=set()
@@ -39,53 +32,67 @@ def run(args, _gwas=None):
         snps_found.update(snps)
         reporter.update(len(snps_found), "%d %% of model's snps found so far in the gwas study")
 
-    Utilities.ensure_requisite_folders(args.output_file)
-
     reporter.update(len(snps_found), "%d %% of model's snps used", force=True)
-    results = AssociationCalculation.dataframe_from_results(zip(*results))
+
+    results = AssociationCalculation.dataframe_from_results(results)
     results = MetaxcanUtilities.format_output(results, context, args.remove_ens_version)
-    results.to_csv(args.output_file, index=False)
+
+    if args.output_file:
+        Utilities.ensure_requisite_folders(args.output_file)
+        results.to_csv(args.output_file, index=False)
+
+    return results
+
+def run_additional(args, context):
+    logging.info("Started metaxcan additional stats")
+    i_genes, i_snps = context.get_data_intersection()
+    results = []
+    for gene in i_genes:
+        stats_ = AssociationCalculation.additional_stats(gene, context)
+        results.append(stats_)
+
+    results = AssociationCalculation.dataframe_from_aditional_stats(results)
+    results = MetaxcanUtilities.format_additional_output(results, context, args.remove_ens_version)
+
+    if args.additional_output:
+        Utilities.ensure_requisite_folders(args.additional_output)
+        results.to_csv(args.additional_output, index=False)
+
+    return results
+
+def run(args, _gwas=None):
+    if not args.output_file and not args.additional_output:
+        logging.info("Provide at least --output_file or --additional_output")
+
+    if args.output_file and not args.overwrite and os.path.exists(args.output_file):
+        logging.info("%s already exists, move it or delete it if you want it done again", args.output_file)
+        return
+
+    start = timer()
+    logging.info("Started metaxcan process")
+
+    context = MetaxcanUtilities.build_context(args, _gwas)
+
+    results = run_metaxcan(args, context) if (args.output_file or not args.additional_output) else None
+    additional = run_additional(args, context) if args.additional_output else None
+
     end = timer()
     logging.info("Sucessfully processed metaxcan association in %s seconds"%(str(end - start)))
+    return results, additional
 
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description='M04_zscores.py %s: Build ZScores from GWAS data.' % (__version__,))
 
-    parser.add_argument("--model_db_path",
-                        help="name of weight db in data folder",
-                        default=None)
-
-    parser.add_argument("--covariance",
-                        help="name of file containing covariance data",
-                        default=None)
-
-    parser.add_argument("--beta_folder",
-                        help="name of folder containing beta data",
-                        default=None)
-
-    parser.add_argument("--output_file",
-                        help="name of output file",
-                        default="results/zscores.csv")
-
-    parser.add_argument("--verbosity",
-                        help="Log verbosity level. 1 is everything being logged. 10 is only high level messages, above 10 will hardly log anything",
-                        default = "10")
-
-    parser.add_argument("--remove_ens_version",
-                        help="If set, will drop the -version- postfix in gene id.",
-                    action="store_true",
-                    default=False)
-
-    parser.add_argument("--overwrite",
-                        help="If set, will overwrite the results file if it exists.",
-                    action="store_true",
-                    default=False)
-
-    parser.add_argument("--throw",
-                        action="store_true",
-                        help="Throw exception on error",
-                        default=False)
+    parser.add_argument("--model_db_path", help="name of weight db in data folder")
+    parser.add_argument("--covariance", help="name of file containing covariance data")
+    parser.add_argument("--beta_folder", help="name of folder containing GWAS effect data")
+    parser.add_argument("--output_file", help="name of output file")
+    parser.add_argument("--verbosity", help="Log verbosity level. 1 is everything being logged. 10 is only high level messages, above 10 will hardly log anything", default = "10")
+    parser.add_argument("--remove_ens_version", help="If set, will drop the -version- postfix in gene id.", action="store_true", default=False)
+    parser.add_argument("--overwrite", help="If set, will overwrite the results file if it exists.", action="store_true", default=False)
+    parser.add_argument("--additional_output", help="If set, will output additional information.")
+    parser.add_argument("--throw", action="store_true", help="Throw exception on error", default=False)
 
     args = parser.parse_args()
 

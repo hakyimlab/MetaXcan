@@ -14,6 +14,11 @@ class InvalidInputFormat(ReportableException):
     def __init__(self, msg):
         super(InvalidInputFormat, self).__init__("Invalid input format: %s" % (msg))
 
+class NotImplemented(ReportableException):
+    """A method that is not implemented got called"""
+    def __init__(self, msg):
+        super(NotImplemented, self).__init__("Not implemented: %s" % (msg))
+
 class InvalidOutputFormat(ReportableException):
     """Error associated with input format"""
     def __init__(self, msg):

@@ -2,7 +2,11 @@ __author__ = 'heroico'
 
 import os
 import json
+import re
+import logging
+import gzip
 import Exceptions
+import pandas
 
 VALID_ALLELES = ["A", "T", "C", "G"]
 
@@ -16,7 +20,9 @@ def dosageName(name):
     return name + ".dosage.gz"
 
 def dosageNamesFromFolder(folder):
-    names = namesWithPatternFromFolder(folder, ".dosage.gz")
+    names = contentsWithRegexpFromFolder(folder, ".*.dosage.gz")
+    if not names:
+        names = contentsWithRegexpFromFolder(folder, ".*.dos.gz")
     return names
 
 def hapNamesFromFolder(folder):
@@ -54,9 +60,19 @@ def contentsWithPatternsFromFolder(folder, patterns):
     return paths
 
 def contentsWithRegexpFromFolder(folder, regexp):
+    if type(regexp) == str:
+        regexp = re.compile(regexp)
     contents = os.listdir(folder)
     paths = [x for x in contents if regexp.match(x)] if regexp else contents
     return paths
+
+def target_files(input_folder, file_filters=None):
+    files = os.listdir(input_folder)
+    if file_filters:
+        patterns = [re.compile(x) for x in file_filters]
+        files = [x for x in files if all([r.match(x) for r in patterns])]
+    files = [os.path.join(input_folder, x) for x in files]
+    return files
 
 def samplesInputPath(path):
     samples_content = contentsWithPatternsFromFolder(path, [".sample"])
@@ -82,7 +98,6 @@ def checkSubdirectorySanity(base, candidate):
 
     return sane
 
-import logging
 class PercentReporter(object):
     def __init__(self, level, total, increment=10, pattern="%i percent complete"):
         self.level = level
@@ -108,7 +123,6 @@ def load_json(path):
         d = json.load(file)
     return d
 
-import gzip
 class FileIterator(object):
     def __init__(self, path, header=None, compressed = False, ignore_until_header = False):
         self.path = path
@@ -174,3 +188,38 @@ def ensure_requisite_folders(path):
     folder = os.path.split(path)[0]
     if len(folder) and not os.path.exists(folder):
         os.makedirs(folder)
+
+def to_dataframe(data, columns,to_numeric=None, fill_na=None):
+    data = zip(*data)
+    if to_numeric:
+        data = [pandas.to_numeric(x, errors=to_numeric) for x in data]
+    if len(data) == 0: data = [[] for i in xrange(0, len(columns))]
+    data = {columns[i]:data[i] for i in xrange(0, len(columns))}
+    data = pandas.DataFrame(data)
+    data = data[columns]
+    if fill_na:
+        data = data.fillna(fill_na)
+    return data
+
+def save_dataframe(d, path, mode="w", header=True):
+    compression = "gzip" if "gz" in path else None
+    ensure_requisite_folders(path)
+    d.to_csv(path, header=header, mode=mode, compression=compression, sep="\t", index=False)
+
+def save_table(data, path, mode="w", header=None):
+    compression = "gzip" if "gz" in path else None
+    _o = gzip.open if compression == "gzip" else open
+    ensure_requisite_folders(path)
+
+    def _to_line(comps):
+        line = "\t".join([str(x) for x in comps]) + "\n"
+        return line
+
+    with _o(path, mode) as file:
+        if header:
+            file.write(_to_line(header))
+
+        for d in data:
+            line = _to_line(d)
+            file.write(line)
+

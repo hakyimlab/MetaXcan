@@ -1,3 +1,9 @@
+Version 0.6.0:
+    * Initial release of MulTiXcan (multi-tissue predixcan) implementation
+Version 0.5.9:
+    * Addressed edge case when the GWAS has no intersection with the prediciton model (most likely a naming issue)
+Version 0.5.8:
+    * Added --gwas_file to MetaXcan so that a single GWAS file can be used as input (alternative to --gwas_folder and --gwas_file_pattern)
 Version 0.5.7:
     * Now input GWAS p-values that are too small (i.e. numerical resolution doesn't yield a finite zscore) can be thresholded as approximation.
 Version 0.5.6.4:

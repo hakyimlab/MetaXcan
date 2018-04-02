@@ -1,0 +1,9 @@
+
+class GF(object):
+    RSID=0
+    CHROMOSOME=1
+    POSITION=2
+    REF_ALLELE=3
+    ALT_ALLELE=4
+    FREQUENCY=5
+    FIRST_DOSAGE=6

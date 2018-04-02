@@ -56,11 +56,20 @@ __author__ = 'heroico, Eric Torstenson'
    """
 
 def get_name_prefix(args):
-    regexp = re.compile(args.gwas_file_pattern) if args.gwas_file_pattern else None
-    names = Utilities.contentsWithRegexpFromFolder(args.gwas_folder, regexp)
-    name = names[0]
-    report_prefix = name.split("/")[-1].split(".")[0]
+    if args.gwas_folder:
+        regexp = re.compile(args.gwas_file_pattern) if args.gwas_file_pattern else None
+        names = Utilities.contentsWithRegexpFromFolder(args.gwas_folder, regexp)
+        name = names[0]
+        report_prefix = get_result_prefix(args, name)
+    else:
+        report_prefix = get_result_prefix(args, args.gwas_file)
     return report_prefix
+
+def get_result_prefix(args, name):
+    if args.output_file_prefix:
+        return args.output_file_prefix
+    n = os.path.splitext(args.gwas_file)[0] if "." in args.gwas_file else args.gwas_file
+    return n
 
 def process(args, db_filename):
     filebase = os.path.basename(db_filename).replace(".db", "")
@@ -109,67 +118,29 @@ older versions (or perhaps those created by the end user which don't follow the
 same organization. In these cases, users should pay careful attention to the
 arguments --covariance_directory and --covariance_suffix. """)
 
-    parser.add_argument("-v", "--version", help="Report the version",
-                        action="store_true",
-                        default=False)
+    parser.add_argument("-v", "--version", help="Report the version", action="store_true", default=False)
 #weight db model
-    parser.add_argument('weight_dbs', metavar='DB', type=argparse.FileType('r'),
-                        nargs='+', help="weight dbs to be used")
+    parser.add_argument('weight_dbs', metavar='DB', type=argparse.FileType('r'), nargs='+', help="weight dbs to be used")
 
 #GWAS betas
-    parser.add_argument("--gwas_folder",
-                        help="name of folder containing GWAS data. All files in the folder are assumed to belong to a single study.",
-                        default="data/GWAS")
+    parser.add_argument("--gwas_file", help="Load a single GWAS file. (Alternative to providing a gwas_folder and gwas_file_pattern)")
 
-    parser.add_argument("--gwas_file_pattern",
-                        help="Pattern to recognice GWAS files in folders (in case there are extra files and you don't want them selected).",
-                        default=None)
+    parser.add_argument("--gwas_folder", help="name of folder containing GWAS data. All files in the folder are assumed to belong to a single study.")
+    parser.add_argument("--gwas_file_pattern", help="Pattern to recognice GWAS files in folders (in case there are extra files and you don't want them selected).")
 
     GWASUtilities.add_gwas_arguments_to_parser(parser)
 
-    parser.add_argument("--separator",
-                        help="Character or string separating fields in input file. Defaults to any whitespace.",
-                        default=None)
-    # Added to support GWAS utilities
-    parser.add_argument("--skip_until_header",
-                        help="Some files may be malformed and contain unespecified bytes in the beggining."
-                             " Specify this option (string value) to identify a header up to which file contents should be skipped.",
-                        default=None)
-
-
 # ZScore calculation
+    parser.add_argument("--covariance_directory", help="directory where covariance files can be found (or SAME if covariance sits beside the .db file", default="SAME")
+    parser.add_argument("--covariance_suffix", help="Suffix associated with the covariance files. covext-dbext (where ..dbext is the portion of the db file to be replaced by the coviarance extension. )", default=".txt.gz.._0.5.db")
+    parser.add_argument("--output_directory", help="name of output file", default="results")
+    parser.add_argument("--output_file_prefix", help="name of output file", default="results")
+    parser.add_argument("--additional_output", help="If set, will output additional information.", default=None)
+    parser.add_argument("--remove_ens_version", help="If set, will keep the -version- postfix in gene id.", action="store_true", default=False)
+    parser.add_argument("--overwrite", help="If set, will overwrite the results file if it exists.", action="store_true", default=False)
+    parser.add_argument("--verbosity", help="Log verbosity level. 1 is everything being logged. 10 is only high level messages, above 10 will hardly log anything", default = "10")
+    parser.add_argument("--throw", action="store_true", help="Throw exception on error", default=False)
 
-    parser.add_argument("--covariance_directory",
-                        help="directory where covariance files can be found (or SAME if covariance sits beside the .db file",
-                        default="SAME")
-
-    parser.add_argument("--covariance_suffix",
-                        help="Suffix associated with the covariance files. covext-dbext (where ..dbext is the portion of the db file to be replaced by the coviarance extension. )",
-                        default=".txt.gz.._0.5.db")
-
-    parser.add_argument("--output_directory",
-                        help="name of output file",
-                        default="results")
-
-
-    parser.add_argument("--remove_ens_version",
-                        help="If set, will drop the -version- postfix in gene id.",
-                    action="store_true",
-                    default=False)
-
-    parser.add_argument("--overwrite",
-                        help="If set, will overwrite the results file if it exists.",
-                    action="store_true",
-                    default=False)
-
-    parser.add_argument("--verbosity",
-                        help="Log verbosity level. 1 is everything being logged. 10 is only high level messages, above 10 will hardly log anything",
-                        default = "10")
-
-    parser.add_argument("--throw",
-                        action="store_true",
-                        help="Throw exception on error",
-                        default=False)
 
     if "-v" in sys.argv or "--verbose" in sys.argv:
         print metax.__version__
@@ -185,4 +156,3 @@ arguments --covariance_directory and --covariance_suffix. """)
             run(args)
         except Exceptions.ReportableException, e:
             logging.error(e.msg)
-        

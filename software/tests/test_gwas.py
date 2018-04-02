@@ -164,12 +164,10 @@ class TestGWAS(unittest.TestCase):
             "column_position":"BP"
         }
 
-        source = GWASUtilities.gwas_filtered_source("tests/_td/GWAS/scz2/scz2.gwas.results.txt.gz")
-        gwas = GWAS.load_gwas(source, gwas_format)
+        gwas = GWAS.load_gwas("tests/_td/GWAS/scz2/scz2.gwas.results.txt.gz", gwas_format, force_special_handling=True)
         assert_gwas_zscore_fbse(self, gwas)
 
-        source = GWASUtilities.gwas_filtered_source("tests/_td/GWAS/scz2/scz2.gwas.results.txt.gz", snps={"rs940550", "rs6650104", "rs61770173"}, snp_column_name="SNPID")
-        gwas = GWAS.load_gwas(source, gwas_format)
+        gwas = GWAS.load_gwas("tests/_td/GWAS/scz2/scz2.gwas.results.txt.gz", gwas_format, snps={"rs940550", "rs6650104", "rs61770173"})
 
         numpy.testing.assert_array_equal(gwas[SNP], pandas.Series(["rs940550", "rs6650104", "rs61770173", ], dtype=numpy.str))
         numpy.testing.assert_array_equal(gwas[EFFECT_ALLELE], pandas.Series(["C", "T",  "A"], dtype=numpy.str))

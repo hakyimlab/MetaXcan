@@ -53,7 +53,8 @@ class PrediXcanFormatDosageLoader(object):
                 snp = DataSetSNP.DataSetSNP(name=rsid, index=i, data=dosages, position=int(position), ref_allele=ref_allele, eff_allele=eff_allele)
                 if snp.name in self.snps_by_rsid:
                     old = self.snps_by_rsid[snp.name]
-                    logging.info("Duplicated rsid: (%s,%s) %s", old.name, old.position, " ".join(components))
+                    logging.log(9, "Duplicated rsid: (%s,%s)", old.name, old.position)
+                    return
                 self.snps.append(snp)
                 self.snps_by_rsid[snp.name] = snp
 

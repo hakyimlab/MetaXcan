@@ -61,26 +61,6 @@ class CalculationStatus(object):
     COMPLEX_COVARIANCE = -7
     INADEQUATE_INVERSE = -8
 
-# Todo: remove
-DEBUG=False
-#TODO remove
-import pandas
-import matplotlib.pyplot as plt
-def get_merged(gene, labels, zscores):
-    predixcan = pandas.read_table("data/cross_model_p/implementation_prototype/results_t1d/predixcan.txt")
-    p = predixcan[predixcan.gene == gene]
-    p.gene = p.gene.str.split(".").str.get(0)
-    p.model = p.model.str.split("TW_").str.get(1)
-    m = pandas.DataFrame(data={"model":labels, "zscore":zscores})
-    merged = p.merge(m, on="model")
-    return merged
-
-def plot(merged):
-    plt.plot(merged.zscore_x, merged.zscore_y, 'ro')
-    plt.plot([numpy.min(merged.zscore_x), numpy.max(merged.zscore_x)],
-             [numpy.min(merged.zscore_x), numpy.max(merged.zscore_x)])
-    plt.show()
-
 def joint_analysis(context, gene):
     g, g_n, pvalue, n, n_indep, p_i_best, t_i_best, p_i_worst, t_i_worst, eigen_max, eigen_min, eigen_min_kept, z_min, z_max, z_mean, z_sd, tmi, status \
         = None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, CalculationStatus.NO_DATA

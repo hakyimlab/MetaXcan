@@ -52,7 +52,7 @@ if __name__ == "__main__":
     parser.add_argument("--gwas_file", help="Path to GWAS file; alternative to gwas_folder and gwas_pattern")
     GWASUtilities.add_gwas_arguments_to_parser(parser)
 
-    parser.add_argument("--regularization", help="Add a regularization term to correct for singularity", default=None, type=float)
+    parser.add_argument("--regularization", help="Add a regularization term to correct for expression covariance matrix singularity", default=None, type=float)
     parser.add_argument("--cutoff_condition_number", help="condition number of eigen values to use when truncating SVD", default=None, type=float)
     parser.add_argument("--cutoff_eigen_ratio", help="ratio to use when truncating SVD", default=None, type=float)
     parser.add_argument("--cutoff_threshold", help="threshold of variance when truncating SVD", default=None, type=float)
@@ -61,7 +61,7 @@ if __name__ == "__main__":
     parser.add_argument("--metaxcan_filter", help="regular expression to filter results files", default=[".*csv"], type=str, nargs='+')
     parser.add_argument("--metaxcan_file_name_parse_pattern", help="Optional regular expression to get phenotype name and model name from MetaXcan result files.", default = None)
     parser.add_argument("--model_product", help="path to file with model feature product", default=None)
-    parser.add_argument("--permissive_model_product", action="store_true", help="Tells the Model Product to need some slack, entires may be missing on numerical problems", default=False)
+    parser.add_argument("--permissive_model_product", action="store_true", help="Tells the Model Product to need some slack, entries may be missing on numerical problems", default=False)
     parser.add_argument("--snp_covariance", help="path  to snp covariance", default=None)
     parser.add_argument("--output", help="where you want the output", default=None)
     parser.add_argument("--verbosity", help="Log verbosity level. 1 is everything being logged. 10 is only high level messages, above 10 will hardly log anything", default = "10")

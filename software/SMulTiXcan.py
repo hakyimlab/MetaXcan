@@ -26,7 +26,7 @@ def run(args):
     logging.info("Processing")
     reporter.update(0, "%d %% of model's genes processed so far")
     for i,gene in enumerate(context.get_genes()):
-        logging.log(7, "Gene: %s", gene)
+        logging.log(7, "Gene %d/%d: %s", i+1, n_genes, gene)
         result = JointAnalysis.joint_analysis(context, gene)
         results.append(result)
         reporter.update(i, "%d %% of model's genes processed so far")
@@ -45,6 +45,7 @@ if __name__ == "__main__":
 
     parser.add_argument("--cleared_snps", help="SNPS to analyze. If you don't provide this, you must provide GWAS and models.")
     parser.add_argument("--models_folder", help="Path to folder with prediction models")
+    parser.add_argument("--models_name_filter", help="Path to folder with prediction models", type=str, nargs='+')
     parser.add_argument("--models_name_pattern", help="regular expression to detect tissue name from file names")
 
     parser.add_argument("--gwas_folder", help="name of folder containing GWAS data. All files in the folder are assumed to belong to a single study.")

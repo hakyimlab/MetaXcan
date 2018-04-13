@@ -1,7 +1,7 @@
 import logging
 import os
 import sqlite3
-
+import re
 import pandas
 
 import Exceptions
@@ -142,8 +142,8 @@ def load_model(path):
     model = Model(weights, extra)
     return model
 
-def load_genes(folder):
-    model_paths = _model_paths(folder)
+def load_genes(folder, name_filter=None):
+    model_paths = _model_paths(folder, name_filter)
     models = pandas.DataFrame()
 
     for path in model_paths:
@@ -214,8 +214,9 @@ def _get_snp_key(models):
         keys[rsid].add(gene)
     return keys
 
-def _model_paths(path):
-    paths = [os.path.join(path, x) for x in os.listdir(path) if ".db" in x]
+def _model_paths(path, name_filter=None):
+    f = [re.compile(x) for x in name_filter] if name_filter else [re.compile(".*db$")]
+    paths = [os.path.join(path, x) for x in os.listdir(path) if True in [f_.search(x) is not None for f_ in f]]
     return paths
 
 ###############################################################################
@@ -275,7 +276,7 @@ def _prepare_models_2(models):
     return r, rsids, rsid_to_genes
 
 ###############################################################################
-def load_model_manager(path, trim_ensemble_version=False, Klass=ModelManager, name_pattern=None):
+def load_model_manager(path, trim_ensemble_version=False, Klass=ModelManager, name_pattern=None, name_filter=None):
 
     def _get_models(paths, trim_ensemble_version=False):
         logging.log(9, "preloading models")
@@ -295,7 +296,7 @@ def load_model_manager(path, trim_ensemble_version=False, Klass=ModelManager, na
             models.gene = k
         return models
 
-    paths = _model_paths(path)
+    paths = _model_paths(path, name_filter)
     models = _get_models(paths, trim_ensemble_version)
     model_manager = Klass(models)
     return model_manager

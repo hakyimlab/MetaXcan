@@ -56,6 +56,11 @@ def association(gene, context, return_snps=False):
     #capture context
     n_snps_in_model, i, cov, snps = context.provide_calculation(gene)
 
+    if logging.getLogger().getEffectiveLevel() < 10:
+        d_ = numpy.linalg.eig(cov)[0]
+        if numpy.sum(numpy.less(d_,1e-6)):
+            logging.info("Gene %s has covariance close to singular", gene)
+
     #some stats
     snps_used = i[Constants.SNP]
     n_snps_used = len(snps_used)

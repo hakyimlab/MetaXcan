@@ -63,6 +63,9 @@ class ExpressionStreamedContext(ContextMixin, Context):
             if self.trimmed_ensemble_id:
                 d.GENE = d.GENE.str.split(".").str.get(0)
             g = d.GENE.values[0]
+            if not g in self.gene_names:
+                logging.log(6, "Gene %s not in pre-processed data. Unless you are running with a reduced set of models, this is fishy.", g)
+                continue
             self.matrix_manager = GeneExpressionMatrixManager._GeneExpressionMatrixManager(d, self.model_manager)
             yield g
 

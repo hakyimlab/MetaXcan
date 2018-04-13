@@ -65,6 +65,7 @@ def joint_analysis(context, gene):
     g, g_n, pvalue, n, n_indep, p_i_best, t_i_best, p_i_worst, t_i_worst, eigen_max, eigen_min, eigen_min_kept, z_min, z_max, z_mean, z_sd, tmi, status \
         = None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, CalculationStatus.NO_DATA
     g = gene.split(".")[0] if context.get_trimmed_ensemble_id() else gene
+
     g_n = context.get_gene_name(g)
 
     ####################################################################################################################

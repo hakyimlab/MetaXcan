@@ -70,7 +70,7 @@ class ExpressionStreamedContext(ContextMixin, Context):
             yield g
 
     def get_n_genes(self):
-        return len(self.model_manager.get_genes())
+        return len(self.gene_names)
 
     def check(self):
         a = self.model_manager.get_model_labels()

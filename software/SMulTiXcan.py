@@ -26,7 +26,7 @@ def run(args):
     logging.info("Processing")
     reporter.update(0, "%d %% of model's genes processed so far")
     for i,gene in enumerate(context.get_genes()):
-        logging.log(7, "Gene: %s", gene)
+        logging.log(7, "Gene %d/%d: %s", i+1, n_genes, gene)
         result = JointAnalysis.joint_analysis(context, gene)
         results.append(result)
         reporter.update(i, "%d %% of model's genes processed so far")

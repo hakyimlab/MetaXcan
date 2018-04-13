@@ -45,6 +45,7 @@ if __name__ == "__main__":
 
     parser.add_argument("--cleared_snps", help="SNPS to analyze. If you don't provide this, you must provide GWAS and models.")
     parser.add_argument("--models_folder", help="Path to folder with prediction models")
+    parser.add_argument("--models_name_filter", help="Path to folder with prediction models", type=str, nargs='+')
     parser.add_argument("--models_name_pattern", help="regular expression to detect tissue name from file names")
 
     parser.add_argument("--gwas_folder", help="name of folder containing GWAS data. All files in the folder are assumed to belong to a single study.")

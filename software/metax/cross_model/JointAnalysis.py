@@ -97,12 +97,15 @@ def joint_analysis(context, gene):
 
     eigen_max, eigen_min = numpy.max(e), numpy.min(e)
 
+    # If no eigenvalue satisfies our cutoff criteria, at least the first component will be used
+    # Not there is a slight numerical mismatch between the resolution in eigh and the svd
     cutoff = context.get_cutoff(matrix)
+
     _d = {tissue_labels[i]:zscores[i] for i in xrange(0, len(tissue_labels))}
     zscores = array([_d[l] for l in labels])
     inv, n_indep, eigen = Math.capinv(matrix, cutoff, context.epsilon)
 
-    eigen_min_kept = numpy.min([x for x in eigen if x>cutoff])
+    eigen_min_kept = numpy.min([x for x in eigen if x>0])
 
     _absz = numpy.abs(zscores)
     _maxzi = numpy.argmax(_absz)

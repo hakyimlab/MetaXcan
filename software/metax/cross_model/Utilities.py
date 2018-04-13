@@ -121,11 +121,11 @@ def _cutoff(args):
             trace = numpy.sum(eigen)
             cumsum = numpy.cumsum(eigen)
             objective = trace*(1-self.cutoff_threshold)
-            last = None
+            last = eigen[0]
             for i in xrange(0, len(cumsum)):
-                last = eigen[i]
                 if cumsum[i] > objective:
                     break
+                last = eigen[i]
             return last
 
     cutoff = None
@@ -156,7 +156,7 @@ def context_from_args(args):
     context = None
 
     logging.info("Loading genes")
-    genes = PredictionModel.load_genes(args.models_folder)
+    genes = PredictionModel.load_genes(args.models_folder, args.models_name_filter)
 
     if args.model_product:
         logging.info("Context for model product")
@@ -182,7 +182,9 @@ def context_from_args(args):
             raise Exceptions.ReportableException("No intersection of snps between GWAS and models.")
 
 
-        model_manager = PredictionModel.load_model_manager(args.models_folder, trim_ensemble_version=args.trimmed_ensemble_id, Klass=PredictionModel._ModelManager, name_pattern=args.models_name_pattern)
+        model_manager = PredictionModel.load_model_manager(args.models_folder,
+            trim_ensemble_version=args.trimmed_ensemble_id, Klass=PredictionModel._ModelManager,
+            name_pattern=args.models_name_pattern, name_filter=args.models_name_filter)
 
         def _check_in(comps, intersection):
             return comps[1] not in intersection or comps[2] not in intersection
@@ -193,5 +195,8 @@ def context_from_args(args):
         metaxcan_manager = MetaXcanResultsManager.build_manager(args.metaxcan_folder, filters=args.metaxcan_filter, file_name_pattern=args.metaxcan_file_name_parse_pattern)
         context = ExpressionStreamedContext(metaxcan_manager, snp_covariance_streamer, model_manager, genes, cutoff, args.regularization, args.trimmed_ensemble_id)
         context.check()
+    else:
+        raise Exceptions.InvalidArguments("Need snp covariance")
+
     return context
 

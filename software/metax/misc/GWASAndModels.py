@@ -32,7 +32,7 @@ def align_data_to_alleles(data, base, left_on, right_on):
 
 def gwas_model_intersection(args):
     gwas= GWASUtilities.load_plain_gwas_from_args(args)
-    paths = PredictionModel._model_paths(args.models_folder)
+    paths = PredictionModel._model_paths(args.models_folder, args.models_name_filter)
     PF = PredictionModel.WDBQF
     intersection = set()
     for db_path in sorted(paths):

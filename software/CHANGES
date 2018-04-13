@@ -1,6 +1,8 @@
 Version 0.6.1:
     * Added logging in SPrediXcan to warn when the covariance matrix is close to singular
     * Bug fixing: Addressed case when SMultiXcan is used with a subset of the GTEx models
+    * Bug fixes: Addressed edge case when SMulTiXcan is used few models, when a numerical resolution error caused no eigen value to pass the threshold\
+    * Added a model name filter in SMulTiXcan to reduce load time.
 Version 0.6.0:
     * Initial release of MulTiXcan (multi-tissue predixcan) implementation
 Version 0.5.9:

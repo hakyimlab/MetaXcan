@@ -53,7 +53,7 @@ def _inv(a, cf, rcond, epsilon):
             s[i] = 1. / s[i]
         else:
             s[i] = 0.
-            eigen[i] = 0.
+
     n_indep = numpy.count_nonzero(s)
     res = dot(transpose(vt), multiply(s[:, newaxis], transpose(u)))
     return wrap(res), n_indep, eigen

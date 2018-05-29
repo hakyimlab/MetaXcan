@@ -35,7 +35,7 @@ def build_betas(args, model, gwas_format, name):
 
     snps = model.snps() if model else None
     b = GWAS.load_gwas(load_from, gwas_format, snps=snps, separator=args.separator,
-            skip_until_header=args.skip_until_header, handle_empty_columns=args.handle_empty_columns, input_pvalue_fix=args.input_pvalue_fix)
+            skip_until_header=args.skip_until_header, handle_empty_columns=args.handle_empty_columns, input_pvalue_fix=args.input_pvalue_fix, keep_non_rsid=args.keep_non_rsid)
 
     if model is not None:
         PF = PredictionModel.WDBQF
@@ -70,7 +70,7 @@ def run(args):
     gwas_format = GWASUtilities.gwas_format_from_args(args)
     GWAS.validate_format_basic(gwas_format)
     GWAS.validate_format_for_strict(gwas_format)
-    model = PredictionModel.load_model(args.model_db_path) if args.model_db_path else None
+    model = PredictionModel.load_model(args.model_db_path, args.model_db_snp_key) if args.model_db_path else None
 
     if args.output_folder:
         if not os.path.exists(args.output_folder):
@@ -96,6 +96,7 @@ def run(args):
             r = pandas.concat([r,b])
         end = timer()
         logging.info("Successfully parsed input gwas in %s seconds"%(str(end-start)))
+
         return r
 
 if __name__ == "__main__":
@@ -106,6 +107,8 @@ if __name__ == "__main__":
                         help="Name of model db in data folder. "
                              "If supplied, will filter input GWAS snps that are not present; this script will not produce output if any error is encountered."
                              "If not supplied, will convert the input GWAS as found, one line at a atime, until finishing or encountering an error.")
+
+    parser.add_argument("--model_db_snp_key", help="Specify a key to use as snp_id")
 
     parser.add_argument("--gwas_file", help="Load a single GWAS file. (Alternative to providing a gwas_folder and gwas_file_pattern)")
 

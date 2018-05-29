@@ -49,11 +49,12 @@ def snps_in_db(path):
     return s
 
 class ModelDB(object):
-    def __init__(self, file_name , create_if_absent=False):
+    def __init__(self, file_name, create_if_absent=False, snp_key=None):
         self.connection = None
         self.cursor = None
         self.file_name = file_name
         self.create_if_absent = create_if_absent
+        self.snp_key = snp_key
 
     def __del__(self):
         self.closeDB()
@@ -75,7 +76,8 @@ class ModelDB(object):
         self.openDBIfNecessary()
 
         params = []
-        query, params = query_helper("SELECT rsid, gene, weight, ref_allele, eff_allele FROM weights", gene_key)
+        _q = "SELECT {}, gene, weight, ref_allele, eff_allele FROM weights".format(self.snp_key if self.snp_key else "rsid")
+        query, params = query_helper(_q, gene_key)
 
         try:
             results = self.cursor.execute(query, params)
@@ -134,12 +136,23 @@ def dataframe_from_extra_data(e):
     extra = extra[[key for key, order in WDBEQF.ORDER]]
     return extra
 
-def load_model(path):
-    db = ModelDB(path)
+def load_model(path, snp_key=None):
+    db = ModelDB(path, snp_key=snp_key)
     weights, extra = db.load_weights(), db.load_extra()
+
+    #UGLY patch. UGLY. UGLY.
+    if snp_key:
+        s = weights[WDBQF.RSID]
+        if "_b38" in s[0] and not "chr" in s[0]:
+            logging.info("Patching variant names with -chr- prefix")
+            s = ["chr"+x for x in s]
+            weights[WDBQF.RSID] = s
+
     weights = dataframe_from_weight_data(weights)
     extra = dataframe_from_extra_data(extra)
+
     model = Model(weights, extra)
+
     return model
 
 def load_genes(folder, name_filter=None):

@@ -34,6 +34,7 @@ def add_gwas_arguments_to_parser(parser):
 
     parser.add_argument("--input_pvalue_fix", help="If input GWAS pvalues are too small to handle, replace with these significance level. Use -0- to disable this behaviour and discard problematic snps.", type=int, default=1e-50)
 
+    parser.add_argument("--keep_non_rsid", help="Keep non-rsid snps", action="store_true")
 
 def add_gwas_format_json_to_parser(parser):
     parser.add_argument("--input_gwas_format_json",

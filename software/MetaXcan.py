@@ -32,7 +32,7 @@ if __name__ == "__main__":
 
 #weight db model
     parser.add_argument("--model_db_path", help="name of model db in data folder")
-
+    parser.add_argument("--model_db_snp_key", help="Specify a key to use as snp_id")
 #GWAS betas
     parser.add_argument("--gwas_file", help="Load a single GWAS file. (Alternative to providing a gwas_folder and gwas_file_pattern)")
 
@@ -42,6 +42,7 @@ if __name__ == "__main__":
     GWASUtilities.add_gwas_arguments_to_parser(parser)
 
 # ZScore calculation
+    parser.add_argument("--single_snp_model", action="store_true", help="Models are comprised of a single snp per gene", default=False)
     parser.add_argument("--covariance", help="name of file containing covariance data")
     parser.add_argument("--output_file", help="name of output file")
     parser.add_argument("--remove_ens_version", help="If set, will drop the -version- postfix in gene id.", action="store_true", default=False)

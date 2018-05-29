@@ -212,10 +212,16 @@ def _gwas_wrapper(gwas):
 
 def build_context(args, gwas):
     logging.info("Loading model from: %s", args.model_db_path)
-    model = load_model(args.model_db_path)
+    model = load_model(args.model_db_path, args.model_db_snp_key)
 
-    logging.info("Loading covariance data from: %s", args.covariance)
-    covariance_manager = MatrixManager.load_matrix_manager(args.covariance)
+    if not args.single_snp_model:
+        logging.info("Loading covariance data from: %s", args.covariance)
+        covariance_manager = MatrixManager.load_matrix_manager(args.covariance)
+    else:
+        logging.info("Bypassing covariance for single-snp-models")
+        d = model.weights[[WDBQF.K_GENE, WDBQF.K_RSID]].rename(columns={WDBQF.K_RSID:"id1"})
+        d = d.assign(id2=d.id1, value=1)
+        covariance_manager = MatrixManager.MatrixManager(d, {MatrixManager.K_MODEL:WDBQF.K_GENE, MatrixManager.K_ID1:"id1", MatrixManager.K_ID2:"id2", MatrixManager.K_VALUE:"value"})
 
     gwas = _gwas_wrapper(gwas) if gwas is not None else _beta_loader(args)
     context = _build_context(model, covariance_manager, gwas)

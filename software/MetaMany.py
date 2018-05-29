@@ -118,6 +118,8 @@ older versions (or perhaps those created by the end user which don't follow the
 same organization. In these cases, users should pay careful attention to the
 arguments --covariance_directory and --covariance_suffix. """)
 
+    parser.add_argument("--model_db_snp_key", help="Specify a key to use as snp_id")
+
     parser.add_argument("-v", "--version", help="Report the version", action="store_true", default=False)
 #weight db model
     parser.add_argument('weight_dbs', metavar='DB', type=argparse.FileType('r'), nargs='+', help="weight dbs to be used")
@@ -131,6 +133,7 @@ arguments --covariance_directory and --covariance_suffix. """)
     GWASUtilities.add_gwas_arguments_to_parser(parser)
 
 # ZScore calculation
+    parser.add_argument("--single_snp_model", action="store_true", help="Models are comprised of a single snp per gene", default=False)
     parser.add_argument("--covariance_directory", help="directory where covariance files can be found (or SAME if covariance sits beside the .db file", default="SAME")
     parser.add_argument("--covariance_suffix", help="Suffix associated with the covariance files. covext-dbext (where ..dbext is the portion of the db file to be replaced by the coviarance extension. )", default=".txt.gz.._0.5.db")
     parser.add_argument("--output_directory", help="name of output file", default="results")

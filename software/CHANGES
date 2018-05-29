@@ -1,3 +1,5 @@
+Version 0.6.2:
+    * Experimental support for single-snp models and non-rsid snps in models
 Version 0.6.1:
     * Added logging in SPrediXcan to warn when the covariance matrix is close to singular
     * Bug fixing: Addressed case when SMultiXcan is used with a subset of the GTEx models

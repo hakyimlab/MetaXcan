@@ -85,6 +85,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='M04_zscores.py %s: Build ZScores from GWAS data.' % (__version__,))
 
     parser.add_argument("--model_db_path", help="name of weight db in data folder")
+    parser.add_argument("--model_db_snp_key", help="Specify a key to use as snp_id")
     parser.add_argument("--covariance", help="name of file containing covariance data")
     parser.add_argument("--beta_folder", help="name of folder containing GWAS effect data")
     parser.add_argument("--output_file", help="name of output file")
@@ -92,6 +93,7 @@ if __name__ == "__main__":
     parser.add_argument("--remove_ens_version", help="If set, will drop the -version- postfix in gene id.", action="store_true", default=False)
     parser.add_argument("--overwrite", help="If set, will overwrite the results file if it exists.", action="store_true", default=False)
     parser.add_argument("--additional_output", help="If set, will output additional information.")
+    parser.add_argument("--single_snp_model", action="store_true", help="Models are comprised of a single snp per gene", default=False)
     parser.add_argument("--throw", action="store_true", help="Throw exception on error", default=False)
 
     args = parser.parse_args()

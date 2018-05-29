@@ -81,7 +81,7 @@ def validate_format_for_strict(format):
 
 ########################################################################################################################
 # Load a gwas
-def load_gwas(source, gwas_format, strict=True, separator=None, skip_until_header=False, snps=None, force_special_handling=False, handle_empty_columns=False, input_pvalue_fix=None):
+def load_gwas(source, gwas_format, strict=True, separator=None, skip_until_header=False, snps=None, force_special_handling=False, handle_empty_columns=False, input_pvalue_fix=None, keep_non_rsid=False):
     """
     Attempts to read a GWAS summary statistics file, and load it into a uniform format,
     in a pandas dataframe.
@@ -110,7 +110,8 @@ def load_gwas(source, gwas_format, strict=True, separator=None, skip_until_heade
     #keep only rsids
     if d.shape[0] > 0:
         d = d[~ d[SNP].isnull()]
-        d = d[d[SNP].str.contains("rs")]
+        if not keep_non_rsid:
+            d = d[d[SNP].str.contains("rs")]
 
     if strict:
         d = _enforce_numeric_columns(d)

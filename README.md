@@ -69,7 +69,7 @@ GWAS results can belong to a single file or be split into multiple ones (i.e. sp
 You can specify the necessary columns via command line arguments (i.e. which column holds snps, which holds p-values, etc)
 
 You can use precalculated databases, or generate new ones with tools available in [PredictDB repository](https://github.com/hakyimlab/PredictDBPipeline).
-GTEx-based tissues and 1000 Genomes covariances precalculated data can be found [here](http://predictdb.hakyimlab.org).
+GTEx-based tissues and 1000 Genomes covariances precalculated data can be found [here](http://predictdb.org).
 <!-- old box https://app.box.com/s/gujt4m6njqjfqqc9tu0oqgtjvtz9860w  -->
 (Please refer to **/software/Readme.md** for more detailed information)
 
@@ -211,7 +211,7 @@ You can check [here](https://github.com/hakyimlab/MetaXcan/wiki) for the release
 Transcriptome Models are a key component of PrediXcan and S-PrediXcan input. As models are improved,
 sometimes the format of these databases needs be changed too. We only provide support for the very latest databases;
 if a user updates their repository clone to the latest version and MetaXcan complains about the transcriptome weight dbs,
-please check if new databases [have been published here](http://predictdb.hakyimlab.org).
+please check if new databases [have been published here](http://predictdb.org).
 
 For the time being, the only way to use old transcriptome models is to use older versions of MetaXcan.
 

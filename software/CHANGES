@@ -1,3 +1,5 @@
+Version 0.6.3:
+    * Reworked additional stats
 Version 0.6.2:
     * Experimental support for single-snp models and non-rsid snps in models
 Version 0.6.1:

@@ -25,38 +25,29 @@ def run_metaxcan(args, context):
     i_genes, i_snps = context.get_data_intersection()
 
     results = []
-    for gene in i_genes:
+    additional = []
+    for i,gene in enumerate(i_genes):
         logging.log(7, "Processing gene %s", gene)
         r, snps = AssociationCalculation.association(gene, context, return_snps=True)
         results.append(r)
         snps_found.update(snps)
         reporter.update(len(snps_found), "%d %% of model's snps found so far in the gwas study")
+        if args.additional_output:
+            stats_ = AssociationCalculation.additional_stats(gene, context)
+            additional.append(stats_)
 
     reporter.update(len(snps_found), "%d %% of model's snps used", force=True)
 
     results = AssociationCalculation.dataframe_from_results(results)
     results = MetaxcanUtilities.format_output(results, context, args.remove_ens_version)
 
+    if args.additional_output:
+        additional = AssociationCalculation.dataframe_from_aditional_stats(additional)
+        results = MetaxcanUtilities.merge_additional_output(results, additional, context, args.remove_ens_version)
+
     if args.output_file:
         Utilities.ensure_requisite_folders(args.output_file)
         results.to_csv(args.output_file, index=False)
-
-    return results
-
-def run_additional(args, context):
-    logging.info("Started metaxcan additional stats")
-    i_genes, i_snps = context.get_data_intersection()
-    results = []
-    for gene in i_genes:
-        stats_ = AssociationCalculation.additional_stats(gene, context)
-        results.append(stats_)
-
-    results = AssociationCalculation.dataframe_from_aditional_stats(results)
-    results = MetaxcanUtilities.format_additional_output(results, context, args.remove_ens_version)
-
-    if args.additional_output:
-        Utilities.ensure_requisite_folders(args.additional_output)
-        results.to_csv(args.additional_output, index=False)
 
     return results
 
@@ -73,12 +64,11 @@ def run(args, _gwas=None):
 
     context = MetaxcanUtilities.build_context(args, _gwas)
 
-    results = run_metaxcan(args, context) if (args.output_file or not args.additional_output) else None
-    additional = run_additional(args, context) if args.additional_output else None
+    results = run_metaxcan(args, context)
 
     end = timer()
     logging.info("Sucessfully processed metaxcan association in %s seconds"%(str(end - start)))
-    return results, additional
+    return results
 
 if __name__ == "__main__":
     import argparse
@@ -92,7 +82,7 @@ if __name__ == "__main__":
     parser.add_argument("--verbosity", help="Log verbosity level. 1 is everything being logged. 10 is only high level messages, above 10 will hardly log anything", default = "10")
     parser.add_argument("--remove_ens_version", help="If set, will drop the -version- postfix in gene id.", action="store_true", default=False)
     parser.add_argument("--overwrite", help="If set, will overwrite the results file if it exists.", action="store_true", default=False)
-    parser.add_argument("--additional_output", help="If set, will output additional information.")
+    parser.add_argument("--additional_output", help="If set, will output additional information.", action="store_true", default=False)
     parser.add_argument("--single_snp_model", action="store_true", help="Models are comprised of a single snp per gene", default=False)
     parser.add_argument("--throw", action="store_true", help="Throw exception on error", default=False)
 

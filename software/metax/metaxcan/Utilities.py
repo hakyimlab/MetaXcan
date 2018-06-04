@@ -9,7 +9,7 @@ from .. import Utilities
 from .. import MatrixManager
 from ..PredictionModel import WDBQF, WDBEQF, load_model, dataframe_from_weight_data
 
-import AssociationCalculation
+from . import AssociationCalculation
 
 class SimpleContext(AssociationCalculation.Context):
     def __init__(self, gwas, model, covariance):
@@ -248,20 +248,7 @@ def _to_int(d):
         pass
     return r
 
-def format_output(results, context, remove_ens_version):
-    results = results.drop("n_snps_in_model",1)
-
-    # Dodge the use of cdf on non finite values
-    i = numpy.isfinite(results.zscore)
-    results[Constants.PVALUE] = numpy.nan
-    results.loc[i, Constants.PVALUE] = 2 * stats.norm.sf(numpy.abs(results.loc[i, Constants.ZSCORE].values))
-
-    model_info = pandas.DataFrame(context.get_model_info())
-
-    merged = pandas.merge(results, model_info, how="inner", on="gene")
-    if remove_ens_version:
-        merged.gene = merged.gene.str.split(".").str.get(0)
-
+def _results_column_order(with_additional=False):
     K = Constants
     AK = AssociationCalculation.ARF
     column_order = [WDBQF.K_GENE,
@@ -276,7 +263,28 @@ def format_output(results, context, remove_ens_version):
                     AK.K_N_SNPS_USED,
                     AK.K_N_SNPS_IN_COV,
                     WDBEQF.K_N_SNP_IN_MODEL]
+    if with_additional:
+        ADD = AssociationCalculation.ASF
+        column_order.extend([ADD.K_BEST_GWAS_P, ADD.K_LARGEST_WEIGHT])
 
+    return column_order
+
+def format_output(results, context, remove_ens_version):
+    results = results.drop("n_snps_in_model",1)
+
+    # Dodge the use of cdf on non finite values
+    i = numpy.isfinite(results.zscore)
+    results[Constants.PVALUE] = numpy.nan
+    results.loc[i, Constants.PVALUE] = 2 * stats.norm.sf(numpy.abs(results.loc[i, Constants.ZSCORE].values))
+
+    model_info = pandas.DataFrame(context.get_model_info())
+
+    merged = pandas.merge(results, model_info, how="inner", on="gene")
+    if remove_ens_version:
+        merged.gene = merged.gene.str.split(".").str.get(0)
+
+
+    column_order = _results_column_order()
     merged = merged[column_order]
     merged = merged.fillna("NA")
     # since we allow NA in covs, we massage it a little bit into resemblying an int instead of a float
@@ -286,12 +294,11 @@ def format_output(results, context, remove_ens_version):
 
     return merged
 
-def format_additional_output(results, context, remove_ens_version):
-    model_info = pandas.DataFrame(context.get_model_info())[["gene", "gene_name"]]
-
-    merged = pandas.merge(results, model_info, how="inner", on="gene")
+def merge_additional_output(results, stats, context, remove_ens_version):
+    merged = pandas.merge(results, stats, how="inner", on="gene")
     if remove_ens_version:
         merged.gene = merged.gene.str.split(".").str.get(0)
 
-    merged = merged[["gene", "gene_name", "best_gwas_p", "largest_weight"]]
+    column_order = _results_column_order(with_additional=True)
+    merged = merged[column_order]
     return merged

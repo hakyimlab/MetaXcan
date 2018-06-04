@@ -45,6 +45,7 @@ class DummyArgs(object):
         self.input_pvalue_fix = 1e-30
         self.gwas_file = None
         self.model_db_snp_key = None
+        self.keep_non_rsid = None
 
 def base_args(folder="tests/_td/GWAS/scz2", file=None):
     args = DummyArgs()

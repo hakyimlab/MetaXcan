@@ -42,7 +42,10 @@ def _parse_name(name, file_name_pattern):
 
     r = re.compile(file_name_pattern)
     g = r.match(name).groups()
-    pheno, model = g[0], g[1]
+    if len(g) > 1:
+        pheno, model = g[0], g[1]
+    else:
+        pheno, model = "", g[0]
     return pheno, model
 
 def _load_results(files, file_name_pattern):

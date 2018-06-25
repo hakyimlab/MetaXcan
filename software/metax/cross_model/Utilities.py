@@ -155,6 +155,9 @@ def load_variance(path, trim_ensemble_version=True):
 def context_from_args(args):
     context = None
 
+    logging.info("Creating MetaXcan results manager")
+    metaxcan_manager = MetaXcanResultsManager.build_manager(args.metaxcan_folder, filters=args.metaxcan_filter, file_name_pattern=args.metaxcan_file_name_parse_pattern)
+
     logging.info("Loading genes")
     genes = PredictionModel.load_genes(args.models_folder, args.models_name_filter)
 
@@ -167,11 +170,12 @@ def context_from_args(args):
             MatrixManager.K_VALUE:"value"
         }
         matrix_manager = MatrixManager.load_matrix_manager(args.model_product, definition=definition, permissive=args.permissive_model_product)
-        metaxcan_manager = MetaXcanResultsManager.build_manager(args.metaxcan_folder, filters=args.metaxcan_filter)
         cutoff = _cutoff(args)
         context = SimpleContext(metaxcan_manager, matrix_manager, genes, cutoff, args.regularization)
     elif args.snp_covariance:
         logging.info("Context for snp covariance")
+
+        logging.info("Assessing GWAS-Models SNP intersection")
         if args.cleared_snps:
             intersection = KeyedDataSource.load_data_column(args.cleared_snps, "rsid")
             intersection = set(intersection)
@@ -181,7 +185,7 @@ def context_from_args(args):
         if len(intersection) == 0:
             raise Exceptions.ReportableException("No intersection of snps between GWAS and models.")
 
-
+        logging.info("Loading Model Manager")
         model_manager = PredictionModel.load_model_manager(args.models_folder,
             trim_ensemble_version=args.trimmed_ensemble_id, Klass=PredictionModel._ModelManager,
             name_pattern=args.models_name_pattern, name_filter=args.models_name_filter)
@@ -189,10 +193,11 @@ def context_from_args(args):
         def _check_in(comps, intersection):
             return comps[1] not in intersection or comps[2] not in intersection
 
+        logging.info("Preparing SNP covariance")
         snp_covariance_streamer = DataFrameStreamer.data_frame_streamer(args.snp_covariance, "GENE", additional_skip_row_check= lambda x: _check_in(x, intersection))
 
         cutoff = _cutoff(args)
-        metaxcan_manager = MetaXcanResultsManager.build_manager(args.metaxcan_folder, filters=args.metaxcan_filter, file_name_pattern=args.metaxcan_file_name_parse_pattern)
+
         context = ExpressionStreamedContext(metaxcan_manager, snp_covariance_streamer, model_manager, genes, cutoff, args.regularization, args.trimmed_ensemble_id)
         context.check()
     else:

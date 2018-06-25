@@ -1,3 +1,5 @@
+Version 0.6.4:
+    * Minor refactoring. Added support for more primitive naming conventions in S-MulTiXcan
 Version 0.6.3:
     * Reworked additional stats
 Version 0.6.2:

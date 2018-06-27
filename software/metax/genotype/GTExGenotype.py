@@ -18,7 +18,7 @@ def gtex_geno_header(gtex_file):
         header = file.readline().strip().split()
     return header
 
-def gtex_geno_lines(gtex_file, gtex_snp_file, snps=None, gtex_release_version=None):
+def gtex_geno_lines(gtex_file, gtex_snp_file, snps=None, gtex_release_version=None, impute_to_mean=False):
     logging.log(9, "Loading GTEx snp file")
     #TODO: change to something more flexible to support V7 naming
 
@@ -29,7 +29,7 @@ def gtex_geno_lines(gtex_file, gtex_snp_file, snps=None, gtex_release_version=No
     elif gtex_release_version.lower() == "v8":
         gtex_snp = KeyedDataSource.load_data(gtex_snp_file, "variant_id", "rs_id_dbSNP150_GRCh38p7", numeric=False)
     else:
-        raise Exceptions.InvalidArguments("Unsupported GTEx relkease version")
+        raise Exceptions.InvalidArguments("Unsupported GTEx release version")
 
     logging.log(9, "Processing GTEx geno")
     with gzip.open(gtex_file) as file:
@@ -46,12 +46,18 @@ def gtex_geno_lines(gtex_file, gtex_snp_file, snps=None, gtex_release_version=No
                 continue
 
             data = parse_gtex_variant(variant)
-            dosage = numpy.array(comps[1:], dtype=numpy.float64)
-            frequency = numpy.mean(dosage)/2
+            if impute_to_mean:
+                _d = numpy.array([x for x in comps[1:] if x != "NA"], dtype=numpy.float64)
+                _m = numpy.mean(_d)
+                dosage = numpy.array([x if x != "NA" else _m for x in comps[1:]], dtype=numpy.float64)
+                frequency = _m/2
+            else:
+                dosage = numpy.array(comps[1:], dtype=numpy.float64)
+                frequency = numpy.mean(dosage)/2
 
             yield [rsid] + data + [frequency] + list(dosage)
 
-def gtex_geno_by_chromosome(gtex_file, gtex_snp_file, snps=None, gtex_release_version=None):
+def gtex_geno_by_chromosome(gtex_file, gtex_snp_file, snps=None, gtex_release_version=None, impute_to_mean=False):
     buffer = []
     last_chr = None
 
@@ -82,7 +88,7 @@ def gtex_geno_by_chromosome(gtex_file, gtex_snp_file, snps=None, gtex_release_ve
         return chromosome, metadata, dosage_data
 
     logging.log(8, "Starting to process lines")
-    for line in gtex_geno_lines(gtex_file, gtex_snp_file, snps, gtex_release_version):
+    for line in gtex_geno_lines(gtex_file, gtex_snp_file, snps, gtex_release_version, impute_to_mean):
 
         chromosome = line[GF.CHROMOSOME]
         if last_chr is None: last_chr = chromosome

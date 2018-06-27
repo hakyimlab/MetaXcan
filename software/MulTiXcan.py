@@ -39,7 +39,7 @@ def run(args):
         results = results.fillna("NA")
         results = results.sort_values(by="pvalue")
 
-        Utilities.save_csv(results, args.output)
+        Utilities.save_dataframe(results, args.output)
 
     end = timer()
     logging.info("Ran multi tissue predixcan in %s seconds" % (str(end - start)))

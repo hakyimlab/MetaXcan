@@ -138,14 +138,24 @@ def _pca_data(e_, model_keys, pc_filter):
     u, s, vt = numpy.linalg.svd(k)
     # we want to keep only those components with significant variance, to reduce dimensionality
     selected = pc_filter(s)
-    Xc_t_ = _dot(vt[selected], Xc_t)
-    _data = {"pc{}".format(i):x for i,x in enumerate(Xc_t_)}
-    pca_keys = _data.keys()
+
+    vt_projection = vt[selected]
+    Xc_t_ = _dot(vt_projection, Xc_t)
+    pca_keys = ["pc{}".format(i) for i in xrange(0, len(selected))]
+    _data = {pca_keys[i]:x for i,x in enumerate(Xc_t_)}
     _data["pheno"] = e_.pheno
     pca_data = pandas.DataFrame(_data)
-    return pca_data, pca_keys, numpy.max(s), numpy.min(s), numpy.min(s[selected])
+    return pca_data, pca_keys, numpy.max(s), numpy.min(s), numpy.min(s[selected]), vt_projection
 
-def multi_predixcan_association(gene_, context):
+def _coefs(result, vt_projection, model_keys):
+    coefs = result.params[1:].to_frame().reset_index().rename(columns={"index": "variable", 0: "param"})
+    if vt_projection is not None:
+        v = numpy.dot(coefs.param.values,vt_projection)
+        k = model_keys
+        coefs = pandas.DataFrame({"variable": k, "param": v})
+    return coefs
+
+def multi_predixcan_association(gene_, context, callback=None):
     gene, pvalue, n_models, n_samples, p_i_best, m_i_best, p_i_worst,  m_i_worst, status, n_used, max_eigen, min_eigen, min_eigen_kept = None, None, None, None, None, None, None, None, None, None, None, None, None
     gene = gene_
 
@@ -155,7 +165,11 @@ def multi_predixcan_association(gene_, context):
     pc_filter = context.get_pc_filter()
     try:
         if pc_filter is not None:
-            e_, model_keys, max_eigen, min_eigen, min_eigen_kept = _pca_data(e_, model_keys, pc_filter)
+            original_models = model_keys
+            e_, model_keys, max_eigen, min_eigen, min_eigen_kept, vt_projection = _pca_data(e_, model_keys, pc_filter)
+        else:
+            original_models = model_keys
+            vt_projection = None
         n_used = len(model_keys)
         y, X = _design_matrices(e_, model_keys, context)
         specifics =  _mode[context.get_mode()]
@@ -172,6 +186,8 @@ def multi_predixcan_association(gene_, context):
 
         pvalue = specifics[K_PVALUE](result)
         status = specifics[K_STATUS](result)
+        if callback:
+            callback(model, result, vt_projection, original_models)
     except Exception as ex:
         status = ex.message.replace(" ", "_").replace(",", "_")
 
@@ -182,7 +198,7 @@ def dataframe_from_results(results, context):
     if len(results) == 0:
         return pandas.DataFrame({key:[] for order,key in MTPF.order})
 
-    ORDER = MTPF.order if context.get_pc_filter() is not None else MTPF.order[0:MTPF.N_USED]
+    ORDER = MTPF.order if (context is not None and context.get_pc_filter() is not None) else MTPF.order[0:MTPF.N_USED]
     r = pandas.DataFrame({key: results[order] for order, key in ORDER})
     r = r[[key for order,key in ORDER]]
     return r

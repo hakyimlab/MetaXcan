@@ -52,6 +52,8 @@ if __name__ == "__main__":
     parser.add_argument("--hdf5_expression_folder", help="Folder with predicted gene expressions. (HDF5 format)")
     parser.add_argument("--expression_folder", help="Folder with predicted gene expressions. (plain text file format)")
     parser.add_argument("--memory_efficient", help="If using plain text expression files, be memory efficient about it. Will be slower.", action="store_true", default=False)
+    parser.add_argument("--standardize_expression", help="Standardise input predicted expressions.", action="store_true", default=False)
+    parser.add_argument("--code_999", help="values of -999 in expression are to be ignored", action="store_true", default=False)
     parser.add_argument("--expression_pattern", help="Patterns to select expression files", default=None)
     parser.add_argument("--input_phenos_file", help="Text file (or gzip-compressed) where one column will be used as phenotype")
     parser.add_argument('--covariates', type=str, nargs='+',help='Names of covariates in the file', default=[])

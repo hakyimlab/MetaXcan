@@ -97,8 +97,6 @@ class ProcessPrerequisites(object):
                 filter.buildPrediXcan()
             else:
                 raise Exceptions.InvalidOutputFormat(self.output_format)
-            #TODO: remove once it runs properly
-            #break
 
     def processPrediXcanFiles(self):
         logging.info("Loading people")
@@ -122,9 +120,6 @@ class ProcessPrerequisites(object):
                 fileBuilder.buildPrediXcan()
             else:
                 raise Exceptions.InvalidOutputFormat(self.output_format)
-
-            #TODO: remove once it runs properly
-            #break
 
 if __name__ == "__main__":
     import argparse

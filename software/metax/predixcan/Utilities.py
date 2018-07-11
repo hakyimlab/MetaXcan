@@ -130,6 +130,19 @@ class PContext(_PContext):
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.expression.exit()
 
+class DumbPContext(_PContext):
+    def __init__(self, expression, pheno, gene, pc_filter):
+        self.expression = expression
+        self.pheno = pheno
+        self.gene = gene
+        self.pc_filter = pc_filter
+
+    def get_genes(self): return [self.gene]
+    def expression_for_gene(self, gene): return self.expression
+    def get_pheno(self): return self.pheno
+    def get_mode(self): return MTPMode.K_LINEAR
+    def get_covariates(self): return None
+
 def _check_args_file(args):
     if not args.mode in PMode.K_MODES:
         raise Exceptions.InvalidArguments("Invalid mode")

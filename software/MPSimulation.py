@@ -18,8 +18,9 @@ def run(args):
     start = timer()
 
     folder, prefix = os.path.split(args.output_prefix)
-    results_name = args.output_prefix + "_results.txt"
-    additional_name = args.output_prefix + "_additional.txt"
+    results_name = args.output_prefix + "__mt_results.txt"
+    predixcan_results_name = args.output_prefix + "__p_results.txt"
+    additional_name = args.output_prefix + "__additional.txt"
 
     if os.path.exists(results_name):
         logging.info("%s already exists, you have to move it or delete it if you want it done again", results_name)
@@ -30,19 +31,23 @@ def run(args):
 
     results = []
     additional = []
-    _c, _e = None, None
+    predixcan_results = []
+
     logging.info("Acquiring context")
     with MultiPredixcanSimulations.context_from_args(args) as context:
         logging.info("processing")
-        _c, _e = context.get_mp_simulation(None)
+        _c, _cp, _e = context.get_mp_simulation(None)
         for i, gene in enumerate(context.get_genes()):
             logging.log(9, "Gene %s", gene)
-            r, add = MultiPredixcanSimulations.simulate(gene, context)
+            r, add, p = MultiPredixcanSimulations.simulate(gene, context)
             if r is None:
                 logging.log(9, "%s could not be simulated", gene)
                 continue
             results.append(r)
             additional.append(add)
+
+            if p is not None:
+                predixcan_results.append(p)
 
     results = MultiPrediXcanAssociation.dataframe_from_results(results, _c).sort_values(by="pvalue")
     additional = pandas.concat(additional)
@@ -50,6 +55,10 @@ def run(args):
     Utilities.ensure_requisite_folders(results_name)
     Utilities.save_dataframe(results, results_name)
     Utilities.save_dataframe(additional, additional_name)
+
+    if len(predixcan_results):
+        predixcan_results = pandas.concat(predixcan_results)
+        Utilities.save_dataframe(predixcan_results, predixcan_results_name)
     logging.info("Finished")
 
 if __name__ == "__main__":
@@ -69,6 +78,7 @@ if __name__ == "__main__":
     parser.add_argument("--pc_eigen_ratio", help="Principal components filter, cutoff at proportion to max eigenvalue", type=float)
     parser.add_argument("--standardize_expression", help="Standardise input predicted expressions.", action="store_true", default=False)
     parser.add_argument("--simulation_parameters", help="Depends on particular scheme", action="append", nargs=2)
+    parser.add_argument("--do_predixcan", help="Also compute predixcan association", action="store_true", default=False)
 
     args = parser.parse_args()
 

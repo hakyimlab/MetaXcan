@@ -4,7 +4,7 @@ import numpy
 import pandas
 
 from . import Utilities
-from . import MultiPrediXcanAssociation
+from . import MultiPrediXcanAssociation, PrediXcanAssociation
 from ..expression import HDF5Expression, Expression
 
 ########################################################################################################################
@@ -13,10 +13,14 @@ def mp_callback(model, result, vt_projection, model_keys, save):
     save["coefs"] = coefs
 
 class Context(object):
-    def __init__(self, expression_manager, phenotype_generator, filter):
+    def __init__(self, expression_manager, phenotype_generator, filter, do_predixcan=False):
         self.expression_manager = expression_manager
         self.phenotype_generator = phenotype_generator
         self.filter = filter
+        self.do_predixcan = do_predixcan
+
+    def do_predixcan(self):
+        return self.do_predixcan
 
     def get_genes(self):
         return self.expression_manager.get_genes()
@@ -30,13 +34,21 @@ class Context(object):
 
     def get_mp_simulation(self, gene):
         if not gene:
-            return Utilities.DumbMTPContext(None, None, None, self.filter), None
+            return Utilities.DumbMTPContext(None, None, None, self.filter), None, None
 
         expression = self.expression_manager.expression_for_gene(gene)
         phenotype, description = self.phenotype_generator.get(expression, gene)
         if phenotype is None:
-            return None, None
-        return Utilities.DumbMTPContext(expression, phenotype, gene, self.filter), description
+            return None, None, None
+
+        _cp = None
+        if self.do_predixcan:
+            _cp = {}
+            for t in description.itertuples():
+                if "covariate" in t.variable: continue
+                _cp[t.variable] = Utilities.DumbPContext(expression[t.variable], phenotype, gene, self.filter)
+
+        return Utilities.DumbMTPContext(expression, phenotype, gene, self.filter), _cp, description
 
 ########################################################################################################################
 
@@ -166,7 +178,7 @@ def context_from_args(args):
     else:
         raise RuntimeError("Wrong phenotype simulation spec")
     filter = Utilities._filter_from_args(args)
-    context = Context(expression, phenotype, filter)
+    context = Context(expression, phenotype, filter, args.do_predixcan)
     return context
 
 
@@ -175,11 +187,24 @@ def context_from_args(args):
 def simulate(gene, context):
     save_results = {}
     _cb = lambda model, result, vt_projection, model_keys: mp_callback(model, result, vt_projection, model_keys, save_results)
-    _context, _description = context.get_mp_simulation(gene)
-    if _context is None:
-        return None, None
-    r = MultiPrediXcanAssociation.multi_predixcan_association(gene, _context, _cb)
+
+    _context_mt, _context_p, _description = context.get_mp_simulation(gene)
+    if _context_mt is None:
+        return None, None, None
+
+    p = None
+    if _context_p:
+        p = pandas.DataFrame()
+        for model,_c in _context_p.iteritems():
+            p_ = PrediXcanAssociation.predixcan_association(gene, _c)
+            p_ = PrediXcanAssociation.dataframe_from_results([p_])
+            p_["model"] = model
+            p = pandas.concat([p,p_])
+
+
+    r = MultiPrediXcanAssociation.multi_predixcan_association(gene, _context_mt, _cb)
     description = _description.assign(gene=gene, type="truth")
     coefs = save_results["coefs"].assign(gene=gene, type="result")
     description = pandas.concat([description, coefs])
-    return r, description
+
+    return r, description, p

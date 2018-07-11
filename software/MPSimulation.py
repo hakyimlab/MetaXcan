@@ -30,7 +30,11 @@ def run(args):
 
     results = []
     additional = []
+    _c, _e = None, None
+    logging.info("Acquiring context")
     with MultiPredixcanSimulations.context_from_args(args) as context:
+        logging.info("processing")
+        _c, _e = context.get_mp_simulation(None)
         for i, gene in enumerate(context.get_genes()):
             logging.log(9, "Gene %s", gene)
             r, add = MultiPredixcanSimulations.simulate(gene, context)
@@ -40,7 +44,7 @@ def run(args):
             results.append(r)
             additional.append(add)
 
-    results = MultiPrediXcanAssociation.dataframe_from_results(results)
+    results = MultiPrediXcanAssociation.dataframe_from_results(results, _c).sort_values(by="pvalue")
     additional = pandas.concat(additional)
 
     Utilities.ensure_requisite_folders(results_name)
@@ -52,7 +56,6 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description='MPSimulation.py')
 
-    parser.add_argument("--hdf5_expression_folder", help="Folder with predicted gene expressions. (HDF5 format)")
     parser.add_argument("--expression_folder", help="Folder with predicted gene expressions. (plain text file format)")
     parser.add_argument("--expression_pattern", help="Patterns to select expression files", default=None)
     parser.add_argument("--input_phenos_file", help="Text file (or gzip-compressed) where one column will be used as phenotype")
@@ -65,6 +68,7 @@ if __name__ == "__main__":
     parser.add_argument("--pc_condition_number", help="Principal components condition number", type=int)
     parser.add_argument("--pc_eigen_ratio", help="Principal components filter, cutoff at proportion to max eigenvalue", type=float)
     parser.add_argument("--standardize_expression", help="Standardise input predicted expressions.", action="store_true", default=False)
+    parser.add_argument("--simulation_parameters", help="Depends on particular scheme", action="append", nargs=2)
 
     args = parser.parse_args()
 

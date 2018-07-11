@@ -5,9 +5,9 @@ import pandas
 
 from . import Utilities
 from . import MultiPrediXcanAssociation
-from ..misc import Math
-from ..expression import HDF5Expression
+from ..expression import HDF5Expression, Expression
 
+########################################################################################################################
 def mp_callback(model, result, vt_projection, model_keys, save):
     coefs = MultiPrediXcanAssociation._coefs(result, vt_projection, model_keys)
     save["coefs"] = coefs
@@ -19,7 +19,7 @@ class Context(object):
         self.filter = filter
 
     def get_genes(self):
-        return self.expression_manager.get_genes()[0:10]
+        return self.expression_manager.get_genes()
 
     def __enter__(self):
         self.expression_manager.enter()
@@ -29,11 +29,16 @@ class Context(object):
         self.expression_manager.exit()
 
     def get_mp_simulation(self, gene):
+        if not gene:
+            return Utilities.DumbMTPContext(None, None, None, self.filter), None
+
         expression = self.expression_manager.expression_for_gene(gene)
         phenotype, description = self.phenotype_generator.get(expression, gene)
         if phenotype is None:
             return None, None
         return Utilities.DumbMTPContext(expression, phenotype, gene, self.filter), description
+
+########################################################################################################################
 
 class PhenotypeGenerator(object):
     def __init__(self): raise RuntimeError("Not implemented")
@@ -50,13 +55,46 @@ class RandomPhenotypeGenerator(PhenotypeGenerator):
         description = pandas.DataFrame({ "variable":["covariate"], "param": [1.0]})
         return pheno, description
 
-
 class LinearCombinationPhenotypeGenerator(PhenotypeGenerator):
     def __init__(self, combination):
         self.combination = combination
 
     def get(self, expression, gene):
         return _pheno_from_combination(expression, self.combination)
+
+class CombinationOfCorrelatedPhenotypeGenerator(PhenotypeGenerator):
+    def __init__(self, covariate_coefficient=None, threshold=None):
+        self.covariate_coefficient = float(covariate_coefficient) if covariate_coefficient is not None else 1
+        self.threshold = float(threshold) if threshold is not None else 0.9
+
+    def get(self, expression, gene):
+        # Get the tissue with the most correlated siblings;
+        # then average them build a phenotype
+        values = list(expression.values())
+        if len(values) == 1:
+            return None, None
+        e = values
+        c = numpy.corrcoef(e)
+        d = len(expression)
+        f = 0
+        r = 0
+        for i in xrange(0, d):
+            f_ = numpy.sum(c[i] > self.threshold)
+            if f_ > f:
+                r = i
+                f = f_
+
+        if f<2:
+            return None, None
+
+        which = c[r] > self.threshold
+        keys = list(expression.keys())
+        combination = {keys[i]:1.0/f for i in xrange(0, d) if which[i]}
+        #for i in xrange(0,d):
+        #    combination["covariate_{}".format(i)] = 10.0/f
+        combination["covariate"] = self.covariate_coefficient
+
+        return  _pheno_from_combination(expression, combination)
 
 def _pheno_from_combination(expression, combination):
     ok = True
@@ -70,7 +108,7 @@ def _pheno_from_combination(expression, combination):
             e +=  expression[k] * v
             used.add(k)
         elif "covariate" in k:
-            e += numpy.random.normal(size=n) * v
+            e += numpy.random.normal(scale=1, size=n) * v
             used.add(k)
         else:
             # If we couldn't build a model with the desired combination, abort
@@ -85,13 +123,46 @@ def _pheno_from_combination(expression, combination):
     description = pandas.DataFrame({"variable": list(_c.keys()), "param": list(_c.values())})
     return pheno, description
 
+########################################################################################################################
+
+class SExpressionManager(Expression.ExpressionManager):
+    def __init__(self, em):
+        self.em = em
+        self.which = None
+
+    def expression_for_gene(self, gene):
+        e = self.em.expression_for_gene(gene)
+
+        if self.which is None:
+            n = len(e[list(e.keys())[0]])
+            s = 10000
+            #self.which = numpy.random.choice([True, False], size=n, p=[s*1.0/n, 1 - s*1.0/n])
+            self.which = list(numpy.random.choice(xrange(0,n), size=s, replace=False))
+
+        e = {k:v[self.which] for k,v in e.iteritems()}
+        return e
+
+    def get_genes(self): return self.em.get_genes()
+    def enter(self): return self.em.enter()
+    def exit(self): self.em.exit()
+
+
 def context_from_args(args):
-    expression = HDF5Expression.ExpressionManager(args.hdf5_expression_folder, args.expression_pattern, code_999=args.code_999, standardise= args.standardize_expression)
+    #expression_ = HDF5Expression.ExpressionManager(args.hdf5_expression_folder, args.expression_pattern, code_999=args.code_999, standardise= args.standardize_expression)
+    #expression = SExpressionManager(expression_)
+    expression = HDF5Expression.ExpressionManager(args.expression_folder, args.expression_pattern,
+                                                   code_999=args.code_999, standardise=args.standardize_expression)
+
+    p = {x[0]: x[1] for x in args.simulation_parameters}
+    covariate_coefficient = p.get("covariate_coefficient")
     if args.simulation_type == "random":
         phenotype = RandomPhenotypeGenerator()
     elif args.simulation_type == "combination":
         _c = {"Adipose_Subcutaneous":1.0, "Brain_Cerebellum":1.0, "covariate":1.0}
         phenotype = LinearCombinationPhenotypeGenerator(_c)
+    elif args.simulation_type == "combination_from_correlated":
+        threshold = p.get("threshold")
+        phenotype = CombinationOfCorrelatedPhenotypeGenerator(covariate_coefficient=covariate_coefficient, threshold=threshold)
     else:
         raise RuntimeError("Wrong phenotype simulation spec")
     filter = Utilities._filter_from_args(args)
@@ -99,13 +170,14 @@ def context_from_args(args):
     return context
 
 
+########################################################################################################################
+
 def simulate(gene, context):
     save_results = {}
     _cb = lambda model, result, vt_projection, model_keys: mp_callback(model, result, vt_projection, model_keys, save_results)
     _context, _description = context.get_mp_simulation(gene)
     if _context is None:
         return None, None
-
     r = MultiPrediXcanAssociation.multi_predixcan_association(gene, _context, _cb)
     description = _description.assign(gene=gene, type="truth")
     coefs = save_results["coefs"].assign(gene=gene, type="result")

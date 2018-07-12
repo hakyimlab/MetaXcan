@@ -68,16 +68,18 @@ class RandomPhenotypeGenerator(PhenotypeGenerator):
         return pheno, description
 
 class LinearCombinationPhenotypeGenerator(PhenotypeGenerator):
-    def __init__(self, combination):
+    def __init__(self, combination, covariate_sd):
         self.combination = combination
+        self.covariate_sd = covariate_sd
 
     def get(self, expression, gene):
-        return _pheno_from_combination(expression, self.combination)
+        return _pheno_from_combination(expression, self.combination, self.covariate_sd)
 
 class CombinationOfCorrelatedPhenotypeGenerator(PhenotypeGenerator):
-    def __init__(self, covariate_coefficient=None, threshold=None):
-        self.covariate_coefficient = float(covariate_coefficient) if covariate_coefficient is not None else 1
-        self.threshold = float(threshold) if threshold is not None else 0.9
+    def __init__(self, covariate_coefficient, covariate_sd, threshold):
+        self.covariate_coefficient = covariate_coefficient
+        self.threshold = threshold
+        self.covariate_sd = covariate_sd
 
     def get(self, expression, gene):
         # Get the tissue with the most correlated siblings;
@@ -106,9 +108,9 @@ class CombinationOfCorrelatedPhenotypeGenerator(PhenotypeGenerator):
         #    combination["covariate_{}".format(i)] = 10.0/f
         combination["covariate"] = self.covariate_coefficient
 
-        return  _pheno_from_combination(expression, combination)
+        return  _pheno_from_combination(expression, combination, self.covariate_sd)
 
-def _pheno_from_combination(expression, combination):
+def _pheno_from_combination(expression, combination, covariate_sd):
     ok = True
     _k = list(expression.keys())[0]
     _e = expression[_k]
@@ -120,7 +122,7 @@ def _pheno_from_combination(expression, combination):
             e +=  expression[k] * v
             used.add(k)
         elif "covariate" in k:
-            e += numpy.random.normal(scale=1, size=n) * v
+            e += numpy.random.normal(scale=covariate_sd, size=n) * v
             used.add(k)
         else:
             # If we couldn't build a model with the desired combination, abort
@@ -165,16 +167,20 @@ def context_from_args(args):
     expression = HDF5Expression.ExpressionManager(args.expression_folder, args.expression_pattern,
                                                    code_999=args.code_999, standardise=args.standardize_expression)
 
+    def _argumentize(x, t, default=1.0):
+        return t(x) if x is not None else default
+
     p = {x[0]: x[1] for x in args.simulation_parameters}
-    covariate_coefficient = p.get("covariate_coefficient")
+    covariate_coefficient = _argumentize(p.get("covariate_coefficient"), float)
+    covariate_sd = _argumentize(p.get("covariate_sd"), float)
     if args.simulation_type == "random":
         phenotype = RandomPhenotypeGenerator()
     elif args.simulation_type == "combination":
         _c = {"Adipose_Subcutaneous":1.0, "Brain_Cerebellum":1.0, "covariate":1.0}
-        phenotype = LinearCombinationPhenotypeGenerator(_c)
+        phenotype = LinearCombinationPhenotypeGenerator(_c, covariate_sd=covariate_sd)
     elif args.simulation_type == "combination_from_correlated":
-        threshold = p.get("threshold")
-        phenotype = CombinationOfCorrelatedPhenotypeGenerator(covariate_coefficient=covariate_coefficient, threshold=threshold)
+        threshold = _argumentize(p.get("threshold"), float, 0.9)
+        phenotype = CombinationOfCorrelatedPhenotypeGenerator(covariate_coefficient=covariate_coefficient, covariate_sd=covariate_sd, threshold=threshold)
     else:
         raise RuntimeError("Wrong phenotype simulation spec")
     filter = Utilities._filter_from_args(args)

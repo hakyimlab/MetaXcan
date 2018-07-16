@@ -120,11 +120,13 @@ def _pvalues(result, context):
 
 def _get_pc_input(e_, model_keys):
     Xc = []
+    _mk = []
     for key in model_keys:
         x = Math.standardize(e_[key])
         if x is not None:
             Xc.append(x)
-    return Xc
+            _mk.append(key)
+    return Xc, _mk
 
 def _pca_data(e_, model_keys, pc_filter):
     if e_.shape[1] == 2:
@@ -133,7 +135,7 @@ def _pca_data(e_, model_keys, pc_filter):
     # That is: we compute ths SVD of a covariance matrix, and use those coefficients to get the SVD of input data
     # Shamelessly designed from https://stats.stackexchange.com/questions/134282/relationship-between-svd-and-pca-how-to-use-svd-to-perform-pca
     # In numpy.cov, each row is a variable and each column an observation. Exactly opposite to standard PCA notation: it is transposed, then.
-    Xc_t = _get_pc_input(e_, model_keys)
+    Xc_t, original_keys = _get_pc_input(e_, model_keys)
     k = numpy.cov(Xc_t)
     u, s, vt = numpy.linalg.svd(k)
     # we want to keep only those components with significant variance, to reduce dimensionality
@@ -145,7 +147,7 @@ def _pca_data(e_, model_keys, pc_filter):
     _data = {pca_keys[i]:x for i,x in enumerate(Xc_t_)}
     _data["pheno"] = e_.pheno
     pca_data = pandas.DataFrame(_data)
-    return pca_data, pca_keys, numpy.max(s), numpy.min(s), numpy.min(s[selected]), vt_projection
+    return pca_data, pca_keys, original_keys, numpy.max(s), numpy.min(s), numpy.min(s[selected]), vt_projection
 
 def _coefs(result, vt_projection, model_keys):
     coefs = result.params[1:].to_frame().reset_index().rename(columns={"index": "variable", 0: "param"})
@@ -165,8 +167,7 @@ def multi_predixcan_association(gene_, context, callback=None):
     pc_filter = context.get_pc_filter()
     try:
         if pc_filter is not None:
-            original_models = model_keys
-            e_, model_keys, max_eigen, min_eigen, min_eigen_kept, vt_projection = _pca_data(e_, model_keys, pc_filter)
+            e_, model_keys, original_models, max_eigen, min_eigen, min_eigen_kept, vt_projection = _pca_data(e_, model_keys, pc_filter)
         else:
             original_models = model_keys
             vt_projection = None

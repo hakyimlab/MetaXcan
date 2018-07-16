@@ -176,7 +176,17 @@ def context_from_args(args):
     if args.simulation_type == "random":
         phenotype = RandomPhenotypeGenerator()
     elif args.simulation_type == "combination":
-        _c = {"Adipose_Subcutaneous":1.0, "Brain_Cerebellum":1.0, "covariate":1.0}
+        if "model_spec" in p:
+            _c = p.get("model_spec")
+            if not _c:
+                _c = {}
+            else:
+                _c = _c.split()
+                _c = {_c[i*2]:float(_c[i*2+1]) for i in xrange(0,len(_c)/2)}
+        elif "use_tissues":
+            _c = p.get("use_tissues").strip().split()
+            _c = {x:1.0/len(_c) for x in _c}
+        _c["covariate"] = covariate_coefficient
         phenotype = LinearCombinationPhenotypeGenerator(_c, covariate_sd=covariate_sd)
     elif args.simulation_type == "combination_from_correlated":
         threshold = _argumentize(p.get("threshold"), float, 0.9)

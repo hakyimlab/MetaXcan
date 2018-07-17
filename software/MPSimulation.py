@@ -77,6 +77,7 @@ if __name__ == "__main__":
     parser.add_argument("--pc_condition_number", help="Principal components condition number", type=int)
     parser.add_argument("--pc_eigen_ratio", help="Principal components filter, cutoff at proportion to max eigenvalue", type=float)
     parser.add_argument("--standardize_expression", help="Standardise input predicted expressions.", action="store_true", default=False)
+    parser.add_argument("--only_truth", help="Run Multi-PrediXcan only with selected causal models.", action="store_true", default=False)
     parser.add_argument("--simulation_parameters", help="Depends on particular scheme", action="append", nargs=2)
     parser.add_argument("--do_predixcan", help="Also compute predixcan association", action="store_true", default=False)
 

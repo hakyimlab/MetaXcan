@@ -13,11 +13,12 @@ def mp_callback(model, result, vt_projection, model_keys, save):
     save["coefs"] = coefs
 
 class Context(object):
-    def __init__(self, expression_manager, phenotype_generator, filter, do_predixcan=False):
+    def __init__(self, expression_manager, phenotype_generator, filter, do_predixcan=False, only_truth=False):
         self.expression_manager = expression_manager
         self.phenotype_generator = phenotype_generator
         self.filter = filter
         self.do_predixcan = do_predixcan
+        self.only_truth = only_truth
 
     def do_predixcan(self):
         return self.do_predixcan
@@ -47,6 +48,9 @@ class Context(object):
             for t in description.itertuples():
                 if "covariate" in t.variable: continue
                 _cp[t.variable] = Utilities.DumbPContext(expression[t.variable], phenotype, gene, self.filter)
+
+        if self.only_truth:
+            expression = {x.variable:expression[x.variable] for x in description.itertuples() if x.variable in expression}
 
         return Utilities.DumbMTPContext(expression, phenotype, gene, self.filter), _cp, description
 
@@ -170,7 +174,7 @@ def context_from_args(args):
     def _argumentize(x, t, default=1.0):
         return t(x) if x is not None else default
 
-    p = {x[0]: x[1] for x in args.simulation_parameters}
+    p = {x[0]: x[1] for x in args.simulation_parameters} if args.simulation_parameters else {}
     covariate_coefficient = _argumentize(p.get("covariate_coefficient"), float)
     covariate_sd = _argumentize(p.get("covariate_sd"), float)
     if args.simulation_type == "random":
@@ -194,7 +198,7 @@ def context_from_args(args):
     else:
         raise RuntimeError("Wrong phenotype simulation spec")
     filter = Utilities._filter_from_args(args)
-    context = Context(expression, phenotype, filter, args.do_predixcan)
+    context = Context(expression, phenotype, filter, args.do_predixcan, args.only_truth)
     return context
 
 

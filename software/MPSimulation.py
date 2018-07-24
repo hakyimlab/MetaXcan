@@ -33,12 +33,16 @@ def run(args):
     additional = []
     predixcan_results = []
 
+    n_max = args.max_n_results
     logging.info("Acquiring context")
     with MultiPredixcanSimulations.context_from_args(args) as context:
         logging.info("processing")
         _c, _cp, _e = context.get_mp_simulation(None)
         for i, gene in enumerate(context.get_genes()):
-            logging.log(9, "Gene %s", gene)
+            if n_max and i>n_max:
+                logging.info("Max runs met")
+                break
+            logging.log(9, "%d Gene %s", i, gene)
             r, add, p = MultiPredixcanSimulations.simulate(gene, context)
             if r is None:
                 logging.log(9, "%s could not be simulated", gene)
@@ -80,6 +84,7 @@ if __name__ == "__main__":
     parser.add_argument("--only_truth", help="Run Multi-PrediXcan only with selected causal models.", action="store_true", default=False)
     parser.add_argument("--simulation_parameters", help="Depends on particular scheme", action="append", nargs=2)
     parser.add_argument("--do_predixcan", help="Also compute predixcan association", action="store_true", default=False)
+    parser.add_argument("--max_n_results", help="Optional. If provided, run up to as many analysis", type=int)
 
     args = parser.parse_args()
 

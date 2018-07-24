@@ -2,6 +2,8 @@ __author__ = "alvaro barbeira"
 
 import numpy
 import pandas
+import copy
+import math
 
 from . import Utilities
 from . import MultiPrediXcanAssociation, PrediXcanAssociation
@@ -72,12 +74,22 @@ class RandomPhenotypeGenerator(PhenotypeGenerator):
         return pheno, description
 
 class LinearCombinationPhenotypeGenerator(PhenotypeGenerator):
-    def __init__(self, combination, covariate_sd):
+    def __init__(self, combination, covariate_sd, use_all=None):
         self.combination = combination
         self.covariate_sd = covariate_sd
+        self.use_all = use_all
 
     def get(self, expression, gene):
-        return _pheno_from_combination(expression, self.combination, self.covariate_sd)
+        combination = copy.copy(self.combination)
+        if self.use_all:
+            if type(self.use_all) == float:
+                c = self.use_all
+            elif self.use_all == "ONE_VAR":
+                c = math.sqrt(1.0 / len(expression))
+            for e in expression.keys():
+                combination[e] = c
+
+        return _pheno_from_combination(expression, combination, self.covariate_sd)
 
 class CombinationOfCorrelatedPhenotypeGenerator(PhenotypeGenerator):
     def __init__(self, covariate_coefficient, covariate_sd, threshold):
@@ -107,7 +119,7 @@ class CombinationOfCorrelatedPhenotypeGenerator(PhenotypeGenerator):
 
         which = c[r] > self.threshold
         keys = list(expression.keys())
-        combination = {keys[i]:1.0/f for i in xrange(0, d) if which[i]}
+        combination = {keys[i]:math.sqrt(1.0/f) for i in xrange(0, d) if which[i]}
         #for i in xrange(0,d):
         #    combination["covariate_{}".format(i)] = 10.0/f
         combination["covariate"] = self.covariate_coefficient
@@ -180,6 +192,7 @@ def context_from_args(args):
     if args.simulation_type == "random":
         phenotype = RandomPhenotypeGenerator()
     elif args.simulation_type == "combination":
+        use_all = None
         if "model_spec" in p:
             _c = p.get("model_spec")
             if not _c:
@@ -187,11 +200,14 @@ def context_from_args(args):
             else:
                 _c = _c.split()
                 _c = {_c[i*2]:float(_c[i*2+1]) for i in xrange(0,len(_c)/2)}
-        elif "use_tissues":
+        elif "use_tissues" in p:
             _c = p.get("use_tissues").strip().split()
-            _c = {x:1.0/len(_c) for x in _c}
+            _c = {x:math.sqrt(1.0/len(_c)) for x in _c}
+        elif "use_all" in p:
+            _c = {}
+            use_all = float(p["use_all"]) if p["use_all"] != "ONE_VAR" else p["use_all"]
         _c["covariate"] = covariate_coefficient
-        phenotype = LinearCombinationPhenotypeGenerator(_c, covariate_sd=covariate_sd)
+        phenotype = LinearCombinationPhenotypeGenerator(_c, covariate_sd=covariate_sd, use_all=use_all)
     elif args.simulation_type == "combination_from_correlated":
         threshold = _argumentize(p.get("threshold"), float, 0.9)
         phenotype = CombinationOfCorrelatedPhenotypeGenerator(covariate_coefficient=covariate_coefficient, covariate_sd=covariate_sd, threshold=threshold)

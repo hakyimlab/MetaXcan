@@ -88,7 +88,7 @@ def mp_context_from_args(args):
 
 def _filter_eigen_values_from_max(s, ratio):
     s_max = numpy.max(s)
-    return [i for i,x in enumerate(s) if x > s_max*ratio]
+    return [i for i,x in enumerate(s) if x >= s_max*ratio]
 
 def _filter_from_args(args):
     if args.pc_condition_number:

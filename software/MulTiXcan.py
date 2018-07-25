@@ -30,7 +30,7 @@ def run(args):
         reporter.update(0, "%d %% of model's genes processed so far", force=True)
         results = []
         for i,gene in enumerate(genes):
-            logging.log(7, "Processing gene %s", gene)
+            logging.log(7, "%d Processing gene %s", i, gene)
             r = MultiPrediXcanAssociation.multi_predixcan_association(gene, context)
             results.append(r)
             reporter.update(i, "%d %% of model's genes processed so far")

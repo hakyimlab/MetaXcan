@@ -39,7 +39,7 @@ def run(args):
         logging.info("processing")
         _c, _cp, _e = context.get_mp_simulation(None)
         for i, gene in enumerate(context.get_genes()):
-            if n_max and i>n_max:
+            if n_max and i+1>n_max:
                 logging.info("Max runs met")
                 break
             logging.log(9, "%d Gene %s", i, gene)

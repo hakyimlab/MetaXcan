@@ -1,4 +1,4 @@
-Version 0.6.4:
+Version 0.6.5:
     * Added support for model training genotypes to covariance builder
 Version 0.6.4:
     * Minor refactoring. Added support for more primitive naming conventions in S-MulTiXcan

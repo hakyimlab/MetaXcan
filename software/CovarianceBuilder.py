@@ -22,7 +22,7 @@ def run(args):
     start = timer()
 
     logging.info("Loading models...")
-    model_manager = PredictionModel.load_model_manager(args.models_folder, name_pattern=args.models_pattern)
+    model_manager = PredictionModel.load_model_manager(args.models_folder, name_pattern=args.models_pattern, name_filter=args.models_filter)
     all_snps = model_manager.get_rsids()
 
     logging.info("processing genotype")
@@ -60,7 +60,8 @@ if __name__ == "__main__":
         'Collect and process covariance of genotypes' % (__version__))
 
     parser.add_argument("--models_folder", help="Path to folder with prediction models")
-    parser.add_argument("--models_pattern", help="Regexp to extarct models with")
+    parser.add_argument("--models_pattern", help="Regexp to extract models with")
+    parser.add_argument("--models_filter", help="Regexp to select models", nargs="+")
     parser.add_argument("--gtex_genotype_file", help="Path to gtex genotype file")
     parser.add_argument("--gtex_snp_file", help="Path to snp annotation file")
     parser.add_argument("--gtex_release_version", help="none(which is v6p) or V8")

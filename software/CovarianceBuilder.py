@@ -67,6 +67,8 @@ if __name__ == "__main__":
     parser.add_argument("--gtex_release_version", help="none(which is v6p) or V8")
     parser.add_argument("--dosage_genotype_folder", help="Path to dosage folder")
     parser.add_argument("--dosage_genotype_pattern", help="Regexp-like pattern to select files")
+    parser.add_argument("--model_training_genotype_folder", help="Path to dosage folder")
+    parser.add_argument("--model_training_genotype_pattern", help="Regexp-like pattern to select files")
     parser.add_argument("--snp_covariance_output", help="where you want the output", default=None)
     parser.add_argument("--verbosity", help="Log verbosity level. 1 is everything being logged. 10 is only high level messages, above 10 will hardly log anything", default = "10")
     parser.add_argument("--impute_to_mean", help="Dosages might have missing values; impute missing to the mean", action="store_true")

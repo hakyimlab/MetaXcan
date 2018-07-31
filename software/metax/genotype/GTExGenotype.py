@@ -5,8 +5,7 @@ import numpy
 
 from Genotype import GF
 from .. import Utilities
-from .. import Exceptions
-from ..misc import KeyedDataSource
+from . import  Helpers
 
 
 def parse_gtex_variant(variant):
@@ -22,14 +21,7 @@ def gtex_geno_lines(gtex_file, gtex_snp_file, snps=None, gtex_release_version=No
     logging.log(9, "Loading GTEx snp file")
     #TODO: change to something more flexible to support V7 naming
 
-    if not gtex_release_version:
-        gtex_snp = KeyedDataSource.load_data(gtex_snp_file, "VariantID", "RS_ID_dbSNP142_CHG37p13", numeric=False)
-    elif gtex_release_version.lower() == "v7":
-        gtex_snp = KeyedDataSource.load_data(gtex_snp_file, "variant_id", "rs_id_dbSNP147_GRCh37p13", numeric=False)
-    elif gtex_release_version.lower() == "v8":
-        gtex_snp = KeyedDataSource.load_data(gtex_snp_file, "variant_id", "rs_id_dbSNP150_GRCh38p7", numeric=False)
-    else:
-        raise Exceptions.InvalidArguments("Unsupported GTEx release version")
+    gtex_snp = Helpers.gtex_snp(gtex_snp_file, gtex_release_version)
 
     logging.log(9, "Processing GTEx geno")
     with gzip.open(gtex_file) as file:

@@ -39,8 +39,7 @@ def run(args):
         results = results.fillna("NA")
         results = results.sort_values(by="pvalue")
 
-        Utilities.ensure_requisite_folders(args.output)
-        results.to_csv(args.output, index=False, sep="\t", quotechar='"')
+        Utilities.save_dataframe(results, args.output)
 
     end = timer()
     logging.info("Ran multi tissue predixcan in %s seconds" % (str(end - start)))

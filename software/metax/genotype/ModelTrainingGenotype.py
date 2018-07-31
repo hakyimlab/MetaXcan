@@ -1,3 +1,5 @@
+__author__ = "alvaro barbeira"
+
 import gzip
 import os
 import logging
@@ -6,43 +8,41 @@ import numpy
 
 from Genotype import GF
 from .. import Utilities
+from . import Helpers
 
-class DTF:
-    """Format of dosage"""
-    CHR = 0
-    RSID = 1
-    POSITION = 2
-    ALLELE_0 = 3
-    ALLELE_1 = 4
-    FREQ= 5
-    FIRST_DATA_COLUMN = 6
-
-def dosage_file_geno_lines(file, snps=None):
+def model_training_file_geno_lines(file, snp_annotation, snps=None):
     logging.log(9, "Processing Dosage geno %s", file)
     with gzip.open(file) as file:
         for i,line in enumerate(file):
-            comps = line.strip().split()
-            rsid = comps[DTF.RSID]
             if i==0: continue
+            comps = line.strip().split()
+            id = comps[0]
+
+            if not id  in snp_annotation:
+                continue
+
+            rsid = snp_annotation[id]
             if snps and not rsid in snps:
                 continue
 
-            dosage = numpy.array(comps[DTF.FIRST_DATA_COLUMN:], dtype=numpy.float64)
-            chrom = comps[DTF.CHR].replace("chr", "")
+            dosage = numpy.array(comps[1:], dtype=numpy.float64)
+            chrom, position, allele_0, allele_1, leftover = id.split("_")
 
-            yield [rsid, chrom, comps[DTF.POSITION], comps[DTF.ALLELE_0], comps[DTF.ALLELE_1], comps[DTF.FREQ]] + list(dosage)
+            yield [rsid, chrom, position, allele_0, allele_1, numpy.mean(dosage)/2] + list(dosage)
 
-def dosage_folder_geno_lines(dosage_folder, dosage_pattern, snps=None):
+def model_training_folder_geno_lines(dosage_folder, dosage_pattern, snp_annotation, snps=None):
     logging.log(9, "Processing Dosage Folder geno")
     files = Utilities.contentsWithRegexpFromFolder(dosage_folder, dosage_pattern)
     files = sorted([os.path.join(dosage_folder, x) for x in files])
     for f in files:
-        for line in dosage_file_geno_lines(f, snps=snps):
+        for line in model_training_file_geno_lines(f, snp_annotation, snps=snps):
             yield line
 
-def dosage_geno_by_chromosome(dosage_folder, dosage_pattern, snps=None):
+def model_training_geno_by_chromosome(dosage_folder, dosage_pattern, gtex_snp_file, gtex_release_version, snps=None):
     buffer = []
     last_chr = None
+
+    snp_annotation = Helpers.gtex_snp(gtex_snp_file, gtex_release_version)
 
     def _buffer_to_data(buffer):
         _data = zip(*buffer)
@@ -59,7 +59,7 @@ def dosage_geno_by_chromosome(dosage_folder, dosage_pattern, snps=None):
         return chromosome, metadata, dosage_data
 
     logging.log(8, "Starting to process lines")
-    for line in dosage_folder_geno_lines(dosage_folder, dosage_pattern, snps):
+    for line in model_training_folder_geno_lines(dosage_folder, dosage_pattern, snp_annotation, snps):
         chromosome = line[GF.CHROMOSOME]
 
         if last_chr is None: last_chr = chromosome

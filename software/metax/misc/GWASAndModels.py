@@ -16,6 +16,8 @@ def align_data_to_alleles(data, base, left_on, right_on):
     alleles_2 = pandas.Series([set(e) for e in zip(merged[EA_BASE], merged[NEA_BASE])])
     eq = alleles_1 == alleles_2
     merged = merged[eq]
+    if eq.shape[0] == 0:
+        return merged
 
     flipped = merged[EA] != merged[EA_BASE]
     Z = Constants.ZSCORE

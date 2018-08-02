@@ -13,13 +13,13 @@ from ..genotype import GeneExpressionMatrixManager
 from ..metaxcan import MetaXcanResultsManager
 
 class SimpleContext(ContextMixin, Context):
-    def __init__(self, metaxcan_results_manager, matrix_manager, genes, cutoff, epsilon):
+    def __init__(self, metaxcan_results_manager, matrix_manager, genes, cutoff, epsilon, trimmed_ensemble_ids):
         self.metaxcan_results_manager = metaxcan_results_manager
         self.matrix_manager = matrix_manager
         self.model_name_index = _index(matrix_manager)
 
         #Todo: maybe fix?
-        self.trimmed_ensemble_id = True
+        self.trimmed_ensemble_id = trimmed_ensemble_ids
         self.gene_names = self._process_genes(genes)
 
         # Yeah, a callable object. Go figure.
@@ -29,7 +29,10 @@ class SimpleContext(ContextMixin, Context):
     def get_genes(self):
         matrix_genes = self.matrix_manager.model_labels()
         results_genes = self.metaxcan_results_manager.get_genes()
-        genes = {x for x in matrix_genes if x.split(".")[0] in results_genes}
+        if self.trimmed_ensemble_id:
+            genes = {x for x in matrix_genes if x.split(".")[0] in results_genes}
+        else:
+            genes = {x for x in matrix_genes if x in results_genes}
         return genes
 
     def get_n_genes(self):
@@ -171,7 +174,7 @@ def context_from_args(args):
         }
         matrix_manager = MatrixManager.load_matrix_manager(args.model_product, definition=definition, permissive=args.permissive_model_product)
         cutoff = _cutoff(args)
-        context = SimpleContext(metaxcan_manager, matrix_manager, genes, cutoff, args.regularization)
+        context = SimpleContext(metaxcan_manager, matrix_manager, genes, cutoff, args.regularization, args.trimmed_ensemble_id)
     elif args.snp_covariance:
         logging.info("Context for snp covariance")
 

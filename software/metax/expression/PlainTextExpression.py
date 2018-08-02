@@ -33,7 +33,12 @@ class ExpressionManager(Expression.ExpressionManager):
         return self.gene_map.keys()
 
     def enter(self):
-        self.d = {name: pandas.read_table(path) for name, path in self.file_map.iteritems()}
+        d = {}
+        for name in sorted(self.file_map.keys()):
+            path = self.file_map[name]
+            logging.log(9, "Loading %s", path)
+            d[name] = pandas.read_table(path)
+        self.d = d
 
     def exit(self):
         pass

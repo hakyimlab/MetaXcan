@@ -1,1 +1,1 @@
-scripts used in papers
+scripts used in MultiXcan

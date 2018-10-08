@@ -86,6 +86,11 @@ class LinearCombinationPhenotypeGenerator(PhenotypeGenerator):
                 c = self.use_all
             elif self.use_all == "ONE_VAR":
                 c = math.sqrt(1.0 / len(expression))
+            elif self.use_all == "FIX_VAR":
+                c = 1.0
+                combination["covariate"] = math.sqrt(len(expression)*9)
+            else:
+                raise RuntimeError("Unsupported option")
             for e in expression.keys():
                 combination[e] = c
 
@@ -205,7 +210,10 @@ def context_from_args(args):
             _c = {x:math.sqrt(1.0/len(_c)) for x in _c}
         elif "use_all" in p:
             _c = {}
-            use_all = float(p["use_all"]) if p["use_all"] != "ONE_VAR" else p["use_all"]
+            if p["use_all"] == "ONE_VAR" or p["use_all"] == "FIX_VAR":
+                use_all = p["use_all"]
+            else:
+                use_all = float(p["use_all"])
         _c["covariate"] = covariate_coefficient
         phenotype = LinearCombinationPhenotypeGenerator(_c, covariate_sd=covariate_sd, use_all=use_all)
     elif args.simulation_type == "combination_from_correlated":

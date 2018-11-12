@@ -141,13 +141,14 @@ def _pca_data(e_, model_keys, pc_filter):
     # we want to keep only those components with significant variance, to reduce dimensionality
     selected = pc_filter(s)
 
+    variance = s[selected]
     vt_projection = vt[selected]
     Xc_t_ = _dot(vt_projection, Xc_t)
     pca_keys = ["pc{}".format(i) for i in xrange(0, len(selected))]
     _data = {pca_keys[i]:x for i,x in enumerate(Xc_t_)}
     _data["pheno"] = e_.pheno
     pca_data = pandas.DataFrame(_data)
-    return pca_data, pca_keys, original_keys, numpy.max(s), numpy.min(s), numpy.min(s[selected]), vt_projection
+    return pca_data, pca_keys, original_keys, numpy.max(s), numpy.min(s), numpy.min(s[selected]), vt_projection, variance
 
 def _coefs(result, vt_projection, model_keys):
     coefs = result.params[1:].to_frame().reset_index().rename(columns={"index": "variable", 0: "param"})
@@ -157,7 +158,7 @@ def _coefs(result, vt_projection, model_keys):
         coefs = pandas.DataFrame({"variable": k, "param": v})
     return coefs
 
-def multi_predixcan_association(gene_, context, callback=None):
+def multi_predixcan_association(gene_, context, callbacks=None):
     gene, pvalue, n_models, n_samples, p_i_best, m_i_best, p_i_worst,  m_i_worst, status, n_used, max_eigen, min_eigen, min_eigen_kept = None, None, None, None, None, None, None, None, None, None, None, None, None
     gene = gene_
 
@@ -167,10 +168,11 @@ def multi_predixcan_association(gene_, context, callback=None):
     pc_filter = context.get_pc_filter()
     try:
         if pc_filter is not None:
-            e_, model_keys, original_models, max_eigen, min_eigen, min_eigen_kept, vt_projection = _pca_data(e_, model_keys, pc_filter)
+            e_, model_keys, original_models, max_eigen, min_eigen, min_eigen_kept, vt_projection, variance = _pca_data(e_, model_keys, pc_filter)
         else:
             original_models = model_keys
             vt_projection = None
+            variance = None
         n_used = len(model_keys)
         y, X = _design_matrices(e_, model_keys, context)
         specifics =  _mode[context.get_mode()]
@@ -187,8 +189,11 @@ def multi_predixcan_association(gene_, context, callback=None):
 
         pvalue = specifics[K_PVALUE](result)
         status = specifics[K_STATUS](result)
-        if callback:
-            callback(model, result, vt_projection, original_models)
+
+        if callbacks:
+            coefs = _coefs(result, vt_projection, original_models)
+            for callback in callbacks:
+                callback(gene, model, result, vt_projection, variance, original_models, coefs)
     except Exception as ex:
         status = ex.message.replace(" ", "_").replace(",", "_")
 
@@ -203,3 +208,30 @@ def dataframe_from_results(results, context):
     r = pandas.DataFrame({key: results[order] for order, key in ORDER})
     r = r[[key for order,key in ORDER]]
     return r
+
+class SaveCoefs(object):
+    def __init__(self):
+        self.coefs = []
+
+    def __call__(self, gene, model, result, vt_projection, variance, model_keys, coefs):
+        self.coefs.append(coefs.assign(gene=gene))
+
+    def get(self):
+        return pandas.concat(self.coefs)
+
+class SaveLoadings(object):
+    def __init__(self):
+        self.loadings = []
+
+    def __call__(self, gene, model, result, vt_projection, variance,  model_keys, coefs):
+        results=[]
+        for i in xrange(0, vt_projection.shape[0]):
+            pc = "pc{}".format(i)
+            l = numpy.sqrt(variance[i])*vt_projection[i]
+            for j in xrange(0, l.shape[0]):
+                results.append((gene,pc,model_keys[j], l[j]))
+
+        self.loadings.append(pandas.DataFrame(results, columns=["gene", "pc", "tissue", "weight"]))
+
+    def get(self):
+        return pandas.concat(self.loadings)

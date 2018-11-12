@@ -10,8 +10,7 @@ from . import MultiPrediXcanAssociation, PrediXcanAssociation
 from ..expression import HDF5Expression, Expression
 
 ########################################################################################################################
-def mp_callback(model, result, vt_projection, model_keys, save):
-    coefs = MultiPrediXcanAssociation._coefs(result, vt_projection, model_keys)
+def mp_callback(gene, model, result, vt_projection, variance, model_keys, coefs, save):
     save["coefs"] = coefs
 
 class Context(object):
@@ -88,7 +87,7 @@ class LinearCombinationPhenotypeGenerator(PhenotypeGenerator):
                 c = math.sqrt(1.0 / len(expression))
             elif self.use_all == "FIX_VAR":
                 c = 1.0
-                combination["covariate"] = math.sqrt(len(expression)*9)
+                combination["covariate"] = math.sqrt(len(expression)*99)
             else:
                 raise RuntimeError("Unsupported option")
             for e in expression.keys():
@@ -230,7 +229,7 @@ def context_from_args(args):
 
 def simulate(gene, context):
     save_results = {}
-    _cb = lambda model, result, vt_projection, model_keys: mp_callback(model, result, vt_projection, model_keys, save_results)
+    _cb = lambda gene, model, result, vt_projection, variance, model_keys, coefs: mp_callback(gene, model, result, vt_projection, variance, model_keys, coefs, save_results)
 
     _context_mt, _context_p, _description = context.get_mp_simulation(gene)
     if _context_mt is None:
@@ -246,7 +245,7 @@ def simulate(gene, context):
             p = pandas.concat([p,p_])
 
 
-    r = MultiPrediXcanAssociation.multi_predixcan_association(gene, _context_mt, _cb)
+    r = MultiPrediXcanAssociation.multi_predixcan_association(gene, _context_mt, [_cb])
     description = _description.assign(gene=gene, type="truth")
     coefs = save_results["coefs"].assign(gene=gene, type="result")
     description = pandas.concat([description, coefs])

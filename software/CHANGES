@@ -1,3 +1,5 @@
+Version 0.6.6:
+    * Added output of loadings and PC regression coefficients to MultiXcan output
 Version 0.6.5:
     * Added support for model training genotypes to covariance builder
 Version 0.6.4:

@@ -48,6 +48,19 @@ class MTPContext(_MTPContext):
         logging.info("Exiting Multi-tissue PrediXcan context")
         self.expression.exit()
 
+class DumbMTPContext(_MTPContext):
+    def __init__(self, expression, pheno, gene, pc_filter):
+        self.expression = expression
+        self.pheno = pheno
+        self.gene = gene
+        self.pc_filter = pc_filter
+
+    def get_genes(self): return [self.gene]
+    def expression_for_gene(self, gene): return self.expression
+    def get_pheno(self): return self.pheno
+    def get_pc_filter(self): return self.pc_filter
+    def get_mode(self): return MTPMode.K_LINEAR
+
 def _check_args(args):
     if not args.mode in MTPMode.K_MODES:
         raise Exceptions.InvalidArguments("Invalid mode")
@@ -55,13 +68,13 @@ def _check_args(args):
 def _expression_manager_from_args(args):
     if args.hdf5_expression_folder:
         logging.info("Preparing expression from HDF5 files")
-        expression = HDF5Expression.ExpressionManager(args.hdf5_expression_folder, args.expression_pattern)
+        expression = HDF5Expression.ExpressionManager(args.hdf5_expression_folder, args.expression_pattern, code_999=args.code_999, standardise=args.standardize_expression)
     elif args.memory_efficient and args.expression_folder:
         logging.info("Loading expression manager from text files (memory efficient)")
-        expression = PlainTextExpression.ExpressionManagerMemoryEfficient(args.expression_folder, args.expression_pattern)
+        expression = PlainTextExpression.ExpressionManagerMemoryEfficient(args.expression_folder, args.expression_pattern, standardise=args.standardize_expression)
     elif args.expression_folder:
         logging.info("Loading expression manager from text files")
-        expression = PlainTextExpression.ExpressionManager(args.expression_folder, args.expression_pattern)
+        expression = PlainTextExpression.ExpressionManager(args.expression_folder, args.expression_pattern, standardise=args.standardize_expression)
     else:
         raise RuntimeError("Could not build context from arguments")
     return expression
@@ -75,7 +88,7 @@ def mp_context_from_args(args):
 
 def _filter_eigen_values_from_max(s, ratio):
     s_max = numpy.max(s)
-    return [i for i,x in enumerate(s) if x > s_max*ratio]
+    return [i for i,x in enumerate(s) if x >= s_max*ratio]
 
 def _filter_from_args(args):
     if args.pc_condition_number:
@@ -116,6 +129,19 @@ class PContext(_PContext):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.expression.exit()
+
+class DumbPContext(_PContext):
+    def __init__(self, expression, pheno, gene, pc_filter):
+        self.expression = expression
+        self.pheno = pheno
+        self.gene = gene
+        self.pc_filter = pc_filter
+
+    def get_genes(self): return [self.gene]
+    def expression_for_gene(self, gene): return self.expression
+    def get_pheno(self): return self.pheno
+    def get_mode(self): return MTPMode.K_LINEAR
+    def get_covariates(self): return None
 
 def _check_args_file(args):
     if not args.mode in PMode.K_MODES:

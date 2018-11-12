@@ -7,21 +7,44 @@ import h5py_cache
 
 import Expression as _Expression
 
+from ..misc import Math
+
 ########################################################################################################################
 
 class ExpressionManager(_Expression.ExpressionManager):
-    def __init__(self, folder, pattern=None, code_999=False):
+    def __init__(self, folder, pattern=None, code_999=False, standardise=False):
         self.gene_map = None
         self.h5 = None
         self.folder = folder
         self.pattern = pattern
         self.code_999 = code_999
+        self.last_gene = None
+        self.k = None
+        self.standardise = standardise
 
     def expression_for_gene(self, gene):
+        if gene == self.last_gene:
+            return self.k
+
         m_ = self.gene_map[gene]
         k = {model:self.h5[model]['pred_expr'][m_[model]] for model in sorted(m_.keys())}
         if self.code_999:
+            logging.log(8, "Looking for code -999")
             k = _code_999(k)
+
+        if self.standardise:
+            logging.log(8, "Standardizing")
+            k_ = {}
+            for key, value in k.iteritems():
+                t_ = Math.standardize(value)
+                if t_ is not None:
+                    k_[key] = t_
+            k = k_
+
+
+        self.k = k
+        self.last_gene = gene
+
         return k
 
     def get_genes(self):
@@ -74,14 +97,15 @@ def _code_999(k):
     logged_ = []
 
     def c_(x):
-        if numpy.isclose(x, -999, atol=1e-3, rtol=0):
+        close = numpy.isclose(x, -999.0, atol=1e-3, rtol=0)
+        if numpy.sum(close):
             if not logged_:
                 logged_.append(True)
                 logging.warning("Expression Manager: Encountered value of -999")
-            return numpy.nan
+            x[close] = numpy.nan
         return x
 
-    k = {k: numpy.array(map(c_, v)) for k, v in k.iteritems()}
+    k = {k:c_(v) for k, v in k.iteritems()}
     return  k
 
 ########################################################################################################################

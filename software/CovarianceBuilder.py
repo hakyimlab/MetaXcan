@@ -2,6 +2,7 @@
 import os
 import logging
 import pandas
+import gzip
 
 from timeit import default_timer as timer
 
@@ -24,31 +25,29 @@ def run(args):
     logging.info("Loading models...")
     model_manager = PredictionModel.load_model_manager(args.models_folder, name_pattern=args.models_pattern, name_filter=args.models_filter)
     all_snps = model_manager.get_rsids()
+    Utilities.ensure_requisite_folders(args.snp_covariance_output)
+    with gzip.open(args.snp_covariance_output, "w") as o:
+        o.write("GENE\tRSID1\tRSID2\tVALUE\n")
+        logging.info("processing genotype")
 
-    logging.info("processing genotype")
-    for chromosome, metadata, dosage in GenotypeUtilities.genotype_by_chromosome_from_args(args, all_snps):
-        logging.log(9, "Processing chromosome %s", str(chromosome))
-        covariance_results = pandas.DataFrame()
+        for chromosome, metadata, dosage in GenotypeUtilities.genotype_by_chromosome_from_args(args, all_snps):
+            logging.log(9, "Processing chromosome %s", str(chromosome))
 
-        context = GenotypeAnalysis.GenotypeAnalysisContext(metadata, dosage, model_manager)
-        genes = context.get_genes()
-        reporter = Utilities.PercentReporter(9, len(genes))
-        reporter.update(0, "%d %% of genes processed so far in chromosome " + str(chromosome))
-        for i,gene in enumerate(genes):
-            logging.log(6, "%d/%d:%s", i+1, len(genes), gene)
-            cov_data = GenotypeAnalysis.get_prediction_covariance(context, gene)
-            cov_data = MatrixManager._flatten_matrix_data([cov_data])
-            cov_data = Utilities.to_dataframe(cov_data, GenotypeAnalysis.COVARIANCE_COLUMNS, to_numeric="ignore", fill_na="NA")
-            covariance_results = pandas.concat([covariance_results, cov_data])
+            context = GenotypeAnalysis.GenotypeAnalysisContext(metadata, dosage, model_manager)
+            genes = context.get_genes()
+            reporter = Utilities.PercentReporter(9, len(genes))
+            reporter.update(0, "%d %% of genes processed so far in chromosome " + str(chromosome))
+            for i,gene in enumerate(genes):
+                logging.log(6, "%d/%d:%s", i+1, len(genes), gene)
+                cov_data = GenotypeAnalysis.get_prediction_covariance(context, gene)
+                cov_data = MatrixManager._flatten_matrix_data([cov_data])
+                for e in cov_data:
+                    l = "{}\t{}\t{}\t{}\n".format(e[0], e[1], e[2], e[3])
+                    o.write(l)
 
-            reporter.update(i, "%d %% of genes processed so far in chromosome "+str(chromosome))
+                reporter.update(i, "%d %% of genes processed so far in chromosome "+str(chromosome))
 
-        reporter.update(len(genes), "%d %% of genes processed so far in chromosome " + str(chromosome))
-
-        logging.log(9, "writing chromosome results")
-        Utilities.save_dataframe(covariance_results, args.snp_covariance_output,
-                                    mode="w" if chromosome ==1 else "a",
-                                    header=chromosome==1)
+            reporter.update(len(genes), "%d %% of genes processed so far in chromosome " + str(chromosome))
 
     end = timer()
     logging.info("Ran covariance builder in %s seconds" % (str(end - start)))

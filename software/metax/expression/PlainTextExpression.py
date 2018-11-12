@@ -3,39 +3,63 @@ import logging
 import os
 import gzip
 import pandas
+
 import Expression
+from ..misc import Math
 
 ########################################################################################################################
 class ExpressionManager(Expression.ExpressionManager):
-    def __init__(self, folder, pattern=None):
+    def __init__(self, folder, pattern=None, standardise=False):
         gene_map, file_map = _structure(folder, pattern)
         self.gene_map = gene_map
         self.file_map = file_map
         self.d = None
+        self.standardise = standardise
 
     def expression_for_gene(self, gene):
         m_ = self.gene_map[gene]
         d = {model:self.d[model][gene].values for model in sorted(m_.keys())}
+
+        if self.standardise:
+            k_ = {}
+            for key, value in k.iteritems():
+                t_ = Math.standardize(value)
+                if t_ is not None:
+                    k_[key] = t_
+            d = k_
         return d
 
     def get_genes(self):
         return self.gene_map.keys()
 
     def enter(self):
-        self.d = {name: pandas.read_table(path) for name, path in self.file_map.iteritems()}
+        d = {}
+        for name in sorted(self.file_map.keys()):
+            path = self.file_map[name]
+            logging.log(9, "Loading %s", path)
+            d[name] = pandas.read_table(path)
+        self.d = d
 
     def exit(self):
         pass
 
 class ExpressionManagerMemoryEfficient(Expression.ExpressionManager):
-    def __init__(self, folder, pattern):
+    def __init__(self, folder, pattern, standardise = False):
         gene_map, file_map = _structure(folder, pattern)
         self.gene_map = gene_map
         self.file_map = file_map
+        self.standardise = standardise
 
     def expression_for_gene(self, gene):
         m_ = self.gene_map[gene]
         k = {model:pandas.read_table(self.file_map[model], usecols=[gene])[gene].values for model in sorted(m_.keys())}
+        if self.standardise:
+            k_ = {}
+            for key, value in k.iteritems():
+                t_ = Math.standardize(value)
+                if t_ is not None:
+                    k_[key] = t_
+            k = k_
         return k
 
     def get_genes(self):

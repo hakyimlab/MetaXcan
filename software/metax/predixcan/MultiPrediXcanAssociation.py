@@ -130,7 +130,7 @@ def _get_pc_input(e_, model_keys):
 
 def _pca_data(e_, model_keys, pc_filter):
     if e_.shape[1] == 2:
-        return e_, model_keys, model_keys, 1, 1, 1, 1
+        return e_, model_keys, model_keys, 1, 1, 1, 1, 1
     #numpy.svd can't handle typical data size in UK Biobank. So we do PCA through the covariance matrix
     # That is: we compute ths SVD of a covariance matrix, and use those coefficients to get the SVD of input data
     # Shamelessly designed from https://stats.stackexchange.com/questions/134282/relationship-between-svd-and-pca-how-to-use-svd-to-perform-pca

@@ -54,13 +54,12 @@ class ExpressionManagerMemoryEfficient(Expression.ExpressionManager):
         m_ = self.gene_map[gene]
         k = {model:pandas.read_table(self.file_map[model], usecols=[gene])[gene].values for model in sorted(m_.keys())}
         if self.standardise:
-            if self.standardise:
-                k_ = {}
-                for key, value in k.iteritems():
-                    t_ = Math.standardize(value)
-                    if t_ is not None:
-                        k_[key] = t_
-                k = k_
+            k_ = {}
+            for key, value in k.iteritems():
+                t_ = Math.standardize(value)
+                if t_ is not None:
+                    k_[key] = t_
+            k = k_
         return k
 
     def get_genes(self):

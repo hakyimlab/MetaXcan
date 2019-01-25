@@ -133,6 +133,7 @@ arguments --covariance_directory and --covariance_suffix. """)
     GWASUtilities.add_gwas_arguments_to_parser(parser)
 
 # ZScore calculation
+    parser.add_argument("--stream_covariance", help="Option to better handle large covariances, slower but less memory consuming", action="store_true")
     parser.add_argument("--single_snp_model", action="store_true", help="Models are comprised of a single snp per gene", default=False)
     parser.add_argument("--covariance_directory", help="directory where covariance files can be found (or SAME if covariance sits beside the .db file", default="SAME")
     parser.add_argument("--covariance_suffix", help="Suffix associated with the covariance files. covext-dbext (where ..dbext is the portion of the db file to be replaced by the coviarance extension. )", default=".txt.gz.._0.5.db")

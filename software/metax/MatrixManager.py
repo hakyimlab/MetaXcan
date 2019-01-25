@@ -1,5 +1,7 @@
 import pandas
 import numpy
+import logging
+
 import Exceptions
 
 K_MODEL="model"
@@ -55,12 +57,45 @@ class MatrixManager(MatrixManagerBase):
         return set(self.data.keys())
 
     def n_ids(self, gene):
-        if not gene in self.data:
-            return numpy.nan
-        snps = self.data[gene]
-        snps = _non_na(snps)
-        snps = {x[CDTF.ID1] for x in snps}
-        return len(snps)
+        return _n_ids(gene, self.data)
+
+class StreamedMatrixManager(MatrixManagerBase):
+    """
+    Needs a dictionary mapping the header names to the keys ["model", "id1", "id2", "value"],
+    and a dataframe streamer
+    """
+    def __init__(self, streamer, definition):
+        self.definition = definition
+        self.streamer = streamer
+        self._data = {}
+
+    def get(self, key, whitelist=None, strict_whitelist=None):
+        d = next(self.streamer)
+        self._data = _build_data(d, self.definition)
+        if not key in self._data:
+            raise  Exceptions.MalformedInputFile("covariance", "loaded data does not contain the required covariance: {} from {}".format(key, self._data.keys()) )
+        return _get(self._data, key, whitelist, strict_whitelist)
+
+    def get_2(self, key, snps_1, snps_2):
+        d = next(self.streamer)
+        self._data = _build_data(d, self.definition)
+        if not key in self._data:
+            raise  Exceptions.MalformedInputFile("covariance", "loaded data does not contain the required covariance: {} from {}".format(key, self._data.keys()) )
+        return _get_2(self._data, key, snps_1, snps_2)
+
+    def model_labels(self):
+        return set(self._data.keys())
+
+    def n_ids(self, gene):
+        return _n_ids(gene, self._data)
+
+def _n_ids(gene, data):
+    if not gene in data:
+        return numpy.nan
+    snps = data[gene]
+    snps = _non_na(snps)
+    snps = {x[CDTF.ID1] for x in snps}
+    return len(snps)
 
 def _validate(d, definition):
     MODEL_KEY = definition[K_MODEL]

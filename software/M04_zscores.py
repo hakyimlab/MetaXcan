@@ -27,7 +27,7 @@ def run_metaxcan(args, context):
     results = []
     additional = []
     for i,gene in enumerate(i_genes):
-        logging.log(7, "Processing gene %s", gene)
+        logging.log(9, "Processing gene %s", gene)
         r, snps = AssociationCalculation.association(gene, context, return_snps=True)
         results.append(r)
         snps_found.update(snps)
@@ -77,6 +77,7 @@ if __name__ == "__main__":
     parser.add_argument("--model_db_path", help="name of weight db in data folder")
     parser.add_argument("--model_db_snp_key", help="Specify a key to use as snp_id")
     parser.add_argument("--covariance", help="name of file containing covariance data")
+    parser.add_argument("--stream_covariance", help="Option to better handle large covariances, slower but less memory consuming", action="store_true")
     parser.add_argument("--beta_folder", help="name of folder containing GWAS effect data")
     parser.add_argument("--output_file", help="name of output file")
     parser.add_argument("--verbosity", help="Log verbosity level. 1 is everything being logged. 10 is only high level messages, above 10 will hardly log anything", default = "10")

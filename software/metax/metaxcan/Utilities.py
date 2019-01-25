@@ -8,7 +8,7 @@ from .. import Constants
 from .. import Utilities
 from .. import MatrixManager
 from ..PredictionModel import WDBQF, WDBEQF, load_model, dataframe_from_weight_data
-
+from ..misc import DataFrameStreamer
 from . import AssociationCalculation
 
 class SimpleContext(AssociationCalculation.Context):
@@ -24,6 +24,7 @@ class SimpleContext(AssociationCalculation.Context):
 
     def get_covariance(self, gene, snps):
         return self.covariance.get(gene, snps, strict_whitelist=False)
+
 
     def get_n_in_covariance(self, gene):
         return self.covariance.n_ids(gene)
@@ -67,9 +68,11 @@ class SimpleContext(AssociationCalculation.Context):
 class OptimizedContext(SimpleContext):
     def __init__(self, gwas, model, covariance):
         self.covariance = covariance
-        self.weight_data, self.snps_in_model = _prepare_weight_data(model)
+        self.genes, self.weight_data, self.snps_in_model = _prepare_weight_data(model)
         self.gwas_data = _prepare_gwas_data(gwas)
         self.extra = model.extra
+        self.last_gene = None
+        self.data_cache = None
 
     def _get_weights(self, gene):
         w = self.weight_data[gene]
@@ -103,28 +106,31 @@ class OptimizedContext(SimpleContext):
         return g
 
     def get_data_intersection(self):
-        return _data_intersection_2(self.weight_data, self.gwas_data)
+        return _data_intersection_3(self.weight_data, self.gwas_data, self.extra.gene.values)
 
     def provide_calculation(self, gene):
-        w = self._get_weights(gene)
-        gwas = self._get_gwas(w.keys())
-        type = [numpy.str, numpy.float64, numpy.float64, numpy.float64]
-        columns = [Constants.SNP, WDBQF.K_WEIGHT, Constants.ZSCORE, Constants.BETA]
-        d = {x: v for x, v in w.iteritems() if x in gwas}
+        if gene != self.last_gene:
+            w = self._get_weights(gene)
+            gwas = self._get_gwas(w.keys())
+            type = [numpy.str, numpy.float64, numpy.float64, numpy.float64]
+            columns = [Constants.SNP, WDBQF.K_WEIGHT, Constants.ZSCORE, Constants.BETA]
+            d = {x: v for x, v in w.iteritems() if x in gwas}
 
-        snps, cov = self.get_covariance(gene, d.keys())
-        if snps is None:
-            d = pandas.DataFrame(columns=columns)
-            return len(w), d, cov, snps
+            snps, cov = self.get_covariance(gene, d.keys())
+            if snps is None:
+                d = pandas.DataFrame(columns=columns)
+                return len(w), d, cov, snps
 
-        d = [(x, w[x], gwas[x][0], gwas[x][1]) for x in snps]
-        d = zip(*d)
-        if len(d):
-            d = {columns[i]:numpy.array(d[i], dtype=type[i]) for i in xrange(0,len(columns))}
-        else:
-            d = {columns[i]:numpy.array([]) for i in xrange(0,len(columns))}
+            d = [(x, w[x], gwas[x][0], gwas[x][1]) for x in snps]
+            d = zip(*d)
+            if len(d):
+                d = {columns[i]:numpy.array(d[i], dtype=type[i]) for i in xrange(0,len(columns))}
+            else:
+                d = {columns[i]:numpy.array([]) for i in xrange(0,len(columns))}
 
-        return  len(w), d, cov, snps
+            self.data_cache = len(w), d, cov, snps
+            self.last_gene = gene
+        return self.data_cache
 
     def get_model_info(self):
         return self.extra
@@ -146,6 +152,24 @@ def _data_intersection_2(weight_data, gwas_data):
             if s in gwas_data:
                 genes.add(gene)
                 snps.add(s)
+    return genes, snps
+
+def _data_intersection_3(weight_data, gwas_data, gene_list):
+    genes = list()
+    _genes = set()
+    snps =set()
+    for gene in gene_list:
+        if not gene in weight_data:
+            logging.warning("Issues processing gene %s, skipped", gene)
+            continue
+        gs = zip(*weight_data[gene])[WDBQF.RSID]
+        for s in gs:
+            if s in gwas_data:
+                if not gene in _genes:
+                    _genes.add(gene)
+                    genes.append(gene)
+                snps.add(s)
+
     return genes, snps
 
 def _sanitized_gwas(gwas):
@@ -185,16 +209,17 @@ def _prepare_model(model):
     return model
 
 def _prepare_weight_data(model):
-    d = {}
+    d,_d = [],{}
     snps = set()
     for x in model.weights.values:
         gene = x[WDBQF.GENE]
         if not gene in d:
-            d[gene] = []
-        entries = d[gene]
+            _d[gene] = []
+            d.append(gene)
+        entries = _d[gene]
         entries.append(x)
         snps.add(x[WDBQF.RSID])
-    return d, snps
+    return d, _d, snps
 
 def _beta_loader(args):
     beta_contents = Utilities.contentsWithPatternsFromFolder(args.beta_folder, [])
@@ -215,8 +240,14 @@ def build_context(args, gwas):
     model = load_model(args.model_db_path, args.model_db_snp_key)
 
     if not args.single_snp_model:
-        logging.info("Loading covariance data from: %s", args.covariance)
-        covariance_manager = MatrixManager.load_matrix_manager(args.covariance)
+        if not args.stream_covariance:
+            logging.info("Loading covariance data from: %s", args.covariance)
+            covariance_manager = MatrixManager.load_matrix_manager(args.covariance)
+        else:
+            logging.info("Using streamed covariance from: %s", args.covariance)
+            logging.warning("This version is more lenient with input covariances, as many potential errors can't be checked for the whole input covariance in advance. Pay extra care to your covariances!")
+            streamer = DataFrameStreamer.data_frame_streamer(args.covariance, "GENE")
+            covariance_manager = MatrixManager.StreamedMatrixManager(streamer, MatrixManager.GENE_SNP_COVARIANCE_DEFINITION)
     else:
         logging.info("Bypassing covariance for single-snp-models")
         d = model.weights[[WDBQF.K_GENE, WDBQF.K_RSID]].rename(columns={WDBQF.K_RSID:"id1"})

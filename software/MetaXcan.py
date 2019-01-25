@@ -44,6 +44,7 @@ if __name__ == "__main__":
 # ZScore calculation
     parser.add_argument("--single_snp_model", action="store_true", help="Models are comprised of a single snp per gene", default=False)
     parser.add_argument("--covariance", help="name of file containing covariance data")
+    parser.add_argument("--stream_covariance", help="Option to better handle large covariances, slower but less memory consuming", action="store_true")
     parser.add_argument("--output_file", help="name of output file")
     parser.add_argument("--remove_ens_version", help="If set, will drop the -version- postfix in gene id.", action="store_true", default=False)
     parser.add_argument("--verbosity", help="Log verbosity level. 1 is everything being logged. 10 is only high level messages, above 10 will hardly log anything", default = "10")

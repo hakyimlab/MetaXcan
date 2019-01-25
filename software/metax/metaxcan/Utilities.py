@@ -66,13 +66,14 @@ class SimpleContext(AssociationCalculation.Context):
         return self.model.extra
 
 class OptimizedContext(SimpleContext):
-    def __init__(self, gwas, model, covariance):
+    def __init__(self, gwas, model, covariance, MAX_R):
         self.covariance = covariance
-        self.genes, self.weight_data, self.snps_in_model = _prepare_weight_data(model)
+        self.genes, self.weight_data, self.snps_in_model = _prepare_weight_data(model, MAX_R)
         self.gwas_data = _prepare_gwas_data(gwas)
         self.extra = model.extra
         self.last_gene = None
         self.data_cache = None
+        self.pedantic = MAX_R is None
 
     def _get_weights(self, gene):
         w = self.weight_data[gene]
@@ -106,7 +107,7 @@ class OptimizedContext(SimpleContext):
         return g
 
     def get_data_intersection(self):
-        return _data_intersection_3(self.weight_data, self.gwas_data, self.extra.gene.values)
+        return _data_intersection_3(self.weight_data, self.gwas_data, self.extra.gene.values, self.pedantic)
 
     def provide_calculation(self, gene):
         if gene != self.last_gene:
@@ -154,13 +155,14 @@ def _data_intersection_2(weight_data, gwas_data):
                 snps.add(s)
     return genes, snps
 
-def _data_intersection_3(weight_data, gwas_data, gene_list):
+def _data_intersection_3(weight_data, gwas_data, gene_list, pedantic):
     genes = list()
     _genes = set()
     snps =set()
     for gene in gene_list:
         if not gene in weight_data:
-            logging.warning("Issues processing gene %s, skipped", gene)
+            if pedantic:
+                logging.warning("Issues processing gene %s, skipped", gene)
             continue
         gs = zip(*weight_data[gene])[WDBQF.RSID]
         for s in gs:
@@ -208,10 +210,13 @@ def _prepare_model(model):
     model.weights[K] = pandas.Categorical(g, g.drop_duplicates())
     return model
 
-def _prepare_weight_data(model):
+def _prepare_weight_data(model, MAX_R=None):
     d,_d = [],{}
     snps = set()
     for x in model.weights.values:
+        if MAX_R and len(d) + 1 > MAX_R:
+            logging.info("Restricting data load to first %d", MAX_R)
+            break
         gene = x[WDBQF.GENE]
         if not gene in d:
             _d[gene] = []
@@ -232,7 +237,7 @@ def _beta_loader(args):
     return r
 
 def _gwas_wrapper(gwas):
-    logging.info("Processing input gwas")
+    logging.info("Processing loaded gwas")
     return gwas
 
 def build_context(args, gwas):
@@ -255,13 +260,13 @@ def build_context(args, gwas):
         covariance_manager = MatrixManager.MatrixManager(d, {MatrixManager.K_MODEL:WDBQF.K_GENE, MatrixManager.K_ID1:"id1", MatrixManager.K_ID2:"id2", MatrixManager.K_VALUE:"value"})
 
     gwas = _gwas_wrapper(gwas) if gwas is not None else _beta_loader(args)
-    context = _build_context(model, covariance_manager, gwas)
+    context = _build_context(model, covariance_manager, gwas, args.MAX_R)
     return context
 
-def _build_context(model, covariance_manager, gwas):
+def _build_context(model, covariance_manager, gwas, MAX_R=None):
     gwas = _prepare_gwas(gwas)
     gwas = _sanitized_gwas(gwas)
-    context = OptimizedContext(gwas, model, covariance_manager)
+    context = OptimizedContext(gwas, model, covariance_manager, MAX_R)
     return context
 
 def _build_simple_context(model, covariance_manager, gwas):

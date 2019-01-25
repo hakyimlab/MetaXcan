@@ -27,6 +27,9 @@ def run_metaxcan(args, context):
     results = []
     additional = []
     for i,gene in enumerate(i_genes):
+        if args.MAX_R and i+1>args.MAX_R:
+            logging.log("Early exit condition met")
+            break
         logging.log(9, "Processing gene %s", gene)
         r, snps = AssociationCalculation.association(gene, context, return_snps=True)
         results.append(r)
@@ -81,6 +84,7 @@ if __name__ == "__main__":
     parser.add_argument("--beta_folder", help="name of folder containing GWAS effect data")
     parser.add_argument("--output_file", help="name of output file")
     parser.add_argument("--verbosity", help="Log verbosity level. 1 is everything being logged. 10 is only high level messages, above 10 will hardly log anything", default = "10")
+    parser.add_argument("--MAX_R", help="Run only for the first R genes", type=int, default=None)
     parser.add_argument("--remove_ens_version", help="If set, will drop the -version- postfix in gene id.", action="store_true", default=False)
     parser.add_argument("--overwrite", help="If set, will overwrite the results file if it exists.", action="store_true", default=False)
     parser.add_argument("--additional_output", help="If set, will output additional information.", action="store_true", default=False)

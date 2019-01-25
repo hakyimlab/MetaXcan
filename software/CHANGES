@@ -1,5 +1,6 @@
 Version 0.6.7:
     * Added streamlined execution option that keeps a low-memory profile at a small increase of running time, to handle large covariances
+    * Debug mode: added command line argument to compute just the firt k genes present in the data
 Version 0.6.6:
     * Added output of loadings and PC regression coefficients to MultiXcan output
 Version 0.6.5:

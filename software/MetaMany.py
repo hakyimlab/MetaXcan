@@ -144,6 +144,7 @@ arguments --covariance_directory and --covariance_suffix. """)
     parser.add_argument("--overwrite", help="If set, will overwrite the results file if it exists.", action="store_true", default=False)
     parser.add_argument("--verbosity", help="Log verbosity level. 1 is everything being logged. 10 is only high level messages, above 10 will hardly log anything", default = "10")
     parser.add_argument("--throw", action="store_true", help="Throw exception on error", default=False)
+    parser.add_argument("--MAX_R", help="Run only for the first R genes", type=int, default=None)
 
 
     if "-v" in sys.argv or "--verbose" in sys.argv:

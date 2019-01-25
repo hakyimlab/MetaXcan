@@ -51,6 +51,7 @@ if __name__ == "__main__":
     parser.add_argument("--throw", action="store_true", help="Throw exception on error", default=False)
     parser.add_argument("--overwrite", help="If set, will overwrite the results file if it exists.", action="store_true", default=False)
     parser.add_argument("--additional_output", help="If set, will output additional information.", action="store_true", default=False)
+    parser.add_argument("--MAX_R", help="Run only for the first R genes", type=int, default=None)
 
     args = parser.parse_args()
 

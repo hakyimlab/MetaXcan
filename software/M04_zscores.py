@@ -30,7 +30,7 @@ def run_metaxcan(args, context):
         if args.MAX_R and i+1>args.MAX_R:
             logging.log("Early exit condition met")
             break
-        logging.log(9, "Processing gene %s", gene)
+        logging.log(9, "Processing gene %i:%s", i, gene)
         r, snps = AssociationCalculation.association(gene, context, return_snps=True)
         results.append(r)
         snps_found.update(snps)

@@ -92,7 +92,7 @@ class ModelDB(object):
     def load_extra(self, gene_key=None):
         self.openDBIfNecessary()
 
-        query,params = query_helper("SELECT gene, genename, `n.snps.in.model`, `pred.perf.R2`, `pred.perf.pval`, `pred.perf.qval` FROM extra", gene_key)
+        query,params = query_helper("SELECT gene, genename, `n.snps.in.model`, `pred.perf.R2`, `pred.perf.pval`, `pred.perf.qval` FROM extra order by gene", gene_key)
 
         try:
             results = self.cursor.execute(query, params)

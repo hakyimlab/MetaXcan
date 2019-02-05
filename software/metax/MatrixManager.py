@@ -70,10 +70,17 @@ class StreamedMatrixManager(MatrixManagerBase):
         self._data = {}
 
     def get(self, key, whitelist=None, strict_whitelist=None):
-        d = next(self.streamer)
-        self._data = _build_data(d, self.definition)
+        """It is vital to ask for gene in the same order they are present in the covariance"""
+        while not key in self._data:
+            d = next(self.streamer)
+            if d.shape[0]:
+                logging.log(8, "no measured data")
+            else:
+                logging.log(8, "loaded data with gene %d", d.gene.values[0])
+            self._data = _build_data(d, self.definition)
         if not key in self._data:
-            raise  Exceptions.MalformedInputFile("covariance", "loaded data does not contain the required covariance: {} from {}".format(key, self._data.keys()) )
+            raise Exceptions.MalformedInputFile("covariance", "loaded data does not contain the required covariance: {} from {}".format( key, self._data.keys()))
+
         return _get(self._data, key, whitelist, strict_whitelist)
 
     def get_2(self, key, snps_1, snps_2):

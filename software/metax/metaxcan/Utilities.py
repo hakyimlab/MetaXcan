@@ -111,26 +111,32 @@ class OptimizedContext(SimpleContext):
 
     def provide_calculation(self, gene):
         if gene != self.last_gene:
-            w = self._get_weights(gene)
-            gwas = self._get_gwas(w.keys())
-            type = [numpy.str, numpy.float64, numpy.float64, numpy.float64]
-            columns = [Constants.SNP, WDBQF.K_WEIGHT, Constants.ZSCORE, Constants.BETA]
-            d = {x: v for x, v in w.iteritems() if x in gwas}
+            #dummy while(True) to emulate go/to
+            while True:
+                w = self._get_weights(gene)
+                gwas = self._get_gwas(w.keys())
+                type = [numpy.str, numpy.float64, numpy.float64, numpy.float64]
+                columns = [Constants.SNP, WDBQF.K_WEIGHT, Constants.ZSCORE, Constants.BETA]
+                d = {x: v for x, v in w.iteritems() if x in gwas}
 
-            snps, cov = self.get_covariance(gene, d.keys())
-            if snps is None:
-                d = pandas.DataFrame(columns=columns)
-                return len(w), d, cov, snps
+                snps, cov = self.get_covariance(gene, d.keys())
+                if snps is None:
+                    d = pandas.DataFrame(columns=columns)
+                    self.data_cache = len(w), d, cov, snps
+                    self.last_gene = gene
+                    break
 
-            d = [(x, w[x], gwas[x][0], gwas[x][1]) for x in snps]
-            d = zip(*d)
-            if len(d):
-                d = {columns[i]:numpy.array(d[i], dtype=type[i]) for i in xrange(0,len(columns))}
-            else:
-                d = {columns[i]:numpy.array([]) for i in xrange(0,len(columns))}
+                d = [(x, w[x], gwas[x][0], gwas[x][1]) for x in snps]
+                d = zip(*d)
+                if len(d):
+                    d = {columns[i]:numpy.array(d[i], dtype=type[i]) for i in xrange(0,len(columns))}
+                else:
+                    d = {columns[i]:numpy.array([]) for i in xrange(0,len(columns))}
 
-            self.data_cache = len(w), d, cov, snps
-            self.last_gene = gene
+                self.data_cache = len(w), d, cov, snps
+                self.last_gene = gene
+                break
+
         return self.data_cache
 
     def get_model_info(self):

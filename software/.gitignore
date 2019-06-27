@@ -13,3 +13,4 @@ _prof
 _scripts
 _test
 *.cprof
+*_lenient.py

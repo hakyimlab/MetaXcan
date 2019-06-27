@@ -1,6 +1,8 @@
 #! /usr/bin/env python
 import os
 import logging
+import traceback
+
 from metax import __version__
 from metax import Logging
 from metax import Exceptions
@@ -27,9 +29,20 @@ def run(args):
 
     reporter.update(0, "%d %% of model's genes processed so far")
     for i,gene in enumerate(context.get_genes()):
+        if args.MAX_M and i > args.MAX_M:
+            logging.info("Early exit")
+            break
+
         logging.log(7, "Gene %d/%d: %s", i+1, n_genes, gene)
-        result = JointAnalysis.joint_analysis(context, gene)
-        results.append(result)
+        if args.throw:
+            result = JointAnalysis.joint_analysis(context, gene)
+            results.append(result)
+        else:
+            try:
+                result = JointAnalysis.joint_analysis(context, gene)
+                results.append(result)
+            except Exception as e:
+                logging.info("Error in gene %s\n%s", gene, traceback.format_exc())
         reporter.update(i, "%d %% of model's genes processed so far")
 
     results = JointAnalysis.format_results(results)
@@ -69,7 +82,7 @@ if __name__ == "__main__":
     parser.add_argument("--verbosity", help="Log verbosity level. 1 is everything being logged. 10 is only high level messages, above 10 will hardly log anything", default = "10")
     parser.add_argument("--throw", action="store_true", help="Throw exception on error", default=False)
     parser.add_argument("--trimmed_ensemble_id", action="store_true", help="Use ensemble ids without version", default=False)
-
+    parser.add_argument("--MAX_M", help="Compute only the first M genes", type=int)
 
     args = parser.parse_args()
 

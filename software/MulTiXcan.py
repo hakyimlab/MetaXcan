@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 import os
 import logging
+import traceback
 
 from timeit import default_timer as timer
 
@@ -37,10 +38,23 @@ def run(args):
             callbacks["loadings"] = MultiPrediXcanAssociation.SaveLoadings()
 
         for i,gene in enumerate(genes):
-            logging.log(7, "Processing gene %i/%i: %s", i+1, n_genes, gene)
-            r = MultiPrediXcanAssociation.multi_predixcan_association(gene, context, callbacks.values())
-            results.append(r)
+            if args.MAX_M and i>args.MAX_M:
+                logging.info("Early exit")
+                break
+
+            logging.log(7, "Processing gene %i/%i: %s", i + 1, n_genes, gene)
+            if args.throw:
+                r = MultiPrediXcanAssociation.multi_predixcan_association(gene, context, callbacks.values())
+                results.append(r)
+            else:
+                try:
+                    r = MultiPrediXcanAssociation.multi_predixcan_association(gene, context, callbacks.values())
+                    results.append(r)
+                except Exception as e:
+                    logging.info("Error in gene %s\n%s", gene, traceback.format_exc())
             reporter.update(i, "%d %% of model's genes processed so far")
+
+
         reporter.update(i, "%d %% of model's genes processed so far")
         results = MultiPrediXcanAssociation.dataframe_from_results(results, context)
         results = results.fillna("NA")
@@ -78,6 +92,7 @@ if __name__ == "__main__":
     parser.add_argument("--mode", help="Type of regression. Can be: {}".format(MultiPrediXcanAssociation.MTPMode.K_MODES), default=MultiPrediXcanAssociation.MTPMode.K_LINEAR)
     parser.add_argument("--pc_condition_number", help="Principal components condition number", type=int)
     parser.add_argument("--pc_eigen_ratio", help="Principal components filter, cutoff at proportion to max eigenvalue", type=float)
+    parser.add_argument("--MAX_M", help="Compute only the first M genes", type=int)
 
     args = parser.parse_args()
 

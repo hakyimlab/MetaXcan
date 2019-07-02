@@ -173,6 +173,7 @@ def multi_predixcan_association(gene_, context, callbacks=None):
             original_models = model_keys
             vt_projection = None
             variance = None
+
         n_used = len(model_keys)
         y, X = _design_matrices(e_, model_keys, context)
         specifics =  _mode[context.get_mode()]

@@ -29,7 +29,7 @@ def run(args):
 
     reporter.update(0, "%d %% of model's genes processed so far")
     for i,gene in enumerate(context.get_genes()):
-        if args.MAX_M and i > args.MAX_M:
+        if args.MAX_M and i > args.MAX_M-1:
             logging.info("Early exit")
             break
 

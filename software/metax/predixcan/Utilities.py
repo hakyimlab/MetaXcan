@@ -170,9 +170,12 @@ def _prepare_phenotype(context):
     logging.info("Accquiring phenotype")
     context.pheno = _pheno_from_file_and_column(context.args.input_phenos_file, context.args.input_phenos_column)
     if context.args.mode == MTPMode.K_LOGISTIC:
-        v = set([str(float(x)) for x in context.pheno])
-        if v != {'0.0', '1.0', 'nan'}:
-            raise Exceptions.InvalidArguments("Logistic regression was asked but phenotype is not binomial")
+        try:
+            v = set([str(float(x)) for x in context.pheno])
+            if not v.issubset({'0.0', '1.0', 'nan'}):
+                raise Exceptions.InvalidArguments("Logistic regression was asked but phenotype is not binomial")
+        except:
+            raise Exceptions.InvalidArguments("Logistic regression: could not parse phenotype")
 
     context.mode = context.args.mode
     if context.args.covariates_file and context.args.covariates:

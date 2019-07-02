@@ -38,7 +38,7 @@ def run(args):
             callbacks["loadings"] = MultiPrediXcanAssociation.SaveLoadings()
 
         for i,gene in enumerate(genes):
-            if args.MAX_M and i>args.MAX_M:
+            if args.MAX_M and i>args.MAX_M-1:
                 logging.info("Early exit")
                 break
 

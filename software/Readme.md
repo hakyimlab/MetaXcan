@@ -27,14 +27,14 @@ Check the root [Readme](https://github.com/hakyimlab/MetaXcan) for a sample scri
 The software is developed and tested in Linux and Max OS environments. Should be mostly working on Windows.
 
 To run S-PrediXcan, you need  [Python 2.7](https://www.python.org/), with the following libraries:
-* [numpy (>=1.11.1)](http://www.numpy.org/)
-* [scipy (>=0.18.1)](http://www.scipy.org/) 
-* [pandas (>=0.18.1)](http://pandas.pydata.org/)
+* [numpy (>=1.14.2)](http://www.numpy.org/)
+* [scipy (>=1.2.2)](http://www.scipy.org/) 
+* [pandas (>=0.22.0)](http://pandas.pydata.org/)
 * [mock](https://github.com/testing-cabal/mock) and [sqlalchemy](https://www.sqlalchemy.org/) are needed for the unit tests.
 
 To run PrediXcan and MulTiPrediXcan, you also need:
 * [patsy (>=0.5.0)](https://patsy.readthedocs.io/en/latest/)
-* [statsmodels (>=0.8.0)](https://www.statsmodels.org/stable/index.html)
+* [statsmodels (>=0.10.0)](https://www.statsmodels.org/stable/index.html)
 * [h5py (>=2.7.1)](https://github.com/h5py/h5py)
 * [h5py-cache (>=1.0.0)](https://pypi.python.org/pypi/h5py-cache/1.0)
 

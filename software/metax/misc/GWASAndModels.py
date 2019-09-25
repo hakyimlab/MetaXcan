@@ -39,7 +39,7 @@ def gwas_model_intersection(args):
     intersection = set()
     for db_path in sorted(paths):
         logging.log(9, "loading %s", db_path)
-        model = PredictionModel.load_model(db_path)
+        model = PredictionModel.load_model(db_path, args.model_db_snp_key)
         base = model.weights[[PF.K_RSID, PF.K_EFFECT_ALLELE, PF.K_NON_EFFECT_ALLELE]].drop_duplicates()
         b = align_data_to_alleles(gwas, base, Constants.SNP, PF.K_RSID)
         intersection.update(b[Constants.SNP])

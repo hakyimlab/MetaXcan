@@ -1,3 +1,5 @@
+Version 0.6.11:
+    * Fixed edge case when using non-rsid variants in S-MultiXcan
 Version 0.6.10:
     * Fixed wrong check in individual-level phenotypes for missing data
 Version 0.6.9:

@@ -61,6 +61,7 @@ if __name__ == "__main__":
     parser.add_argument("--models_folder", help="Path to folder with prediction models")
     parser.add_argument("--models_name_filter", help="Path to folder with prediction models", type=str, nargs='+')
     parser.add_argument("--models_name_pattern", help="regular expression to detect tissue name from file names")
+    parser.add_argument("--model_db_snp_key", help="Specify a key to use as snp_id")
 
     parser.add_argument("--gwas_folder", help="name of folder containing GWAS data. All files in the folder are assumed to belong to a single study.")
     parser.add_argument("--gwas_file_pattern", help="Pattern to recognice GWAS files in folders (in case there are extra files and you don't want them selected).")

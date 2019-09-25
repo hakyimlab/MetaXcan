@@ -103,7 +103,8 @@ def load_plain_gwas_from_args(args):
     GWAS.validate_format_for_strict(gwas_format)
 
     _l = lambda x: GWAS.load_gwas(x, gwas_format, skip_until_header=args.skip_until_header,
-            separator=args.separator, handle_empty_columns=args.handle_empty_columns, input_pvalue_fix=args.input_pvalue_fix)
+            separator=args.separator, handle_empty_columns=args.handle_empty_columns, input_pvalue_fix=args.input_pvalue_fix,
+            keep_non_rsid=args.keep_non_rsid)
     if args.gwas_folder:
         names = BUtilities.contentsWithRegexpFromFolder(args.gwas_folder, regexp)
         names.sort()  # cosmetic, because different filesystems/OS yield folders in different order

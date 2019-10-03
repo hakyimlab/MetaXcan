@@ -47,7 +47,7 @@ def run(args):
 
     results = JointAnalysis.format_results(results)
     Utilities.ensure_requisite_folders(args.output)
-    results.to_csv(args.output, index=False, sep="\t")
+    results.to_csv(args.output, index=False, sep="\t", na_rep="NA")
 
     end = timer()
     logging.info("Ran multi tissue in %s seconds" % (str(end - start)))

@@ -50,7 +50,7 @@ def run_metaxcan(args, context):
 
     if args.output_file:
         Utilities.ensure_requisite_folders(args.output_file)
-        results.to_csv(args.output_file, index=False)
+        results.to_csv(args.output_file, index=False, na_rep="NA")
 
     return results
 

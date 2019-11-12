@@ -164,7 +164,6 @@ def multi_predixcan_association(gene_, context, callbacks=None):
 
     model_keys, e_ = _acquire(gene_, context)
     n_models = len(model_keys)
-
     pc_filter = context.get_pc_filter()
     try:
         if pc_filter is not None:
@@ -226,11 +225,14 @@ class SaveLoadings(object):
 
     def __call__(self, gene, model, result, vt_projection, variance,  model_keys, coefs):
         results=[]
-        for i in xrange(0, vt_projection.shape[0]):
-            pc = "pc{}".format(i)
-            l = numpy.sqrt(variance[i])*vt_projection[i]
-            for j in xrange(0, l.shape[0]):
-                results.append((gene,pc,model_keys[j], l[j]))
+        if type(vt_projection) == int or type(vt_projection) == float:
+            results.append((gene, "pc0", model_keys[0], variance))
+        else:
+            for i in xrange(0, vt_projection.shape[0]):
+                pc = "pc{}".format(i)
+                l = numpy.sqrt(variance[i])*vt_projection[i]
+                for j in xrange(0, l.shape[0]):
+                    results.append((gene,pc,model_keys[j], l[j]))
 
         self.loadings.append(pandas.DataFrame(results, columns=["gene", "pc", "tissue", "weight"]))
 

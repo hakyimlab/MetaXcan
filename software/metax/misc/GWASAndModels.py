@@ -7,9 +7,10 @@ from .. import Constants
 from .. import PredictionModel
 from ..gwas import Utilities as GWASUtilities
 
+EA, NEA = Constants.EFFECT_ALLELE, Constants.NON_EFFECT_ALLELE
+EA_BASE, NEA_BASE = EA + "_BASE", NEA + "_BASE"
+
 def align_data_to_alleles(data, base, left_on, right_on):
-    EA, NEA = Constants.EFFECT_ALLELE, Constants.NON_EFFECT_ALLELE
-    EA_BASE, NEA_BASE = EA+"_BASE", NEA+"_BASE"
     merged = pandas.merge(data, base, left_on=left_on, right_on=right_on, suffixes=("", "_BASE"))
 
     alleles_1 = pandas.Series([set(e) for e in zip(merged[EA], merged[NEA])])

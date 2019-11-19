@@ -38,6 +38,8 @@ def add_gwas_arguments_to_parser(parser):
 
     parser.add_argument("--snp_map_file", help="table specifying conversion between a particular set of snps and those in the models' reference")
 
+    parser.add_argument("--split_column", help="Present for future compatibility.", nargs="+")
+
 def add_gwas_format_json_to_parser(parser):
     parser.add_argument("--input_gwas_format_json",
                         help="File containing a json description of the gwas.")

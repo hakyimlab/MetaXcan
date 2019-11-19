@@ -38,22 +38,37 @@ def build_betas(args, model, gwas_format, name, model_snp_map):
             skip_until_header=args.skip_until_header, handle_empty_columns=args.handle_empty_columns, input_pvalue_fix=args.input_pvalue_fix, keep_non_rsid=args.keep_non_rsid)
 
     if model_snp_map:
-        pass
-        #PF = PredictionModel.WDBQF
-        #snp_map = pandas.read_table(model_snp_map)
-        #snp_map_ = snp_map_.rename(columns={"a0":PF.K_NON_EFFECT_ALLELE, "a1":PF.K_EFFECT_ALLELE})[[PF.K_RSID, PF.K_EFFECT_ALLELE, PF.K_NON_EFFECT_ALLELE]].drop_duplicates()
-        #b = GWASAndModels.align_data_to_alleles(b, base, Constants.SNP, PF.K_RSID)
+        logging.info("Loading mapping")
+        PF = PredictionModel.WDBQF
+        snp_map = pandas.read_table(model_snp_map)
+        snp_map_ = snp_map.rename(columns={"a0":PF.K_NON_EFFECT_ALLELE, "a1":PF.K_EFFECT_ALLELE})[[PF.K_RSID, PF.K_EFFECT_ALLELE, PF.K_NON_EFFECT_ALLELE, "panel_variant_id", "panel_variant_a0", "panel_variant_a1", "swap"]].drop_duplicates()
+
+        logging.info("Mapping variants")
+        columns = [x for x in b.columns.values]
+        b = GWASAndModels.align_data_to_alleles(b, snp_map_, Constants.SNP, PF.K_RSID)
+        if GWAS.ZSCORE in b:
+            b = b.assign(zscore = b.zscore * b.swap)
+        if GWAS.BETA in b:
+            b = b.assign(beta = b.beta * b.swap)
+        b = b.rename(columns={GWAS.SNP:"gwas_snp", GWAS.EFFECT_ALLELE:"gwas_effect_allele", GWAS.NON_EFFECT_ALLELE:"gwas_non_effect_allele"})\
+                .drop(columns=[GWASAndModels.EA_BASE, GWASAndModels.NEA_BASE])\
+                .rename(columns={"panel_variant_id":GWAS.SNP, "panel_variant_a0":GWASAndModels.NEA, "panel_variant_a1":GWASAndModels.EA})\
+                [["gwas_snp", "gwas_effect_allele", "gwas_non_effect_allele"]+columns]
 
     if model is not None:
+        logging.info("Aligning GWAS to models")
         PF = PredictionModel.WDBQF
         base = model.weights[[PF.K_RSID, PF.K_EFFECT_ALLELE, PF.K_NON_EFFECT_ALLELE]].drop_duplicates()
         b = GWASAndModels.align_data_to_alleles(b, base, Constants.SNP, PF.K_RSID)
+        b = b.drop(columns=[GWASAndModels.EA_BASE, GWASAndModels.NEA_BASE])
 
     b = b.fillna("NA")
     if model is not None:
+        logging.info("Trimming output")
         keep = [GWAS.SNP, GWAS.ZSCORE]
         if GWAS.BETA in b: keep.append(GWAS.BETA)
         b = b[keep]
+
     return b
 
 def validate(args):
@@ -105,6 +120,7 @@ def run(args):
 
             b = build_betas(args, model, gwas_format, name, args.snp_map_file)
             c = "gzip" if ".gz" in name else None
+            logging.info("Saving %s", output_path)
             b.to_csv(output_path, sep="\t", index=False, compression=c, mode=m)
         end = timer()
         logging.info("Successfully ran GWAS input processing in %s seconds" %(str(end - start)))

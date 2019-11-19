@@ -36,6 +36,8 @@ def add_gwas_arguments_to_parser(parser):
 
     parser.add_argument("--keep_non_rsid", help="Keep non-rsid snps", action="store_true")
 
+    parser.add_argument("--snp_map_file", help="table specifying conversion between a particular set of snps and those in the models' reference")
+
 def add_gwas_format_json_to_parser(parser):
     parser.add_argument("--input_gwas_format_json",
                         help="File containing a json description of the gwas.")

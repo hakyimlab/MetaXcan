@@ -28,7 +28,7 @@ from metax import Utilities
 from metax import Logging
 from metax import Exceptions
 
-def build_betas(args, model, gwas_format, name):
+def build_betas(args, model, gwas_format, name, model_snp_map):
     logging.info("Building beta for %s and %s", name, args.model_db_path if args.model_db_path else "no database")
 
     load_from = os.path.join(args.gwas_folder, name) if args.gwas_folder else name
@@ -37,15 +37,23 @@ def build_betas(args, model, gwas_format, name):
     b = GWAS.load_gwas(load_from, gwas_format, snps=snps, separator=args.separator,
             skip_until_header=args.skip_until_header, handle_empty_columns=args.handle_empty_columns, input_pvalue_fix=args.input_pvalue_fix, keep_non_rsid=args.keep_non_rsid)
 
+    if model_snp_map:
+        pass
+        #PF = PredictionModel.WDBQF
+        #snp_map = pandas.read_table(model_snp_map)
+        #snp_map_ = snp_map_.rename(columns={"a0":PF.K_NON_EFFECT_ALLELE, "a1":PF.K_EFFECT_ALLELE})[[PF.K_RSID, PF.K_EFFECT_ALLELE, PF.K_NON_EFFECT_ALLELE]].drop_duplicates()
+        #b = GWASAndModels.align_data_to_alleles(b, base, Constants.SNP, PF.K_RSID)
+
     if model is not None:
         PF = PredictionModel.WDBQF
         base = model.weights[[PF.K_RSID, PF.K_EFFECT_ALLELE, PF.K_NON_EFFECT_ALLELE]].drop_duplicates()
         b = GWASAndModels.align_data_to_alleles(b, base, Constants.SNP, PF.K_RSID)
 
     b = b.fillna("NA")
-    keep = [GWAS.SNP, GWAS.ZSCORE]
-    if GWAS.BETA in b: keep.append(GWAS.BETA)
-    b = b[keep]
+    if model is not None:
+        keep = [GWAS.SNP, GWAS.ZSCORE]
+        if GWAS.BETA in b: keep.append(GWAS.BETA)
+        b = b[keep]
     return b
 
 def validate(args):
@@ -55,6 +63,10 @@ def validate(args):
 def run(args):
     start = timer()
     validate(args)
+
+    if args.output_folder and args.output:
+        logging.info("Specify either --output_folder or --output, not both")
+        return
 
     if args.gwas_folder:
         regexp = re.compile(args.gwas_file_pattern) if args.gwas_file_pattern else  None
@@ -72,28 +84,36 @@ def run(args):
     GWAS.validate_format_for_strict(gwas_format)
     model = PredictionModel.load_model(args.model_db_path, args.model_db_snp_key) if args.model_db_path else None
 
-    if args.output_folder:
-        if not os.path.exists(args.output_folder):
+    if args.output_folder or args.output:
+        if args.output_folder and not os.path.exists(args.output_folder):
             os.makedirs(args.output_folder)
+        else:
+            Utilities.ensure_requisite_folders(args.output)
 
-        for name in names:
-            output_path = os.path.join(args.output_folder, name)
+        for i,name in enumerate(names):
+            output_path = os.path.join(args.output_folder, name) if not args.output else args.output
+            if args.output_folder or i==0:
+                m = "w"
+            else:
+                m = "a"
+
             if not ".gz" in output_path:
                 output_path += ".gz"
             if os.path.exists(output_path):
                 logging.info("%s already exists, delete it if you want it to be done again", output_path)
                 continue
 
-            b = build_betas(args, model, gwas_format, name)
+            b = build_betas(args, model, gwas_format, name, args.snp_map_file)
             c = "gzip" if ".gz" in name else None
-            b.to_csv(output_path, sep="\t", index=False, compression=c)
+            b.to_csv(output_path, sep="\t", index=False, compression=c, mode=m)
         end = timer()
         logging.info("Successfully ran GWAS input processing in %s seconds" %(str(end - start)))
     else:
-        r = pandas.DataFrame()
+        r = []
         for name in names:
-            b = build_betas(args, model, gwas_format, name)
-            r = pandas.concat([r,b])
+            b = build_betas(args, model, gwas_format, name, args.snp_map_file)
+            r.append(b)
+        r = pandas.concat(r)
         end = timer()
         logging.info("Successfully parsed input gwas in %s seconds"%(str(end-start)))
 
@@ -119,8 +139,9 @@ if __name__ == "__main__":
     parser.add_argument("--gwas_file_pattern",
                         help="Pattern to recognice GWAS files in folders (in case there are extra files and you don't want them selected).")
 
-    parser.add_argument("--output_folder",
-                        help="name of folder to put results in")
+    parser.add_argument("--output_folder", help="name of folder to put results in")
+
+    parser.add_argument("--output", help="name of file to put results in")
 
     GWASUtilities.add_gwas_arguments_to_parser(parser)
 

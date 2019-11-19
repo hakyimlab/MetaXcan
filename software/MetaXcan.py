@@ -6,6 +6,7 @@ import metax
 __version__ = metax.__version__
 import logging
 import os
+import copy
 
 from metax import Exceptions
 from metax import Logging
@@ -22,8 +23,11 @@ def run(args):
     if not args.model_db_path:
         logging.info("Need to provide a model database file path")
         return
-    args.output_folder = None
-    g = M03_betas.run(args)
+    M03_args = copy.copy(args)
+    M03_args.output_folder = None
+    M03_args.output = None
+    g = M03_betas.run(M03_args)
+
     M04_zscores.run(args, g)
 
 if __name__ == "__main__":

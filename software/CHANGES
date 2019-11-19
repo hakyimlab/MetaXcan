@@ -1,3 +1,5 @@
+Version 0.6.12:
+    * Made some tests portable. Refactored some code to support genome coordinate mapping
 Version 0.6.11:
     * Fixed edge case when using non-rsid variants in S-MultiXcan
 Version 0.6.10:

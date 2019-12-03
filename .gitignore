@@ -26,3 +26,5 @@ setuptools*.zip
 #Pyenv
 .python-version
 
+venv
+

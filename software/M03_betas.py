@@ -63,6 +63,7 @@ def build_betas(args, model, gwas_format, name, model_snp_map):
         b = b.drop(columns=[GWASAndModels.EA_BASE, GWASAndModels.NEA_BASE])
 
     b = b.fillna("NA")
+
     if model is not None:
         logging.info("Trimming output")
         keep = [GWAS.SNP, GWAS.ZSCORE]
@@ -112,14 +113,12 @@ def run(args):
             else:
                 m = "a"
 
-            if not ".gz" in output_path:
-                output_path += ".gz"
             if os.path.exists(output_path):
                 logging.info("%s already exists, delete it if you want it to be done again", output_path)
                 continue
 
             b = build_betas(args, model, gwas_format, name, args.snp_map_file)
-            c = "gzip" if ".gz" in name else None
+            c = "gzip" if ".gz" in output_path else None
             logging.info("Saving %s", output_path)
             b.to_csv(output_path, sep="\t", index=False, compression=c, mode=m)
         end = timer()

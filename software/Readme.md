@@ -46,11 +46,11 @@ is needed for some optional statistics and charts.
 S-PrediXcan is concerned with obtaining gene-level association tests from ordinary GWAS data.
 
 Ordinarily, a user would need to obtain/download support data sets comprising of:
-- A Transcriptome Prediction Model database (an example is [here](https://s3.amazonaws.com/imlab-open/Data/MetaXcan/sample_data/DGN-WB_0.5.db))
-- A file with the covariance matrices of the SNPs within each gene model (such as [this one](https://s3.amazonaws.com/imlab-open/Data/MetaXcan/sample_data/covariance.DGN-WB_0.5.txt.gz))
+- A Transcriptome Prediction Model database (an example is [in the example data](https://uchicago.box.com/s/us7qhue3juubq66tktpogeansahxszg9))
+- A file with the covariance matrices of the SNPs within each gene model (such as in [the example data](https://uchicago.box.com/s/us7qhue3juubq66tktpogeansahxszg9))
 
 And use them to run S-PrediXcan analysis on:
-- GWAS results (such as [these](https://s3.amazonaws.com/imlab-open/Data/MetaXcan/sample_data/GWAS.tar.gz), from  a randomly generated phenotype)
+- GWAS results (such as in  [the example the data](https://uchicago.box.com/s/us7qhue3juubq66tktpogeansahxszg9), from  a randomly generated phenotype)
 
 However, if you have access to interesting data,
 you can build your own Transcriptome Prediction Model database 
@@ -107,8 +107,8 @@ used at the covariance script step (**M01_covariances_correlations.py**).
 
 This script is considered deprecated and left here for future reference only. This script builds the covariance matrices needed at **M04_zscores.py**.
 You will run it once in a while, if ever.
-It takes input from **M00_prerequisites.py**'s output, and a genetic expression model database, such as
-[this one](https://s3.amazonaws.com/imlab-open/Data/MetaXcan/sample_data/DGN-WB_0.5.db).
+It takes input from **M00_prerequisites.py**'s output, and a genetic expression model database, such as in
+[the example data](https://uchicago.box.com/s/us7qhue3juubq66tktpogeansahxszg9).
 
 It will build the correlation matrix between SNP's in a same gene's model, for each gene, and save them
 in a gzip-compressed text file.

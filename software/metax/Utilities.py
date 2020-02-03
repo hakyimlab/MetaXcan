@@ -167,6 +167,20 @@ class FileIterator(object):
             for i,line in enumerate(file_object):
                 callback(i, line)
 
+def open_any_plain_file(path):
+    if "gz" in path:
+        return gzip.open(path)
+    else:
+        return open(path)
+
+def generate_from_any_plain_file(path, skip_n=None):
+    with open_any_plain_file(path) as f:
+        if skip_n:
+            for i in range(0, skip_n):
+                f.readline()
+        for l in f:
+            yield l
+
 import csv
 class CSVFileIterator(FileIterator):
     def __init__(self, path, header=None, compressed = False, ignore_until_header = False, delimiter = " ", quotechar='"'):
@@ -204,7 +218,7 @@ def to_dataframe(data, columns,to_numeric=None, fill_na=None):
 def save_dataframe(d, path, mode="w", header=True):
     compression = "gzip" if "gz" in path else None
     ensure_requisite_folders(path)
-    d.to_csv(path, header=header, mode=mode, compression=compression, sep="\t", index=False)
+    d.to_csv(path, header=header, mode=mode, compression=compression, sep="\t", index=False, na_rep="NA")
 
 def save_table(data, path, mode="w", header=None):
     compression = "gzip" if "gz" in path else None

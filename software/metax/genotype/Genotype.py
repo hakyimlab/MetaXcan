@@ -7,5 +7,3 @@ class GF(object):
     ALT_ALLELE=4
     FREQUENCY=5
     FIRST_DOSAGE=6
-
-

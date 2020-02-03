@@ -1,6 +1,5 @@
 import logging
-import os
-import re
+import string
 import pandas
 
 from .. import Constants
@@ -46,4 +45,33 @@ def gwas_model_intersection(args):
         intersection.update(b[Constants.SNP])
     return intersection
 
+
+complement_translation = string.maketrans("CGTA", "GCAT")
+def match_alleles(l_non_effect_allele, l_effect_allele, r_non_effect_allele, r_effect_allele):
+    if len(l_effect_allele) == 1 and len(l_non_effect_allele) == 1:
+        if l_effect_allele == r_effect_allele and  l_non_effect_allele == r_non_effect_allele:
+            return 1, 1
+        if l_effect_allele == r_non_effect_allele and l_non_effect_allele == r_effect_allele:
+            return -1, 1
+
+        t_r_non_effect = r_non_effect_allele.translate(complement_translation)
+        t_r_effect = r_effect_allele.translate(complement_translation)
+
+        if l_effect_allele == t_r_effect and  l_non_effect_allele == t_r_non_effect:
+            return 1, -1
+        if l_effect_allele == t_r_non_effect and l_non_effect_allele == r_effect_allele:
+            return -1, -1
+
+        return None, None
+    else:
+        if l_effect_allele == r_effect_allele and  l_non_effect_allele == r_non_effect_allele:
+            return 1, 1
+
+        t_r_non_effect = r_non_effect_allele.translate(complement_translation)
+        t_r_effect = r_effect_allele.translate(complement_translation)
+
+        if l_effect_allele == t_r_effect and  l_non_effect_allele == t_r_non_effect:
+            return 1, -1
+
+        return None, None
 

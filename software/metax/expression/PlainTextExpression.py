@@ -99,7 +99,7 @@ def _structure(folder, pattern=None):
 
 ########################################################################################################################
 
-class Expression(object):
+class Expression(Expression.Expression):
     def __init__(self, path):
         self.path = path
         self.d = None
@@ -113,6 +113,8 @@ class Expression(object):
 
     def enter(self):
         self.d = pandas.read_table(self.path)
+        if "FID" in self.d:
+            self.d = self.d.drop(["FID", "IID"], axis = 1)
 
     def exit(self):
         pass

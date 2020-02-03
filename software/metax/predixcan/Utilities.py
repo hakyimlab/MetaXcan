@@ -7,7 +7,8 @@ import statsmodels.api as sm
 
 from MultiPrediXcanAssociation import Context as _MTPContext, MTPMode
 from PrediXcanAssociation import Context as _PContext, PMode
-from .. expression import HDF5Expression, PlainTextExpression
+from metax import Exceptions, Utilities
+from .. expression import Expression, HDF5Expression, PlainTextExpression
 from .. import Exceptions
 
 ########################################################################################################################
@@ -147,8 +148,14 @@ def _check_args_file(args):
     if not args.mode in PMode.K_MODES:
         raise Exceptions.InvalidArguments("Invalid mode")
 
-def expression_from_args(args):
-    if args.hdf5_expression_file:
+def expression_from_args(args, prediction_results = None):
+    if prediction_results:
+        if isinstance(prediction_results, BasicPredictionRepository):
+            logging.info("Preparing PrediXcan context from data")
+            expression = Expression.ExpressionFromData(prediction_results.genes)
+        else:
+            raise Exceptions.ReportableException("Invalid prediction results")
+    elif args.hdf5_expression_file:
         logging.info("Preparing PrediXcan HDF5 context")
         expression = HDF5Expression.Expression(args.hdf5_expression_file)
     elif args.expression_file:
@@ -158,9 +165,9 @@ def expression_from_args(args):
         raise RuntimeError("Could not build context from arguments")
     return expression
 
-def p_context_from_args(args):
+def p_context_from_args(args, prediction_results=None):
     _check_args_file(args)
-    expression = expression_from_args(args)
+    expression = expression_from_args(args, prediction_results)
     context = PContext(args, expression)
     return context
 
@@ -217,3 +224,42 @@ def _get_residual(pheno, covariates):
     e_["residual"] = result.resid
     e = e.merge(e_[["order", "residual"]], on="order", how="left")
     return e["residual"]
+
+########################################################################################################################
+
+class PredictionRepository:
+    def update(self, gene, dosage, weight): raise Exceptions.NotImplemented("gene_repository is not implemented")
+    def store_prediction(self, path): raise Exceptions.NotImplemented("gene_repository is not implemented")
+    def summary(self): raise Exceptions.NotImplemented("gene_repository is not implemented")
+
+class BasicPredictionRepository(PredictionRepository):
+    def __init__(self, samples, extra):
+        self.genes = {}
+        self.samples = samples
+        self.stats = {}
+        self.extra = extra
+
+    def update(self, gene, dosage, weight):
+        if not gene in self.genes:
+            self.stats[gene] = [1, ]
+            self.genes[gene] = weight * numpy.array(dosage, dtype=numpy.float)
+        else:
+            self.stats[gene][0] += 1
+            self.genes[gene] += weight * numpy.array(dosage, dtype=numpy.float)
+
+    def store_prediction(self, path):
+        d = pandas.DataFrame(self.genes)
+        result = pandas.concat([self.samples, d], axis=1, sort=False)
+        Utilities.save_dataframe(result, path)
+
+    def summary(self):
+        return summary_report(self.stats, self.extra)
+
+
+def summary_report(summary_data, extra):
+    s = []
+    for k, v in summary_data.stats.iteritems():
+        s.append((k, v[0]))
+    s = pandas.DataFrame(s, columns=["gene", "n_snps_used"])
+    s = extra[['gene', 'gene_name', 'n_snps_in_model', 'pred_perf_r2', 'pred_perf_pval']].merge(s, on="gene", how="left")
+    return s

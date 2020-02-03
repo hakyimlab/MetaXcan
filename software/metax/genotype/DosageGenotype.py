@@ -1,4 +1,4 @@
-import gzip
+import re
 import os
 import logging
 
@@ -10,7 +10,7 @@ from .. import Utilities
 class DTF:
     """Format of dosage"""
     CHR = 0
-    RSID = 1
+    ID = 1
     POSITION = 2
     ALLELE_0 = 3
     ALLELE_1 = 4
@@ -19,26 +19,38 @@ class DTF:
 
 def dosage_file_geno_lines(file, snps=None):
     logging.log(9, "Processing Dosage geno %s", file)
-    with gzip.open(file) as file:
-        for i,line in enumerate(file):
-            comps = line.strip().split()
-            rsid = comps[DTF.RSID]
-            if i==0: continue
-            if snps and not rsid in snps:
-                continue
+    for i, line in enumerate(Utilities.generate_from_any_plain_file(file)):
+        comps = line.strip().split()
+        id = comps[DTF.ID]
 
-            dosage = numpy.array(comps[DTF.FIRST_DATA_COLUMN:], dtype=numpy.float64)
-            chrom = comps[DTF.CHR].replace("chr", "")
+        if snps and not id in snps:
+            continue
 
-            yield [rsid, chrom, comps[DTF.POSITION], comps[DTF.ALLELE_0], comps[DTF.ALLELE_1], comps[DTF.FREQ]] + list(dosage)
+        dosage = numpy.array(comps[DTF.FIRST_DATA_COLUMN:], dtype=numpy.float64)
+        chrom = comps[DTF.CHR].replace("chr", "")
+
+        yield (id, int(chrom), int(comps[DTF.POSITION]), comps[DTF.ALLELE_0], comps[DTF.ALLELE_1], float(comps[DTF.FREQ])) + tuple(dosage)
+
+def dosage_files_geno_lines(dosage_files, snps=None):
+    chr_ = re.compile(".*chr(\d+).*")
+    def sort_geno(x):
+        x_ = chr_.search(x).group(1)
+        if x_:
+            return int(x_)
+        else:
+            return x
+    dosage_files = sorted(dosage_files, key=sort_geno)
+
+    for f in dosage_files:
+        for e in dosage_file_geno_lines(f, snps=snps):
+            yield e
 
 def dosage_folder_geno_lines(dosage_folder, dosage_pattern, snps=None):
-    logging.log(9, "Processing Dosage Folder geno")
+    logging.log(9, "Processing Dosage Folder geno %s", folder)
     files = Utilities.contentsWithRegexpFromFolder(dosage_folder, dosage_pattern)
     files = sorted([os.path.join(dosage_folder, x) for x in files])
-    for f in files:
-        for line in dosage_file_geno_lines(f, snps=snps):
-            yield line
+    for e in dosage_files_geno_lines(files, snps=snps):
+        yield e
 
 def dosage_geno_by_chromosome(dosage_folder, dosage_pattern, snps=None):
     buffer = []

@@ -1,11 +1,12 @@
 __author__ = 'heroico'
 
 import os
+import io
 import json
 import re
 import logging
 import gzip
-import Exceptions
+from . import Exceptions
 import pandas
 
 VALID_ALLELES = ["A", "T", "C", "G"]
@@ -97,7 +98,7 @@ def checkSubdirectorySanity(base, candidate):
         return False
 
     return sane
-
+open
 class PercentReporter(object):
     def __init__(self, level, total, increment=10, pattern="%i percent complete"):
         self.level = level
@@ -134,10 +135,10 @@ class FileIterator(object):
 
     def iterate(self,callback=None):
         if self.compressed:
-            with gzip.open(self.path, 'rb') as file_object:
-                self._iterateOverFile(file_object, callback)
+            with gzip.open(self.path, 'r') as file_object:
+                self._iterateOverFile(io.TextIOWrapper(file_object, newline=""), callback)
         else:
-            with open(self.path, 'rb') as file_object:
+            with open(self.path, 'r') as file_object:
                 self._iterateOverFile(file_object, callback)
 
     def _iterateOverFile(self, file_object, callback):
@@ -169,11 +170,12 @@ class FileIterator(object):
 
 def open_any_plain_file(path):
     if "gz" in path:
-        return gzip.open(path)
+        return io.TextIOWrapper(gzip.open(path), newline="")
     else:
         return open(path)
 
 def generate_from_any_plain_file(path, skip_n=None):
+    is_gz = ".gz" in path
     with open_any_plain_file(path) as f:
         if skip_n:
             for i in range(0, skip_n):
@@ -204,11 +206,11 @@ def ensure_requisite_folders(path):
         os.makedirs(folder)
 
 def to_dataframe(data, columns,to_numeric=None, fill_na=None):
-    data = zip(*data)
+    data = list(zip(*data))
     if to_numeric:
         data = [pandas.to_numeric(x, errors=to_numeric) for x in data]
-    if len(data) == 0: data = [[] for i in xrange(0, len(columns))]
-    data = {columns[i]:data[i] for i in xrange(0, len(columns))}
+    if len(data) == 0: data = [[] for i in range(0, len(columns))]
+    data = {columns[i]:data[i] for i in range(0, len(columns))}
     data = pandas.DataFrame(data)
     data = data[columns]
     if fill_na:
@@ -222,7 +224,9 @@ def save_dataframe(d, path, mode="w", header=True):
 
 def save_table(data, path, mode="w", header=None):
     compression = "gzip" if "gz" in path else None
-    _o = gzip.open if compression == "gzip" else open
+    def _ogz(p):
+        return  io.TextIOWrapper(gzip.open(p, mode), newline="")
+    _o = _ogz if ".gz" in path else open
     ensure_requisite_folders(path)
 
     def _to_line(comps):

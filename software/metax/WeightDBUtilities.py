@@ -2,7 +2,8 @@ __author__ = 'heroico'
 
 import sqlite3
 import os
-import Exceptions
+from collections import OrderedDict
+from . import Exceptions
 
 class GeneEntry:
     def __init__(self, gene, gene_name, n_snps, R2, pval,qval):
@@ -99,7 +100,7 @@ class WeightDB(object):
             else:
                 results = self.cursor.execute("SELECT gene, genename, `n.snps.in.model`, `pred.perf.R2`, `pred.perf.pval`, `pred.perf.qval` FROM extra WHERE gene = ?;", (gene_key,))
         except sqlite3.OperationalError as e:
-            print str(e)
+            print(str(e))
             raise Exceptions.ReportableException("Could not read input tissue database. Please try updating the tissue model files.")
         except Exception as e:
             raise e
@@ -121,9 +122,9 @@ class WeightDB(object):
 
 class WeightDBEntryLogic(object):
     def __init__(self, db_file_name):
-        self.weights_by_gene = {}
-        self.genes_for_an_rsid = {}
-        self.gene_data_for_gene = {}
+        self.weights_by_gene = OrderedDict()#{}
+        self.genes_for_an_rsid = OrderedDict()#{}
+        self.gene_data_for_gene = OrderedDict()#{}
         self._loadData(db_file_name)
 
     def anEntryWithRSID(self, rsid):
@@ -151,7 +152,7 @@ class WeightDBEntryLogic(object):
                 if weight.gene in self.weights_by_gene:
                     weights = self.weights_by_gene[weight.gene]
                 else:
-                    weights = {}
+                    weights = OrderedDict()
                     self.weights_by_gene[weight.gene] = weights
                 weights[weight.rsid]= weight
 

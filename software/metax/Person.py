@@ -53,7 +53,7 @@ class Person(object):
     @classmethod
     def loadPeople(cls, input, delim=' ', skip_header=True):
         people = []
-        with open(input, 'rb') as csv_file:
+        with open(input, "r") as csv_file:
             reader = csv.reader(csv_file, delimiter=delim, quotechar='"')
             for row in reader:
                 if skip_header and reader.line_num == 1:
@@ -65,7 +65,7 @@ class Person(object):
     @classmethod
     def loadFilteredPeople(cls, input_path, group_filters = ["EUR"], individual_filters =[], row_delimiter=' ', skip_header=True):
         filtered = []
-        with open(input_path, 'rb') as csv_file:
+        with open(input_path, 'r') as csv_file:
             reader = csv.reader(csv_file, delimiter=row_delimiter, quotechar='"')
             for row in reader:
                 if skip_header and reader.line_num == 1:

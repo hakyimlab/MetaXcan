@@ -2,7 +2,7 @@ import numpy
 import numpy.testing
 
 import unittest
-import SampleData
+from . import SampleData
 from metax import PredictionModel
 from metax import MatrixManager
 D = MatrixManager.GENE_SNP_COVARIANCE_DEFINITION
@@ -84,7 +84,7 @@ class TestAssociationCalculation(unittest.TestCase):
         d = AssociationCalculation.dataframe_from_results(results)
         A = AssociationCalculation.ARF
 
-        r_ = zip(*results)
+        r_ = list(zip(*results))
         numpy.testing.assert_array_equal(d[A.K_GENE], r_[A.GENE])
         numpy.testing.assert_array_equal(d[A.K_ZSCORE], r_[A.ZSCORE])
         numpy.testing.assert_array_equal(d[A.K_EFFECT_SIZE], r_[A.EFFECT_SIZE])

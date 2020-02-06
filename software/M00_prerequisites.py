@@ -3,14 +3,14 @@ __author__ = 'heroico'
 import os
 import re
 import logging
-import metax.Person as Person
-import metax.ThousandGenomesUtilities as ThousandGenomesUtilities
-import metax.PrediXcanFormatUtilities as PrediXcanFormatUtilities
-import metax.Utilities as Utilities
-import metax.DataSet as DataSet
-import metax.Logging as Logging
-import metax.Formats as Formats
-import metax.Exceptions as Exceptions
+from metax import  Person
+from metax import ThousandGenomesUtilities
+from metax import PrediXcanFormatUtilities
+from metax import Utilities
+from metax import DataSet
+from metax import Logging
+from metax import Formats
+from metax import Exceptions
 from metax import exitIf
 
 class ProcessPrerequisites(object):
@@ -108,7 +108,7 @@ class ProcessPrerequisites(object):
         logging.info("Loading snps")
         snp_data_set = DataSet.DataSetFileUtilities.loadFromCompressedFile(self.snp_list)
         snp_dict = {k:True for k in snp_data_set.data}
-        print len(snp_dict.keys())
+        print(len(list(snp_dict.keys())))
 
         contents = Utilities.contentsWithPatternsFromFolder(self.dosage_folder, ["dosage.txt.gz"])
         for content_name in contents:
@@ -172,5 +172,5 @@ if __name__ == "__main__":
     try:
         prerequisites = ProcessPrerequisites(args)
         prerequisites.run()
-    except Exceptions.ReportableException, e:
+    except Exceptions.ReportableException as e:
         logging.info(e.msg)

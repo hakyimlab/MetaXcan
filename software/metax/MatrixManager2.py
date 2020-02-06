@@ -4,7 +4,7 @@ The ordinary MatrixManager performs well enough when a gene's data is queried on
 and is memory efficient. This one, on the contrary, organizes data in a way that is fast to query but takes up more memory
 """
 import numpy
-import MatrixManager
+from . import MatrixManager
 
 class MatrixManager2(MatrixManager.MatrixManagerBase):
     """
@@ -29,7 +29,7 @@ class MatrixManager2(MatrixManager.MatrixManagerBase):
         if not gene in self.data:
             return numpy.nan
         d = self.data[gene]
-        return len(d.keys())
+        return len(list(d.keys()))
 
 def _build_data(d, definition):
     #First element in a pandas tuple is the index.

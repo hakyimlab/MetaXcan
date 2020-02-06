@@ -3,8 +3,8 @@ __author__ = 'heroico'
 import logging
 import os
 import gzip
-import Utilities
-import DataSetSNP
+from . import Utilities
+from . import DataSetSNP
 
 
 class PDTF:
@@ -47,7 +47,7 @@ class PrediXcanFormatDosageLoader(object):
                 if not eff_allele in Utilities.VALID_ALLELES:
                     logging.log(9, "wrong eff allele, rsid %s is not an SNP", rsid)
                     return
-                dosages = map(float,components[PDTF.FIRST_DATA_COLUMN:]) #dosages may be inputed
+                dosages = list(map(float,components[PDTF.FIRST_DATA_COLUMN:])) #dosages may be inputed
                 #Should we flip based on weight_db at this point?
 
                 snp = DataSetSNP.DataSetSNP(name=rsid, index=i, data=dosages, position=int(position), ref_allele=ref_allele, eff_allele=eff_allele)
@@ -152,7 +152,7 @@ class PrediXcanFormatFilteredFilesProcess(object):
                     logging.error("rsid %s: not enough dosage: %d, %d", rsid, len(dosages), len(self.all_people))
                     assert False
                 selected_dosages = pickDosages(dosages, self.all_people, self.selected_people_by_id)
-                dosages = map(float,selected_dosages) # dosages may be inputed
+                dosages = list(map(float,selected_dosages)) # dosages may be inputed
                 average = float(sum(dosages))/(2*len(dosages))
                 average = str(average)
 

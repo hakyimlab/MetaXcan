@@ -128,7 +128,7 @@ def predixcan_association(gene_, context):
     return gene, effect_size, se, zscore, pvalue, n_samples, status
 
 def dataframe_from_results(results):
-    results = zip(*results)
+    results = list(zip(*results))
     if len(results) == 0:
         return pandas.DataFrame({key:[] for order,key in PF.order})
 

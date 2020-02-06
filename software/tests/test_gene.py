@@ -2,6 +2,7 @@
 
 import sys
 import os
+import io
 import gzip
 import metax.Gene
 
@@ -47,16 +48,16 @@ class TestGenes(unittest.TestCase):
 
         with open(self.txt_filename, 'w') as file:
             for gene in self.genes:
-                print >> file, gene
+                print(gene, file=file)
 
 
         self.header = "CHR\tSTART\tEND\tENS\tNAME\tASDF\tFDSA"
         with open(self.header_filename, 'w') as file:
-            print >> file, self.header
+            print(self.header, file=file)
             for gene in self.genes:
-                print >> file, gene
+                print(gene, file=file)
 
-        with gzip.open(self.gz_filename, 'w') as file:
+        with io.TextIOWrapper(gzip.open(self.gz_filename, 'w'), newline="") as file:
             for gene in self.genes:
                 file.write(str(gene)+"\n")
 

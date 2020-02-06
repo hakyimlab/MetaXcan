@@ -42,7 +42,7 @@ class TestDataset(unittest.TestCase):
             data = []
             for row in dataset:
                 data.append(" ".join([str(x) for x in row]))
-                print >> file, data[-1]
+                print(data[-1], file=file)
             dataset = data
 
         ds1 = DataSetFileUtilities.loadFromFile(filename)
@@ -54,12 +54,12 @@ class TestDataset(unittest.TestCase):
     def testDsfuHeader(self, filename="__test_file"):
         header = "A,B,C,D,E".split(",")
         with open(filename, "w") as file:
-            print >> file, " ".join(header)
+            print(" ".join(header), file=file)
             dataset = numpy.random.randint(10, size=(5,10))
             data = []
             for row in dataset:
                 data.append(" ".join([str(x) for x in row]))
-                print >> file, data[-1]
+                print(data[-1], file=file)
             dataset = data
         ds1 = DataSetFileUtilities.loadFromFile(filename, " ".join(header))
         self.assertEqual(filename, ds1.name)

@@ -1,4 +1,5 @@
 import gzip
+import io
 import pandas
 
 from .. import Utilities
@@ -10,7 +11,9 @@ def try_parse(string, fail=None):
         return fail;
 
 def load_data(path, key_name, value_name, white_list=None, numeric=True):
-    _o = gzip.open if ".gz" in path else open
+    def _ogz(p):
+        return  io.TextIOWrapper(gzip.open(p, "r"), newline="")
+    _o = _ogz if ".gz" in path else open
     data = {}
     c_key=None
     c_value=None
@@ -37,7 +40,9 @@ def load_data(path, key_name, value_name, white_list=None, numeric=True):
     return data
 
 def load_data_column(path, column_name):
-    _o = gzip.open if ".gz" in path else open
+    def _ogz(p):
+        return  io.TextIOWrapper(gzip.open(p, "r"), newline="")
+    _o = _ogz if ".gz" in path else open
     data = []
     c_key=None
     with _o(path) as file:

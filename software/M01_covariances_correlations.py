@@ -1,23 +1,23 @@
 #!/usr/bin/env python
 __author__ = 'heroico'
-
+import os
+import io
+import gzip
 import logging
 import numpy
-import os
-import gzip
-import ntpath
-import metax.WeightDBUtilities as WeightDBUtilities
-import metax.PrediXcanFormatUtilities as PrediXcanFormatUtilities
-import metax.ThousandGenomesUtilities as ThousandGenomesUtilities
-import metax.Logging as Logging
-import metax.Utilities as Utilities
-import metax.Formats as Formats
+
+from metax import WeightDBUtilities
+from metax import PrediXcanFormatUtilities
+from metax import ThousandGenomesUtilities
+from metax import Logging
+from metax import Utilities
+from metax import Formats
 from timeit import default_timer as timer
 
 
 def pathLeaf(path):
-    head, tail = ntpath.split(path)
-    return tail or ntpath.basename(head)
+    head, tail = os.path.split(path)
+    return tail or os.path.basename(head)
 
 class ProcessWeightDB(object):
     def __init__(self, args):
@@ -96,7 +96,7 @@ class ProcessWeightDB(object):
                 self.addToCovarianceFile(weight_db_logic, name, snps, snps_by_rsid)
 
     def writeFileHeader(self,path):
-        with gzip.open(path, "ab") as file:
+        with io.TextIOWrapper(gzip.open(path, "ab"), newline="") as file:
             file.write("GENE RSID1 RSID2 VALUE\n")
 
     def getSNPS(self, name, weight_db_logic):
@@ -137,14 +137,14 @@ class ProcessWeightDB(object):
             self.addToFile(self.covariance_output, gene, entries)
 
     def addToFile(self, path, gene, entries):
-        with gzip.open(path, "ab") as file:
+        with io.TextIOWrapper(gzip.open(path, "ab"), newline="") as file:
             for entry in entries:
                 line = " ".join([gene, entry[0], entry[1], entry[2]])+"\n"
                 file.write(line)
 
     def buildCovarianceEntries(self, name, gene, weight_db_logic, snps_by_rsid):
         weights_in_gene = weight_db_logic.weights_by_gene[gene]
-        rsids_from_genes = weights_in_gene.keys()
+        rsids_from_genes = list(weights_in_gene.keys())
 
         #gather as much data as we can work on
         related_rsids, related_data = self.buildRelatedData(rsids_from_genes, snps_by_rsid, weights_in_gene)
@@ -203,7 +203,7 @@ class ProcessWeightDB(object):
             if weight.ref_allele == related_snp.eff_allele and\
                 weight.eff_allele == related_snp.ref_allele:
                 logging.log(7, "related rsid %s has alleles flipped compared to model, transforming dosage", rsid)
-                data = map(lambda x: 2-x, data)
+                data = [2-x for x in data]
 
             related_data.append(data)
             related_rsids.append(rsid)
@@ -219,13 +219,13 @@ class ProcessWeightDB(object):
             entries.append((r,r,c))
             return entries
 
-        for i in xrange(0, len(rsids_from_genes)):
+        for i in range(0, len(rsids_from_genes)):
             rsid_i = rsids_from_genes[i]
             related_i = -1
             if rsid_i in related_rsids:
                 related_i = related_rsids.index(rsid_i)
 
-            for j in xrange(0, len(rsids_from_genes)):
+            for j in range(0, len(rsids_from_genes)):
                 rsid_j = rsids_from_genes[j]
 
                 related_j = -1
@@ -252,7 +252,7 @@ class ProcessWeightDB(object):
 
     def addToCorrelationFile(self, weight_db_logic, name, snps, snps_by_rsid):
         logging.info("Building correlation database for %s-%s", name, self.weight_db)
-        genes = weight_db_logic.weights_by_gene.keys()
+        genes = list(weight_db_logic.weights_by_gene.keys())
         total_genes = len(genes)
         last_reported_percent = 0
         processed = 0
@@ -273,7 +273,7 @@ class ProcessWeightDB(object):
 
     def buildCorrelationEntries(self, name, gene, weight_db_logic, snps_by_rsid):
         weights_in_gene = weight_db_logic.weights_by_gene[gene]
-        rsids_from_genes = weights_in_gene.keys()
+        rsids_from_genes = list(weights_in_gene.keys())
 
         #gather as much data as we can work on
         related_rsids, related_data = self.buildRelatedData(rsids_from_genes, snps_by_rsid, weights_in_gene)

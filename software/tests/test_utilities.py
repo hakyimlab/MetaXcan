@@ -11,7 +11,7 @@ if "DEBUG" in sys.argv:
 import metax.Utilities as Utilities
 import metax.Exceptions as Exceptions
 
-class TestThousandGenomesUtilities(unittest.TestCase):
+class TestUtilities(unittest.TestCase):
     def testHapName(self):
         hap_name = Utilities.hapName("a")
         self.assertEqual(hap_name, "a.hap.gz")

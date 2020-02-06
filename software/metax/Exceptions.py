@@ -4,7 +4,7 @@ class ReportableException(Exception):
     def __init__(self, msg):
         self.msg = msg
 
-class InvalidArguments(Exception):
+class InvalidArguments(ReportableException):
     """Logical Error for unexpected arguments"""
     def __init__(self, msg):
         super(InvalidArguments, self).__init__("Invalid arguments: %s" % (msg))

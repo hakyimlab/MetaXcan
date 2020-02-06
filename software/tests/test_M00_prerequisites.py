@@ -3,8 +3,10 @@ import unittest
 import sys
 import shutil
 import os
+import io
 import re
 import gzip
+import numpy
 
 if "DEBUG" in sys.argv:
     sys.path.insert(0, "..")
@@ -61,7 +63,7 @@ class TestM00(unittest.TestCase):
         self.assertEqual([x.pattern for x in p.individual_filters], ["ID.*"])
         self.assertEqual(p.chromosome_in_name_regex,re.compile("set_(.*)"))
         self.assertEqual(p.samples_input, "_test/dosage_set_1/set.sample")
-        self.assertEquals(p.samples_output, "_test/intermediate/filtered/set.sample")
+        self.assertEqual(p.samples_output, "_test/intermediate/filtered/set.sample")
         cleanUpDataForArgs("_test")
 
     def testProcessPrerequisitesRun(self):
@@ -84,13 +86,17 @@ class TestM00(unittest.TestCase):
                 self.assertEqual(actual_line, expected_line)
 
         path = os.path.join(p.output_folder, "set_chr1.dosage.gz")
-        with gzip.open(path) as f:
+        with io.TextIOWrapper(gzip.open(path), newline="") as f:
             expected_lines = ["chr1 rs2 2 G A 0.166666666667 0 1 0",
                               "chr1 rs3 3 G A 0.333333333333 0 1 1",
                               "chr1 rs4 4 G A 1.0 2 2 2"]
             for i,expected_line in enumerate(expected_lines):
                 actual_line = f.readline().strip()
-                self.assertEqual(actual_line, expected_line)
+                actual_comps = actual_line.split(" ")
+                expected_comps = expected_line.split(" ")
+                self.assertEqual(actual_comps[0:5], expected_comps[0:5])
+                numpy.testing.assert_almost_equal(float(actual_comps[6]), float(actual_comps[6]))
+                self.assertEqual(actual_comps[7:], expected_comps[7:])
         cleanUpDataForArgs("_test")
 
 if __name__ == "__main__":

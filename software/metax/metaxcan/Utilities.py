@@ -55,8 +55,8 @@ class SimpleContext(AssociationCalculation.Context):
         if snps is not None and len(snps):
             d = {x[0]: x for x in i.values}
             d = [d[snp] for snp in snps]
-            d = zip(*d)
-            d = {d_columns[i]:d[i] for i in xrange(0, len(d_columns))}
+            d = list(zip(*d))
+            d = {d_columns[i]:d[i] for i in range(0, len(d_columns))}
             i = pandas.DataFrame(d)
         else:
             i = pandas.DataFrame(columns=d_columns)
@@ -82,7 +82,7 @@ class OptimizedContext(SimpleContext):
 
     def get_weights(self, gene):
         w = self.weight_data[gene]
-        w = dataframe_from_weight_data(zip(*w))
+        w = dataframe_from_weight_data(list(zip(*w)))
         return w
 
     def get_model_snps(self):
@@ -100,7 +100,7 @@ class OptimizedContext(SimpleContext):
         g = self.gwas_data
         g = [g[x] for x in snps if x in g]
         if len(g):
-            g = zip(*g)
+            g = list(zip(*g))
             g = pandas.DataFrame({Constants.SNP:g[0], Constants.ZSCORE:g[1], Constants.BETA:g[2]})
         else:
             g = pandas.DataFrame(columns=[Constants.SNP, Constants.ZSCORE, Constants.BETA])
@@ -114,12 +114,12 @@ class OptimizedContext(SimpleContext):
             #dummy while(True) to emulate go/to
             while True:
                 w = self._get_weights(gene)
-                gwas = self._get_gwas(w.keys())
+                gwas = self._get_gwas(list(w.keys()))
                 type = [numpy.str, numpy.float64, numpy.float64, numpy.float64]
                 columns = [Constants.SNP, WDBQF.K_WEIGHT, Constants.ZSCORE, Constants.BETA]
-                d = {x: v for x, v in w.iteritems() if x in gwas}
+                d = {x: v for x, v in w.items() if x in gwas}
 
-                snps, cov = self.get_covariance(gene, d.keys())
+                snps, cov = self.get_covariance(gene, list(d.keys()))
                 if snps is None:
                     d = pandas.DataFrame(columns=columns)
                     self.data_cache = len(w), d, cov, snps
@@ -127,11 +127,11 @@ class OptimizedContext(SimpleContext):
                     break
 
                 d = [(x, w[x], gwas[x][0], gwas[x][1]) for x in snps]
-                d = zip(*d)
+                d = list(zip(*d))
                 if len(d):
-                    d = {columns[i]:numpy.array(d[i], dtype=type[i]) for i in xrange(0,len(columns))}
+                    d = {columns[i]:numpy.array(d[i], dtype=type[i]) for i in range(0,len(columns))}
                 else:
-                    d = {columns[i]:numpy.array([]) for i in xrange(0,len(columns))}
+                    d = {columns[i]:numpy.array([]) for i in range(0,len(columns))}
 
                 self.data_cache = len(w), d, cov, snps
                 self.last_gene = gene
@@ -153,7 +153,7 @@ def _data_intersection(model, gwas):
 def _data_intersection_2(weight_data, gwas_data):
     genes = set()
     snps = set()
-    for gene, entries in weight_data.iteritems():
+    for gene, entries in weight_data.items():
         gs = zip(*entries)[WDBQF.RSID]
         for s in gs:
             if s in gwas_data:

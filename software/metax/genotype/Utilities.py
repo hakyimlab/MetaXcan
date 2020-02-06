@@ -1,6 +1,6 @@
-import GTExGenotype
-import DosageGenotype
-import ModelTrainingGenotype
+from . import GTExGenotype
+from . import DosageGenotype
+from . import ModelTrainingGenotype
 
 from .. import Exceptions
 

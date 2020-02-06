@@ -2,7 +2,7 @@ import numpy
 import pandas
 import logging
 
-from JointAnalysis import Context, ContextMixin
+from .JointAnalysis import Context, ContextMixin
 from .. import MatrixManager
 from .. import Exceptions
 from .. import PredictionModel
@@ -125,7 +125,7 @@ def _cutoff(args):
             cumsum = numpy.cumsum(eigen)
             objective = trace*(1-self.cutoff_threshold)
             last = eigen[0]
-            for i in xrange(0, len(cumsum)):
+            for i in range(0, len(cumsum)):
                 if cumsum[i] > objective:
                     break
                 last = eigen[i]

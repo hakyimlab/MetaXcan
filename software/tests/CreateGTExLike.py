@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import gzip
 import os
+import io
 import string
 import numpy
 import pandas
@@ -22,22 +23,22 @@ complement = {"A": ["G", "C"], "T": ["G", "C"], "C":["T","A"], "G":["A","T"]}
 
 def snp_data(chrom, pos):
     pos = chrom * 100 + pos
-    a = numpy.random.choice(complement.keys())
+    a = numpy.random.choice(list(complement.keys()))
     b = numpy.random.choice(complement[a])
     variant = variant_name(chrom, pos, a, b)
     return [variant]+list(numpy.random.uniform(high=2, low=0, size=sample_size))
 
 def build_data():
     data = []
-    for chrom in xrange(1,23):
-        for pos in xrange(1,100):
+    for chrom in range(1,23):
+        for pos in range(1,100):
             snp = snp_data(chrom, pos)
             data.append(snp)
     return data
 
 def write_geno(data, file):
-    with gzip.open(file, "w") as f:
-        header = ["Id"] + ["GTEX-{}A".format(i) for i in xrange(0, sample_size)]
+    with io.TextIOWrapper(gzip.open(file, "w"), newline="") as f:
+        header = ["Id"] + ["GTEX-{}A".format(i) for i in range(0, sample_size)]
         f.write(to_line(header))
 
         for x in data:
@@ -48,7 +49,7 @@ def write_geno(data, file):
 
 
 def write_snps(data, file):
-    with gzip.open(file, "w") as f:
+    with io.TextIOWrapper(gzip.open(file, "w"), newline="") as f:
         header= ["Chr", "Pos", "VariantID", "Ref_b37", "Alt", "RS_ID_dbSNP135_original_VCF", "RS_ID_dbSNP142_CHG37p13", "Num_alt_per_site"]
         f.write(to_line(header))
 
@@ -65,8 +66,8 @@ def write_snps(data, file):
 
 
 gene_names = list(string.ascii_uppercase)
-gene_chromosomes = [numpy.random.randint(1, 3) for i in xrange(0, 3)] + \
-                   [numpy.random.randint(11, 13) for i in xrange(4, len(gene_names))]
+gene_chromosomes = [numpy.random.randint(1, 3) for i in range(0, 3)] + \
+                   [numpy.random.randint(11, 13) for i in range(4, len(gene_names))]
 def _simulate_model(snps, n_genes):
     def _simulate_gene_model(data, gene, chromosome):
         d = data[data.Chr == chromosome]
@@ -80,7 +81,7 @@ def _simulate_model(snps, n_genes):
 
     weights = pandas.DataFrame()
     extra = pandas.DataFrame()
-    for i in xrange(0, n_genes):
+    for i in range(0, n_genes):
         gene = gene_names[i]
         chromosome = gene_chromosomes[i]
         w = _simulate_gene_model(snps, gene, chromosome)
@@ -110,9 +111,9 @@ def write_models(snp_data_path, target_folder):
                 d.append(t[1:])
             else:
                 d.append(t[1:])
-        d = zip(*d)
+        d = list(zip(*d))
         header = snp_data.columns.values
-        d = {header[i]:d[i] for i in xrange(0,len(header))}
+        d = {header[i]:d[i] for i in range(0,len(header))}
         d = pandas.DataFrame(data=d)
         return d
     snps = _get_snp_data(snp_data_path)

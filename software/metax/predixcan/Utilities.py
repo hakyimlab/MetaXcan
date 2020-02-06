@@ -5,8 +5,8 @@ import numpy
 from patsy import dmatrices
 import statsmodels.api as sm
 
-from MultiPrediXcanAssociation import Context as _MTPContext, MTPMode
-from PrediXcanAssociation import Context as _PContext, PMode
+from .MultiPrediXcanAssociation import Context as _MTPContext, MTPMode
+from .PrediXcanAssociation import Context as _PContext, PMode
 from metax import Exceptions, Utilities
 from .. expression import Expression, HDF5Expression, PlainTextExpression
 from .. import Exceptions
@@ -208,7 +208,7 @@ def _get_covariates(args):
 
 def _get_residual(pheno, covariates):
     e = pandas.DataFrame(covariates)
-    e["order"] = xrange(0, e.shape[0])
+    e["order"] = range(0, e.shape[0])
     e["pheno"] = pheno
 
     e_ = e.dropna()
@@ -258,7 +258,7 @@ class BasicPredictionRepository(PredictionRepository):
 
 def summary_report(summary_data, extra):
     s = []
-    for k, v in summary_data.stats.iteritems():
+    for k, v in summary_data.stats.items():
         s.append((k, v[0]))
     s = pandas.DataFrame(s, columns=["gene", "n_snps_used"])
     s = extra[['gene', 'gene_name', 'n_snps_in_model', 'pred_perf_r2', 'pred_perf_pval']].merge(s, on="gene", how="left")

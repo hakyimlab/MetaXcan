@@ -4,7 +4,7 @@ import os
 import pandas
 import numpy
 
-import GWAS
+from . import GWAS
 from .. import Exceptions
 from .. import Constants
 from .. import Utilities as BUtilities
@@ -83,7 +83,7 @@ def gwas_from_data(data, extra_columns=None):
     """"Data should be a list of tuples as in [(snp, chromosome, non_effect_allele, effect_allele, zscore)]"""
 
     if len(data):
-        d = zip(*data)
+        d = list(zip(*data))
         F = GWAS.GWASF
         rsid, chromosome, position, non_effect_allele, effect_allele, zscore = d[F.SNP], d[F.CHROMOSOME], d[F.POSITION], d[F.NON_EFFECT_ALLELE], d[F.EFFECT_ALLELE], d[F.ZSCORE]
     else:

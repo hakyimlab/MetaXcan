@@ -7,8 +7,8 @@ from metax import Exceptions
 from metax import MatrixManager
 D = MatrixManager.GENE_SNP_COVARIANCE_DEFINITION
 
-import cov_data
-import SampleData
+from . import cov_data
+from . import SampleData
 
 class TestMatrixManager(unittest.TestCase):
 
@@ -35,7 +35,7 @@ class TestMatrixManager(unittest.TestCase):
         with self.assertRaises(Exceptions.InvalidArguments) as ctx:
             snps, cov = m.get("ENSG00000183742.8", ["rs7806506", "rs12718973"])
 
-        self.assertTrue("whitelist" in ctx.exception.message) #?
+        self.assertTrue("whitelist" in ctx.exception.msg) #?
 
         whitelist = ["rs3094989", "rs7806506", "rs12536095", "rs10226814"]
         snps, cov = m.get("ENSG00000183742.8", whitelist)
@@ -70,7 +70,8 @@ class TestMatrixManager(unittest.TestCase):
 
         with self.assertRaises(Exceptions.InvalidArguments) as ctx:
             snps, cov = m.get("C", ["rs100", "rs12718973"])
-        self.assertTrue("whitelist" in ctx.exception.message)
+
+        self.assertTrue("whitelist" in ctx.exception.msg)
 
     def test_flatten(self):
         labels = cov_data.SNPS_ENSG00000183742_8_w
@@ -92,7 +93,9 @@ class TestMatrixManager(unittest.TestCase):
         flat = MatrixManager._flatten_matrix_data([("a", "b", cov)])
 
         expected = [('a', 'b', 'b', 2.33333333333333)]
-        numpy.testing.assert_array_equal(flat, expected)
+
+        numpy.testing.assert_array_equal(flat[0][0:3], expected[0][0:3])
+        numpy.testing.assert_array_almost_equal(flat[0][3:], expected[0][3:])
 
 if __name__ == '__main__':
     unittest.main()

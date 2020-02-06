@@ -8,7 +8,7 @@ from sqlalchemy import create_engine
 import unittest
 from  metax import PredictionModel
 
-import SampleData
+from . import SampleData
 
 def get_model_weights(path):
     engine = create_engine('sqlite:///'+path)
@@ -60,7 +60,7 @@ class TestPredictionModelDB(unittest.TestCase):
         extra = t.load_extra()
         self.assertEqual(len(extra), 6)
 
-        e_e = zip(*(SampleData.sample_extra_2()))
+        e_e = list(zip(*(SampleData.sample_extra_2())))
         self.assertEqual(extra[PredictionModel.WDBEQF.GENE], e_e[PredictionModel.WDBEQF.GENE])
         self.assertEqual(extra[PredictionModel.WDBEQF.GENE_NAME], e_e[PredictionModel.WDBEQF.GENE_NAME])
         self.assertEqual(extra[PredictionModel.WDBEQF.N_SNP_IN_MODEL], e_e[PredictionModel.WDBEQF.N_SNP_IN_MODEL])
@@ -71,7 +71,7 @@ class TestPredictionModelDB(unittest.TestCase):
         weights = t.load_weights()
         self.assertEqual(len(weights), 5)
 
-        e_w = zip(*(SampleData.sample_weights_2()))
+        e_w = list(zip(*(SampleData.sample_weights_2())))
         self.assertEqual(weights[PredictionModel.WDBQF.RSID], e_w[PredictionModel.WDBQF.RSID])
         self.assertEqual(weights[PredictionModel.WDBQF.GENE], e_w[PredictionModel.WDBQF.GENE])
         self.assertEqual(weights[PredictionModel.WDBQF.WEIGHT], e_w[PredictionModel.WDBQF.WEIGHT])

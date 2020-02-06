@@ -144,7 +144,7 @@ def _pca_data(e_, model_keys, pc_filter):
     variance = s[selected]
     vt_projection = vt[selected]
     Xc_t_ = _dot(vt_projection, Xc_t)
-    pca_keys = ["pc{}".format(i) for i in xrange(0, len(selected))]
+    pca_keys = ["pc{}".format(i) for i in range(0, len(selected))]
     _data = {pca_keys[i]:x for i,x in enumerate(Xc_t_)}
     _data["pheno"] = e_.pheno
     pca_data = pandas.DataFrame(_data)
@@ -200,7 +200,7 @@ def multi_predixcan_association(gene_, context, callbacks=None):
     return gene, pvalue, n_models, n_samples, p_i_best, m_i_best, p_i_worst,  m_i_worst, status, n_used, max_eigen, min_eigen, min_eigen_kept
 
 def dataframe_from_results(results, context):
-    results = zip(*results)
+    results = list(zip(*results))
     if len(results) == 0:
         return pandas.DataFrame({key:[] for order,key in MTPF.order})
 
@@ -228,10 +228,10 @@ class SaveLoadings(object):
         if type(vt_projection) == int or type(vt_projection) == float:
             results.append((gene, "pc0", model_keys[0], variance))
         else:
-            for i in xrange(0, vt_projection.shape[0]):
+            for i in range(0, vt_projection.shape[0]):
                 pc = "pc{}".format(i)
                 l = numpy.sqrt(variance[i])*vt_projection[i]
-                for j in xrange(0, l.shape[0]):
+                for j in range(0, l.shape[0]):
                     results.append((gene,pc,model_keys[j], l[j]))
 
         self.loadings.append(pandas.DataFrame(results, columns=["gene", "pc", "tissue", "weight"]))

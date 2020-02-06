@@ -4,6 +4,7 @@
 # being tested for absence or alternate values and combinations.
 
 import sys
+import io
 # This allows us to run an individual test as it's own 'program'. Very useful
 # for debugging
 if "DEBUG" in sys.argv:
@@ -50,14 +51,16 @@ class TestKeyedDataset(unittest.TestCase):
         filename = "kds_file.txt"
         with open(filename, 'w') as file:
             KeyedDataSetFileUtilities.writeContents(file, kds, "H1", "H2")
-        file_contents = open(filename, 'r').read().strip()
+        with open(filename, 'r') as f_:
+            file_contents = f_.read().strip()
         self.assertEqual(file_contents,
                          "H1 H2\nk1 v1\nk2 v2\nk3 100\n4 0.4\n5 5")
 
         # No Header
         with open(filename, 'w') as file:
             KeyedDataSetFileUtilities.writeContents(file, kds, None, None)
-        file_contents = open(filename, 'r').read().strip()
+        with open(filename, 'r') as f_:
+            file_contents = f_.read().strip()
         self.assertEqual(file_contents, "k1 v1\nk2 v2\nk3 100\n4 0.4\n5 5")
 
         # Test loading it back
@@ -82,7 +85,8 @@ class TestKeyedDataset(unittest.TestCase):
         kds = KeyedDataSet("Test1", None, values, keys)
         filename = "kds1_file.txt"
         KeyedDataSetFileUtilities.saveToFile(filename, kds, "H1", "H2")
-        file_contents = open(filename, 'r').read().strip()
+        with open(filename, 'r') as f_:
+            file_contents = f_.read().strip()
         self.assertEqual(file_contents,
                          "H1 H2\nk1 v1\nk2 v2\nk3 100\n4 0.4\n5 5")
 
@@ -99,7 +103,8 @@ class TestKeyedDataset(unittest.TestCase):
 
         # No header
         KeyedDataSetFileUtilities.saveToFile(filename, kds, None, None)
-        file_contents = open(filename, 'r').read().strip()
+        with open(filename, 'r') as f_:
+            file_contents = f_.read().strip()
         self.assertEqual(file_contents, "k1 v1\nk2 v2\nk3 100\n4 0.4\n5 5")
 
         kds = KeyedDataSetFileUtilities.loadFromFile(filename)
@@ -121,9 +126,9 @@ class TestKeyedDataset(unittest.TestCase):
         kds = KeyedDataSet("Test1", None, values, keys)
         filename = "kds1_file.txt.gz"
         KeyedDataSetFileUtilities.saveToCompressedFile(filename, kds, "H1", "H2")
-        file_contents = gzip.open(filename, 'rb').read().strip()
-        self.assertEqual(file_contents,
-                         "H1 H2\nk1 v1\nk2 v2\nk3 100\n4 0.4\n5 5")
+        with io.TextIOWrapper(gzip.open(filename, 'r'), newline="") as f_:
+            file_contents = f_.read().strip()
+        self.assertEqual(file_contents, "H1 H2\nk1 v1\nk2 v2\nk3 100\n4 0.4\n5 5")
 
         kds = KeyedDataSetFileUtilities.loadFromCompressedFile(filename, header="H1 H2")
         self.assertEqual(kds.name, filename)
@@ -137,7 +142,8 @@ class TestKeyedDataset(unittest.TestCase):
 
         # No header
         KeyedDataSetFileUtilities.saveToCompressedFile(filename, kds, None, None)
-        file_contents = gzip.open(filename, 'r').read().strip()
+        with io.TextIOWrapper(gzip.open(filename, 'r'), newline="") as f_:
+            file_contents = f_.read().strip()
         self.assertEqual(file_contents, "k1 v1\nk2 v2\nk3 100\n4 0.4\n5 5")
 
         kds = KeyedDataSetFileUtilities.loadFromCompressedFile(filename)
@@ -163,9 +169,9 @@ class TestKeyedDataset(unittest.TestCase):
 
         filename = "kds_multi.txt"
         with open(filename, "w") as file:
-            KeyedDataSetFileUtilities.writeSetsContent(file,
-                        [kds1, kds2, kds3], "K")
-        file_contents = open(filename, 'r').read().strip()
+            KeyedDataSetFileUtilities.writeSetsContent(file,[kds1, kds2, kds3], "K")
+        with open(filename, 'r') as f_:
+            file_contents = f_.read().strip()
         self.assertEqual(file_contents, ("K col1 col2 col3\nk1 v1 d1 j1\n" +
                         "k2 v2 d2 j2\nk3 v3 d3 j3\nk4 v4 d4 j4\nk5 v5 d5 j5"))
 
@@ -201,11 +207,12 @@ class TestKeyedDataset(unittest.TestCase):
             self.assertEqual(kds3.values_by_key["k5"], "j5")
 
         with open(filename, "w") as file:
-            KeyedDataSetFileUtilities.writeSetsContent(file,
-                        [kds1, kds2, kds3], None)
-        file_contents = open(filename, 'r').read().strip()
-        self.assertEqual(file_contents, ("k1 v1 d1 j1\n" +
-                        "k2 v2 d2 j2\nk3 v3 d3 j3\nk4 v4 d4 j4\nk5 v5 d5 j5"))
+            KeyedDataSetFileUtilities.writeSetsContent(file, [kds1, kds2, kds3], None)
+
+        with open(filename, 'r') as f_:
+            file_contents = f_.read().strip()
+
+        self.assertEqual(file_contents, ("k1 v1 d1 j1\n" + "k2 v2 d2 j2\nk3 v3 d3 j3\nk4 v4 d4 j4\nk5 v5 d5 j5"))
 
         # Load the data back
         with open(filename, "r") as file:
@@ -251,7 +258,8 @@ class TestKeyedDataset(unittest.TestCase):
 
         filename = "kds1_sets_file.txt"
         KeyedDataSetFileUtilities.saveSetsToFile(filename, [kds1, kds2, kds3], "K")
-        file_contents = open(filename, 'r').read().strip()
+        with open(filename, 'r') as f_:
+            file_contents = f_.read().strip()
         self.assertEqual(file_contents, ("K col1 col2 col3\nk1 v1 d1 j1\n" +
                         "k2 v2 d2 j2\nk3 v3 d3 j3\nk4 v4 d4 j4\nk5 v5 d5 j5"))
         # Load the data back
@@ -285,7 +293,8 @@ class TestKeyedDataset(unittest.TestCase):
 
 
         KeyedDataSetFileUtilities.saveSetsToFile(filename, [kds1, kds2, kds3], None)
-        file_contents = open(filename, 'r').read().strip()
+        with open(filename, 'r') as f_:
+            file_contents = f_.read().strip()
         self.assertEqual(file_contents, ("k1 v1 d1 j1\n" +
                         "k2 v2 d2 j2\nk3 v3 d3 j3\nk4 v4 d4 j4\nk5 v5 d5 j5"))
 
@@ -331,7 +340,8 @@ class TestKeyedDataset(unittest.TestCase):
 
         filename = "kds1_sets_file.txt"
         KeyedDataSetFileUtilities.saveSetsToCompressedFile(filename, [kds1, kds2, kds3], "K")
-        file_contents = gzip.open(filename, 'rb').read().strip()
+        with io.TextIOWrapper(gzip.open(filename, 'r'), newline="") as f_:
+            file_contents = f_.read().strip()
         self.assertEqual(file_contents, ("K col1 col2 col3\nk1 v1 d1 j1\n" +
                         "k2 v2 d2 j2\nk3 v3 d3 j3\nk4 v4 d4 j4\nk5 v5 d5 j5"))
         # Load the data back
@@ -364,7 +374,8 @@ class TestKeyedDataset(unittest.TestCase):
         self.assertEqual(kds3.values_by_key["k5"], "j5")
 
         KeyedDataSetFileUtilities.saveSetsToCompressedFile(filename, [kds1, kds2, kds3], None)
-        file_contents = gzip.open(filename, 'rb').read().strip()
+        with io.TextIOWrapper(gzip.open(filename, 'r'), newline="") as f_:
+            file_contents = f_.read().strip()
         self.assertEqual(file_contents, ("k1 v1 d1 j1\n" +
                         "k2 v2 d2 j2\nk3 v3 d3 j3\nk4 v4 d4 j4\nk5 v5 d5 j5"))
         # Load the data back

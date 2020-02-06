@@ -8,7 +8,7 @@ import numpy
 import numpy.testing
 import pandas
 
-from mock import patch
+from unittest.mock import patch
 
 from metax.Constants import SNP
 from metax.Constants import BETA
@@ -16,8 +16,8 @@ from metax.Constants import ZSCORE
 
 from metax import Exceptions
 
-import M03_betas
-import scz2_sample
+from M03_betas import run
+from . import scz2_sample
 
 class DummyArgs(object):
     def __init__(self):
@@ -38,7 +38,7 @@ class DummyArgs(object):
         self.output_folder = None
         self.separator = None
         self.skip_until_header = None
-        self.verbosity = logging.ERROR
+        self.verbosity = logging.CRITICAL
         self.throw = True
         self.model_db_path = None
         self.handle_empty_columns = False
@@ -94,22 +94,22 @@ class TestM03(unittest.TestCase):
     @patch('metax.gwas.GWAS.validate_format_basic')
     def testWrongArguments(self, patch_validate_basic, patch_validate_strict):
         args = DummyArgs()
-        with self.assertRaises(Exception) as c: M03_betas.run(args)
+        with self.assertRaises(Exception) as c: run(args)
 
         args.gwas_folder = "tests/_td/GWAS/scz2"
         patch_validate_basic.side_effect = RuntimeError("k")
-        with self.assertRaises(RuntimeError) as c: M03_betas.run(args)
+        with self.assertRaises(RuntimeError) as c: run(args)
 
         patch_validate_basic.side_effect = None
         patch_validate_strict.side_effect = RuntimeError()
-        with self.assertRaises(RuntimeError) as c: M03_betas.run(args)
+        with self.assertRaises(RuntimeError) as c: run(args)
 
         patch_validate_basic.side_effect = None
         patch_validate_strict.side_effect = None
 
     def test_fail_incompatible_arguments(self):
         args = base_args("tests/_td/GWAS/scz2", "tests/_td/GWAS/scz2/scz2.gwas.results.txt.gz")
-        with self.assertRaises(Exceptions.InvalidArguments) as c: M03_betas.run(args)
+        with self.assertRaises(Exceptions.InvalidArguments) as c: run(args)
 
     def test_run_folder(self):
         self.run_folder_or_file("tests/_td/GWAS/scz2", None)
@@ -121,37 +121,37 @@ class TestM03(unittest.TestCase):
         args = base_args(folder, file)
         args.pvalue_column = "P"
         args.or_column = "OR"
-        r = M03_betas.run(args)
+        r = run(args)
         assert_beta_pb(self, r)
 
         args = base_args(folder, file)
         args.pvalue_column = "P"
         args.beta_column = "BETA"
-        r = M03_betas.run(args)
+        r = run(args)
         assert_beta_pb(self, r)
 
         args = base_args(folder, file)
         args.pvalue_column = "P"
         args.beta_sign_column = "BETA_SIGN"
-        r = M03_betas.run(args)
+        r = run(args)
         assert_beta_p(self, r)
 
         args = base_args(folder, file)
         args.beta_column = "BETA"
         args.se_column = "SE"
-        r = M03_betas.run(args)
+        r = run(args)
         assert_beta_bse(self, r)
 
         args = base_args(folder, file)
         args.beta_column = "BETA"
         args.se_column = "SE"
-        r = M03_betas.run(args)
+        r = run(args)
         assert_beta_bse(self, r)
 
         args = base_args(folder, file)
         args.or_column = "OR"
         args.se_column = "SE"
-        r = M03_betas.run(args)
+        r = run(args)
         assert_beta_bse(self, r)
 
         #Should fail
@@ -165,7 +165,7 @@ class TestM03(unittest.TestCase):
         args.pvalue_column = "P"
         args.or_column = "OR"
         args.skip_until_header = "\t".join(["HG19CHRC", "SNPID", "A1", "A2", "BP", "INFO", "OR", "SE", "P", "NGT", "BETA", "ZSCORE", "BETA_SIGN"])
-        r = M03_betas.run(args)
+        r = run(args)
         assert_beta_pb(self, r)
 
     def test_run_split(self):
@@ -173,7 +173,7 @@ class TestM03(unittest.TestCase):
         args.gwas_file_pattern = ".*gz"
         args.pvalue_column = "P"
         args.or_column = "OR"
-        r = M03_betas.run(args)
+        r = run(args)
         assert_beta_pb(self, r)
 
     def test_with_model(self):
@@ -181,7 +181,7 @@ class TestM03(unittest.TestCase):
         args.pvalue_column = "P"
         args.or_column = "OR"
         args.model_db_path = "tests/_td/dbs/test_3.db"
-        r = M03_betas.run(args)
+        r = run(args)
 
         assert_model_beta_pb(self, r)
 
@@ -193,7 +193,7 @@ class TestM03(unittest.TestCase):
         args.pvalue_column = "P"
         args.or_column = "OR"
         args.model_db_path = "tests/_td/dbs/test_3.db"
-        r = M03_betas.run(args)
+        r = run(args)
 
         assert_model_beta_pb(self, r)
 
@@ -204,7 +204,7 @@ class TestM03(unittest.TestCase):
         args.pvalue_column = "P"
         args.or_column = "OR"
         args.output_folder = op
-        M03_betas.run(args)
+        run(args)
 
         n = os.listdir(op)[0]
         n = os.path.join(op,n)
@@ -221,7 +221,7 @@ class TestM03(unittest.TestCase):
         args.pvalue_column = "P"
         args.or_column = "OR"
         args.output_folder = op
-        M03_betas.run(args)
+        run(args)
 
         r = pandas.DataFrame()
         for n in sorted(os.listdir(op)):
@@ -239,7 +239,7 @@ class TestM03(unittest.TestCase):
         args.gwas_file_pattern = ".*gz"
         args.pvalue_column = "P"
         args.or_column = "OR"
-        r = M03_betas.run(args)
+        r = run(args)
         assert_beta_pb_fix(self, r)
 
     def test_align(self):

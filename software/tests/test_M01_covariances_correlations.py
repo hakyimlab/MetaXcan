@@ -57,7 +57,7 @@ class TestM01(unittest.TestCase):
         self.assertEqual(p.covariance_output, "_test/covariance/cov.txt.gz")
         self.assertEqual(p.input_format, Formats.PrediXcan)
         self.assertEqual(p.min_maf_filter, None)
-        self.assertEquals(p.max_maf_filter, None)
+        self.assertEqual(p.max_maf_filter, None)
 
     def testProcessPrerequisitesConstructorDefaultCovariance(self):
         dummy = buildDummyArgs("_test")
@@ -83,12 +83,12 @@ class TestM01(unittest.TestCase):
                             "A rs2 rs2 0.0",
                             "A rs2 rs3 0.0",
                             "A rs3 rs3 0.3333333333333333",
-                            "C rs6 rs6 1.0",
                             "B rs4 rs4 0.0",
                             "B rs4 rs5 0.0",
                             "B rs5 rs5 0.3333333333333333",
+                            "C rs6 rs6 1.0",
                             "D rs1 rs1 1.0"]
             for i,expected_line in enumerate(expected_lines):
-                actual_line = f.readline().strip()
+                actual_line = f.readline().decode().strip()
                 self.assertEqual(actual_line, expected_line)
         cleanUpDataForArgs("_test")

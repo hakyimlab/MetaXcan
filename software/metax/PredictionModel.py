@@ -4,8 +4,8 @@ import sqlite3
 import re
 import pandas
 
-import Exceptions
-import NamingConventions
+from . import Exceptions
+from . import NamingConventions
 
 
 class WDBQF(object):
@@ -86,7 +86,7 @@ class ModelDB(object):
         except Exception as e:
             raise e
 
-        weights = zip(*results)
+        weights = list(zip(*results))
         return  weights
 
     def load_extra(self, gene_key=None):
@@ -102,7 +102,7 @@ class ModelDB(object):
         except Exception as e:
             raise e
 
-        extra = zip(*results)
+        extra = list(zip(*results))
         return  extra
 
 def query_helper(query, gene_key=None):
@@ -253,15 +253,15 @@ class _ModelManager(ModelManagerBase):
 
         g = self.models[gene]
         rsids = set()
-        for tissue, weights in g.iteritems():
-            rsids.update(weights.keys())
+        for tissue, weights in g.items():
+            rsids.update(list(weights.keys()))
         return rsids
 
     def get_model_labels(self, gene = None):
         if not gene:
             labels = set()
-            for gene,tissues in self.models.iteritems():
-                labels.update(tissues.keys())
+            for gene,tissues in self.models.items():
+                labels.update(list(tissues.keys()))
             return labels
 
         if not gene in self.models: return None
@@ -300,7 +300,7 @@ def load_model_manager(path, trim_ensemble_version=False, Klass=ModelManager, na
             m = _m[k]
             w = m.weights
             w["model"] = k
-        _m = [x.weights for x in _m.values()]
+        _m = [x.weights for x in list(_m.values())]
         models = pandas.concat(_m)
         if trim_ensemble_version:
             k = models.gene.str.split(".").str.get(0)

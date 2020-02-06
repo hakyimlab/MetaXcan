@@ -65,7 +65,7 @@ def _build_data(data):
     genes = set()
     models = set()
     result = {}
-    for k, df in data.iteritems():
+    for k, df in data.items():
         logging.log(9, "Processing %s", k)
         for i, row in df.iterrows():
             if not numpy.isfinite(row.zscore):
@@ -80,5 +80,5 @@ def _build_data(data):
 
 def _get_columns(data):
     logging.info("Getting columns")
-    columns = {x for k in data.keys() for x in data[k].columns}
+    columns = {x for k in list(data.keys()) for x in data[k].columns}
     return columns

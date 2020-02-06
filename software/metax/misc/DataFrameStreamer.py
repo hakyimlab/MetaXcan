@@ -1,4 +1,5 @@
 import gzip
+import io
 import pandas
 import logging
 from .. import Utilities
@@ -8,7 +9,9 @@ def data_frame_streamer(path, sentinel_column, sentinel_white_list=None, sentine
 
     found = set()
 
-    _o = gzip.open if ".gz" in path else open
+    def _ogz(p):
+        return  io.TextIOWrapper(gzip.open(p, "r"), newline="")
+    _o = _ogz if ".gz" in path else open
     with _o(path) as file:
         header = file.readline().strip().split()
         sentinel_index = header.index(sentinel_column)

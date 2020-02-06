@@ -4,7 +4,7 @@ import logging
 import gzip
 import scipy.stats as stats
 
-import GWASSpecialHandling
+from . import GWASSpecialHandling
 
 from .. import  Exceptions
 

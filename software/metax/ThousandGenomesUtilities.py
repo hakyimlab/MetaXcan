@@ -2,9 +2,10 @@ __author__ = 'heroico'
 
 import gzip
 import os
+import io
 import logging
-import DataSetSNP
-import Utilities
+from . import DataSetSNP
+from . import Utilities
 
 class ILTF:
     """IMPUTE legend file format"""
@@ -43,9 +44,9 @@ class IMPUTELoader(object):
 
     def iterateOverFile(self, row_processor):
         """row_processor should provide an appropiate '__call__' method"""
-        with gzip.open(os.path.join(self.base_path, self.chrlegend), 'rb') as legend_file:
+        with io.TextIOWrapper(gzip.open(os.path.join(self.base_path, self.chrlegend), 'r'), newline="") as legend_file:
             legend_file.readline()
-            with gzip.open(os.path.join(self.base_path, self.chrhap), 'rb') as hap_file:
+            with io.TextIOWrapper(gzip.open(os.path.join(self.base_path, self.chrhap), 'r'), newline="") as hap_file:
                 row=1
                 last_reported_row = 1
                 while True:
@@ -64,9 +65,9 @@ class IMPUTELoader(object):
 
     def iterateOverFileDosage(self, row_processor):
         """row_processor should provide an appropiate '__call__' method"""
-        with gzip.open(os.path.join(self.base_path, self.chrlegend), 'rb') as legend_file:
+        with io.TextIOWrapper(gzip.open(os.path.join(self.base_path, self.chrlegend), 'r'), newline="") as legend_file:
             legend_file.readline()
-            with gzip.open(os.path.join(self.base_path, self.chrdosage), 'rb') as dosage_file:
+            with io.TextIOWrapper(gzip.open(os.path.join(self.base_path, self.chrdosage), 'r'), newline="") as dosage_file:
                 row=1
                 last_reported_row = 1
                 while True:
@@ -104,7 +105,7 @@ class IMPUTEDosageLoader(object):
                 position = id_components[1]
                 ref_allele = legend_line[ILTF.A0]
                 eff_allele = legend_line[ILTF.A1]
-                data = map(int, dosage_line.strip().split(" "))
+                data = list(map(int, dosage_line.strip().split(" ")))
 
                 snp = DataSetSNP.DataSetSNP(name=rsid, index=row, data=data, position=int(position), ref_allele=ref_allele, eff_allele=eff_allele)
                 if snp.name in self.snps_by_rsid:
@@ -133,8 +134,8 @@ class IMPUTEFilteredDosageFileBuilder(object):
     def buildIMPUTE(self):
         logging.info("Building IMPUTE dosage file for %s", os.path.join(self.base_path,self.name))
         logging.debug("all people: %d", len(self.all_people))
-        logging.debug("selected people: %d", len(self.selected_people_by_id.keys()))
-        logging.debug("snps: %d", len(self.snp_dict.keys()))
+        logging.debug("selected people: %d", len(list(self.selected_people_by_id.keys())))
+        logging.debug("snps: %d", len(list(self.snp_dict.keys())))
 
         dosage_file_name = Utilities.dosageName(self.output_pattern)
         legend_file_name = Utilities.legendName(self.output_pattern)
@@ -151,7 +152,7 @@ class IMPUTEFilteredDosageFileBuilder(object):
                 self.selected_people_by_id = selected_people_by_id
                 self.found_snps = 0
                 self.last_reported_percenteage = 0
-                self.snps_len = len(self.snp_dict.keys())
+                self.snps_len = len(list(self.snp_dict.keys()))
 
             def __call__(self, hap_line, legend_line):
                 rsid, valid, legend = checkLegend(legend_line, self.snp_dict)
@@ -181,8 +182,8 @@ class IMPUTEFilteredDosageFileBuilder(object):
     def buildPrediXcan(self):
         logging.info("Building PrediXcan dosage file for %s", os.path.join(self.base_path,self.name))
         logging.debug("all people: %d", len(self.all_people))
-        logging.debug("selected people: %d", len(self.selected_people_by_id.keys()))
-        logging.debug("snps: %d", len(self.snp_dict.keys()))
+        logging.debug("selected people: %d", len(list(self.selected_people_by_id.keys())))
+        logging.debug("snps: %d", len(list(self.snp_dict.keys())))
 
         dosage_file_name = Utilities.dosageName(self.output_pattern)
         if os.path.exists(dosage_file_name):
@@ -198,7 +199,7 @@ class IMPUTEFilteredDosageFileBuilder(object):
                 self.selected_people_by_id = selected_people_by_id
                 self.found_snps = 0
                 self.last_reported_percenteage = 0
-                self.snps_len = len(self.snp_dict.keys())
+                self.snps_len = len(list(self.snp_dict.keys()))
 
             def __call__(self, hap_line, legend_line):
                 rsid, valid, legend = checkLegend(legend_line, self.snp_dict)
@@ -218,7 +219,7 @@ class IMPUTEFilteredDosageFileBuilder(object):
                 line = snp_string + " " + dosages_line
                 self.dosage_output_file.write(line)
 
-        with gzip.open(dosage_file_name, 'wb') as dosage_output_file:
+        with io.TextIOWrapper(gzip.open(dosage_file_name, 'w'), newline="") as dosage_output_file:
             loader = IMPUTELoader(self.base_path, self.name)
             callback = PrediXcanOutput(self.snp_dict, self.all_people, self.selected_people_by_id, dosage_output_file, self.chromosome_name)
             loader.iterateOverFile(callback)

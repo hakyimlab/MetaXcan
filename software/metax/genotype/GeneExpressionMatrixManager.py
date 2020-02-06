@@ -27,8 +27,8 @@ def _build_matrix_entries(gene, models, matrix_manager, tissues, variances, coef
     coefs = {}
     _t = set()
     _tissues = []
-    for i in xrange(0, len(tissues)):
-        for j in xrange(i, len(tissues)):
+    for i in range(0, len(tissues)):
+        for j in range(i, len(tissues)):
             t1 = tissues[i]
             t2 = tissues[j]
             if not t1 in coefs: coefs[t1] = {}
@@ -49,7 +49,7 @@ def _build_matrix_entries(gene, models, matrix_manager, tissues, variances, coef
 def _get_variances(models, matrix_manager, gene):
     tissues = models.index.get_level_values(0).values
     variances = {t:_get_variance(models, matrix_manager, gene, t) for t in tissues}
-    variances = {k:v for k,v in variances.iteritems() if v is not None}
+    variances = {k:v for k,v in variances.items() if v is not None}
     return variances
 
 def _get_variance(models, matrix_manager, gene, tissue):
@@ -104,16 +104,16 @@ class _GeneExpressionMatrixManager(object):
     def get(self, gene, tissues):
         t = set(tissues)
         models = self.model_manager.get_models(gene)
-        models = {k:v for k,v in models.iteritems() if k in t}
+        models = {k:v for k,v in models.items() if k in t}
         tissues = sorted(set(models.keys()))
         variances = _get_variances_2(models, self.snp_covariance_manager, gene)
         tissues, matrix = _build_matrix(gene, models, self.snp_covariance_manager, tissues, variances, _get_coef_2)
         return tissues, matrix
 
 def _get_variances_2(models, matrix_manager, gene):
-    tissues = models.keys()
+    tissues = list(models.keys())
     variances = {t:_get_variance_2(models, matrix_manager, gene, t) for t in tissues}
-    variances = {k:v for k,v in variances.iteritems() if v is not None}
+    variances = {k:v for k,v in variances.items() if v is not None}
     return variances
 
 def _get_variance_2(models, matrix_manager, gene, tissue):

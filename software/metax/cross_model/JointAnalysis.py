@@ -99,7 +99,7 @@ def joint_analysis(context, gene):
     # Note there is a slight numerical mismatch between the resolution in eigh and the svd
     cutoff = context.get_cutoff(matrix)
 
-    _d = {tissue_labels[i]:zscores[i] for i in xrange(0, len(tissue_labels))}
+    _d = {tissue_labels[i]:zscores[i] for i in range(0, len(tissue_labels))}
     zscores = array([_d[l] for l in labels])
     inv, n_indep, eigen = Math.capinv(matrix, cutoff, context.epsilon)
 

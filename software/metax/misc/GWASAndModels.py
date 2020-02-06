@@ -46,7 +46,7 @@ def gwas_model_intersection(args):
     return intersection
 
 
-complement_translation = string.maketrans("CGTA", "GCAT")
+complement_translation = "CGTA".maketrans({"C": "G", "G": "C", "T":"A", "A": "T"})
 def match_alleles(l_non_effect_allele, l_effect_allele, r_non_effect_allele, r_effect_allele):
     if len(l_effect_allele) == 1 and len(l_non_effect_allele) == 1:
         if l_effect_allele == r_effect_allele and  l_non_effect_allele == r_non_effect_allele:

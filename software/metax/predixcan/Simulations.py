@@ -90,7 +90,7 @@ class LinearCombinationPhenotypeGenerator(PhenotypeGenerator):
                 combination["covariate"] = math.sqrt(len(expression)*99)
             else:
                 raise RuntimeError("Unsupported option")
-            for e in expression.keys():
+            for e in list(expression.keys()):
                 combination[e] = c
 
         return _pheno_from_combination(expression, combination, self.covariate_sd)
@@ -112,7 +112,7 @@ class CombinationOfCorrelatedPhenotypeGenerator(PhenotypeGenerator):
         d = len(expression)
         f = 0
         r = 0
-        for i in xrange(0, d):
+        for i in range(0, d):
             f_ = numpy.sum(c[i] > self.threshold)
             if f_ > f:
                 r = i
@@ -123,7 +123,7 @@ class CombinationOfCorrelatedPhenotypeGenerator(PhenotypeGenerator):
 
         which = c[r] > self.threshold
         keys = list(expression.keys())
-        combination = {keys[i]:math.sqrt(1.0/f) for i in xrange(0, d) if which[i]}
+        combination = {keys[i]:math.sqrt(1.0/f) for i in range(0, d) if which[i]}
         #for i in xrange(0,d):
         #    combination["covariate_{}".format(i)] = 10.0/f
         combination["covariate"] = self.covariate_coefficient
@@ -137,7 +137,7 @@ def _pheno_from_combination(expression, combination, covariate_sd):
     n = len(_e)
     e = numpy.zeros(n)
     used = set()
-    for k, v in combination.iteritems():
+    for k, v in combination.items():
         if k in expression:
             e +=  expression[k] * v
             used.add(k)
@@ -152,7 +152,7 @@ def _pheno_from_combination(expression, combination, covariate_sd):
     if not ok:
         return None, None
 
-    _c = {x: v for x, v in combination.iteritems() if x in used}
+    _c = {x: v for x, v in combination.items() if x in used}
     pheno = e
     description = pandas.DataFrame({"variable": list(_c.keys()), "param": list(_c.values())})
     return pheno, description
@@ -171,9 +171,9 @@ class SExpressionManager(Expression.ExpressionManager):
             n = len(e[list(e.keys())[0]])
             s = 10000
             #self.which = numpy.random.choice([True, False], size=n, p=[s*1.0/n, 1 - s*1.0/n])
-            self.which = list(numpy.random.choice(xrange(0,n), size=s, replace=False))
+            self.which = list(numpy.random.choice(range(0,n), size=s, replace=False))
 
-        e = {k:v[self.which] for k,v in e.iteritems()}
+        e = {k:v[self.which] for k,v in e.items()}
         return e
 
     def get_genes(self): return self.em.get_genes()
@@ -203,7 +203,7 @@ def context_from_args(args):
                 _c = {}
             else:
                 _c = _c.split()
-                _c = {_c[i*2]:float(_c[i*2+1]) for i in xrange(0,len(_c)/2)}
+                _c = {_c[i*2]:float(_c[i*2+1]) for i in range(0,len(_c)/2)}
         elif "use_tissues" in p:
             _c = p.get("use_tissues").strip().split()
             _c = {x:math.sqrt(1.0/len(_c)) for x in _c}
@@ -238,7 +238,7 @@ def simulate(gene, context):
     p = None
     if _context_p:
         p = pandas.DataFrame()
-        for model,_c in _context_p.iteritems():
+        for model,_c in _context_p.items():
             p_ = PrediXcanAssociation.predixcan_association(gene, _c)
             p_ = PrediXcanAssociation.dataframe_from_results([p_])
             p_["model"] = model

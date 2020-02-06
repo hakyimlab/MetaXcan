@@ -79,10 +79,10 @@ class DBLoaders(object):
         connection.close()
 
         valid_rows = []
-        for i in xrange(0, len(valid_keys)):
+        for i in range(0, len(valid_keys)):
             valid_row = []
             valid_rows.append(valid_row)
-            for j in xrange(0, len(valid_keys)):
+            for j in range(0, len(valid_keys)):
                 key_i = valid_keys[i]
                 key_j = valid_keys[j]
 

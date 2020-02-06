@@ -65,7 +65,7 @@ class TestGTExGenotype(unittest.TestCase):
                     i = d[d.RS_ID_dbSNP142_CHG37p13 == rsid].index.tolist()[0]
                     d = d.drop(i)
                 used.add(rsid)
-            d["number"] = range(0, len(d))
+            d["number"] = list(range(0, len(d)))
             d = d.set_index("number")
             return d
 
@@ -74,7 +74,7 @@ class TestGTExGenotype(unittest.TestCase):
             d = Utilities.to_dataframe(d, gtex_ids, to_numeric="ignore")
             d["rsid"] = list(metadata.rsid)
             d = pandas.merge(metadata, d, on="rsid")
-            d["number"] = range(0, len(d))
+            d["number"] = list(range(0, len(d)))
             d = d.set_index("number")
             return d
 
@@ -82,8 +82,8 @@ class TestGTExGenotype(unittest.TestCase):
         for chromosome, metadata, dosage in GTExGenotype.gtex_geno_by_chromosome("tests/_td/genotype/gtex_like.txt.gz", "tests/_td/genotype/gtex_snp.txt.gz"):
             m = pandas.concat([m, metadata])
 
-            self.assertEqual(len(dosage.keys()), metadata.shape[0])
-            for key in dosage.keys():
+            self.assertEqual(len(list(dosage.keys())), metadata.shape[0])
+            for key in list(dosage.keys()):
                 self.assertEqual(len(dosage[key]), 100) #this data has 100 samples
             d = torture_dosage(metadata, dosage, gtex_ids)
             d2 = torture_dataframe(dataframe_2, chromosome)

@@ -1,7 +1,7 @@
 __author__ = 'heroico'
 
 import gzip
-
+import io
 #
 class DataSet(object):
     """A list of values for a thing we care about"""
@@ -15,7 +15,7 @@ class DataSetFileUtilities(object):
     @classmethod
     def loadFromFile(cls, data_file_name = None, header_name=None):
         data_set = None
-        with open(data_file_name, 'rb') as file:
+        with open(data_file_name, 'r') as file:
             data_set = cls._loadDataSetFromFile(file, header_name)
             data_set.name = data_file_name
         return data_set
@@ -23,7 +23,7 @@ class DataSetFileUtilities(object):
     @classmethod
     def loadFromCompressedFile(cls, data_file_name = None, header_name=None):
         data_set = None
-        with gzip.open(data_file_name, 'rb') as file:
+        with io.TextIOWrapper(gzip.open(data_file_name, 'r'), newline="") as file:
             data_set = cls._loadDataSetFromFile(file, header_name)
             data_set.name = data_file_name
         return data_set

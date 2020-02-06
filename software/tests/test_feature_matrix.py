@@ -5,7 +5,7 @@ import unittest
 from metax import misc
 from metax.misc import FeatureMatrix
 
-import SampleData
+from . import SampleData
 
 EXPECTED_A = \
 [[ 0.1 ,  0.01,  0.07],

@@ -6,7 +6,7 @@ import logging
 
 import numpy
 
-from Genotype import GF
+from .Genotype import GF
 from .. import Utilities
 from . import Helpers
 
@@ -45,16 +45,16 @@ def model_training_geno_by_chromosome(dosage_folder, dosage_pattern, gtex_snp_fi
     snp_annotation = Helpers.gtex_snp(gtex_snp_file, gtex_release_version)
 
     def _buffer_to_data(buffer):
-        _data = zip(*buffer)
+        _data = list(zip(*buffer))
 
         _metadata = _data[0:GF.FIRST_DOSAGE]
         rsids = _metadata[GF.RSID]
         chromosome = int(_metadata[GF.CHROMOSOME][0]) # I know I am gonna regret this cast
-        _metadata = zip(*_metadata)
+        _metadata = list(zip(*_metadata))
         metadata = Utilities.to_dataframe(_metadata, ["rsid", "chromosome", "position", "ref_allele", "alt_allele", "frequency"], to_numeric="ignore")
 
-        dosage = zip(*_data[GF.FIRST_DOSAGE:])
-        dosage_data = {rsids[i]:dosage[i] for i in xrange(0, len(rsids))}
+        dosage = list(zip(*_data[GF.FIRST_DOSAGE:]))
+        dosage_data = {rsids[i]:dosage[i] for i in range(0, len(rsids))}
 
         return chromosome, metadata, dosage_data
 

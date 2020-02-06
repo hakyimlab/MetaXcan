@@ -1,8 +1,9 @@
 __author__ = 'heroico'
 
 import gzip
+import io
 import logging
-from DataSet import DataSet
+from .DataSet import DataSet
 
 class KeyedDataSet(DataSet):
     def __init__(self, name=None, index=None, data=[], keys=[]):
@@ -10,7 +11,7 @@ class KeyedDataSet(DataSet):
         self.keys = keys
         self.values_by_key = {}
         if len(keys):
-            self.values_by_key = {keys[i]:data[i] for i in xrange(0, len(keys))}
+            self.values_by_key = {keys[i]:data[i] for i in range(0, len(keys))}
 
 EMPTY = KeyedDataSet()
 
@@ -23,14 +24,14 @@ class KeyedDataSetFileUtilities(object):
 
     @classmethod
     def saveToCompressedFile(cls, file_path, keyed_data_set, key_header, value_header):
-        with gzip.open(file_path, 'wb') as file:
+        with io.TextIOWrapper(gzip.open(file_path, 'w'), newline="") as file:
             cls.writeContents(file, keyed_data_set, key_header, value_header)
 
     @classmethod
     def writeContents(self, file, keyed_data_set, key_header, value_header):
         if key_header and value_header:
             file.write(key_header + " " + value_header + "\n")
-        for i in xrange(0, len(keyed_data_set.keys)):
+        for i in range(0, len(keyed_data_set.keys)):
             key = keyed_data_set.keys[i]
             value = keyed_data_set.data[i]
             file.write(key + " " + str(value) + "\n")
@@ -43,7 +44,7 @@ class KeyedDataSetFileUtilities(object):
 
     @classmethod
     def saveSetsToCompressedFile(cls, file_path, sets, key_header):
-        with gzip.open(file_path, 'wb') as file:
+        with io.TextIOWrapper(gzip.open(file_path, 'w'), newline="") as file:
             cls.writeSetsContent(file, sets, key_header)
 
     @classmethod
@@ -60,7 +61,7 @@ class KeyedDataSetFileUtilities(object):
 
         keys = sets[0].keys
         reference = set(keys)
-        for i in xrange(1, sets_count):
+        for i in range(1, sets_count):
             assert reference == set(sets[i].keys)
 
         for key in keys:
@@ -77,7 +78,7 @@ class KeyedDataSetFileUtilities(object):
 
     @classmethod
     def loadFromCompressedFile(cls, file_path, sep= None, col = 1, header=None):
-        with gzip.open(file_path, 'rb') as file:
+        with io.TextIOWrapper(gzip.open(file_path, 'r'), newline="") as file:
             keyed_data_set = cls.loadContents(file, file_path, sep, col, header)
             return keyed_data_set
 
@@ -109,7 +110,7 @@ class KeyedDataSetFileUtilities(object):
 
     @classmethod
     def loadDataSetsFromCompressedFile(cls, file_path, sep= None, cols = [], header=None):
-        with gzip.open(file_path, 'rb') as file:
+        with io.TextIOWrapper(gzip.open(file_path, 'r'), newline="") as file:
             sets = cls.loadDataSetsContent(file, sep, cols, header)
             return sets
 
@@ -123,7 +124,7 @@ class KeyedDataSetFileUtilities(object):
             names = line.split(separator) if separator else line.split()
 
         if len(cols) == 0:
-            for i in xrange(0, len(names)):
+            for i in range(0, len(names)):
                 cols.append(i)
 
         value_sets = []

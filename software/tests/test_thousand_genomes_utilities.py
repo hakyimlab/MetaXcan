@@ -2,6 +2,7 @@ import unittest
 import sys
 import shutil
 import os
+import io
 import gzip
 import re
 
@@ -128,7 +129,7 @@ class TestThousandGenomesUtilities(unittest.TestCase):
         os.mkdir("_test/result")
         builder.buildPrediXcan()
         self.assertPredixcanOutput("_test/result/set_chr1.dosage.gz",
-        ["chr1 rs2 2 G A 0.1 0 1 0 0 0"])
+            ["chr1 rs2 2 G A 0.1 0 1 0 0 0"])
         cleanUpData("_test")
 
         #Filtering snp info
@@ -147,7 +148,7 @@ class TestThousandGenomesUtilities(unittest.TestCase):
         lines = []
         with gzip.open(file) as f:
             for l in f:
-                lines.append(l.strip())
+                lines.append(l.decode().strip())
         self.assertEqual(len(expected), len(lines))
 
         for i,l in enumerate(lines):

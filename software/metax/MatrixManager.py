@@ -2,7 +2,7 @@ import pandas
 import numpy
 import logging
 
-import Exceptions
+from . import Exceptions
 
 K_MODEL="model"
 K_ID1="id1"
@@ -79,7 +79,7 @@ class StreamedMatrixManager(MatrixManagerBase):
                 logging.log(8, "loaded data with gene %d", d.gene.values[0])
             self._data = _build_data(d, self.definition)
         if not key in self._data:
-            raise Exceptions.MalformedInputFile("covariance", "loaded data does not contain the required covariance: {} from {}".format( key, self._data.keys()))
+            raise Exceptions.MalformedInputFile("covariance", "loaded data does not contain the required covariance: {} from {}".format( key, list(self._data.keys())))
 
         return _get(self._data, key, whitelist, strict_whitelist)
 
@@ -87,7 +87,7 @@ class StreamedMatrixManager(MatrixManagerBase):
         d = next(self.streamer)
         self._data = _build_data(d, self.definition)
         if not key in self._data:
-            raise  Exceptions.MalformedInputFile("covariance", "loaded data does not contain the required covariance: {} from {}".format(key, self._data.keys()) )
+            raise  Exceptions.MalformedInputFile("covariance", "loaded data does not contain the required covariance: {} from {}".format(key, list(self._data.keys())) )
         return _get_2(self._data, key, snps_1, snps_2)
 
     def model_labels(self):
@@ -129,7 +129,7 @@ def _build_data(d, definition):
 
     d = d.fillna("NA")
     d[MODEL_KEY] = pandas.Categorical(d[MODEL_KEY], d[MODEL_KEY].drop_duplicates())  # speed things up!
-    d = zip(d[MODEL_KEY].values, d[ID1_KEY].values, d[ID2_KEY].values, d[VALUE_KEY].values)
+    d = list(zip(d[MODEL_KEY].values, d[ID1_KEY].values, d[ID2_KEY].values, d[VALUE_KEY].values))
     r = {}
     for t in d:
         model = t[0]
@@ -145,7 +145,7 @@ def _get(data, key, whitelist=None, strict_whitelist=True):
     d = data[key]
 
     if strict_whitelist and whitelist:
-        g, r1, r2, v = zip(*d)
+        g, r1, r2, v = list(zip(*d))
         _check_strict(whitelist, set(r1), key)
         _check_strict(whitelist, set(r2), key)
 
@@ -228,8 +228,8 @@ def _flatten_matrix_data(data):
             results.append((name, id, id, float(matrix)))
             continue
 
-        for i in xrange(0, len(id_labels)):
-            for j in xrange(i, len(id_labels)):
+        for i in range(0, len(id_labels)):
+            for j in range(i, len(id_labels)):
                 value = matrix[i][j]
                 id1 = id_labels[i]
                 id2 = id_labels[j]

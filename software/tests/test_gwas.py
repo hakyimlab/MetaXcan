@@ -19,8 +19,8 @@ from metax.Constants import ZSCORE
 from metax.Constants import CHROMOSOME
 from metax.Constants import POSITION
 
-import SampleData
-import scz2_sample
+from . import SampleData
+from . import scz2_sample
 
 def assert_basic_gwas(unit_test, gwas):
     numpy.testing.assert_array_equal(gwas[SNP], scz2_sample.expected_snp)

@@ -1,8 +1,8 @@
 import pandas
 
 def _dataframe(names, data):
-    columns = zip(*data)
-    d = {names[i]:columns[i] for i in xrange(0,len(names))}
+    columns = list(zip(*data))
+    d = {names[i]:columns[i] for i in range(0,len(names))}
     d = pandas.DataFrame(d)
     d = d[names]
     return d
@@ -188,10 +188,10 @@ def sample_weights_2():
 
 def sample_extra_2():
     e =[
-        (u"A", "gene1", 3, 0.9, 0.09, 0.091),
-        (u"B", "gene2", 2, 0.8, 0.08, 0.081),
-        (u"C", "gene3", 1, 0.7, 0.07, 0.071),
-        (u"D", "gene4", 1, 0.6, 0.06, 0.061),
+        ("A", "gene1", 3, 0.9, 0.09, 0.091),
+        ("B", "gene2", 2, 0.8, 0.08, 0.081),
+        ("C", "gene3", 1, 0.7, 0.07, 0.071),
+        ("D", "gene4", 1, 0.6, 0.06, 0.061),
     ]
     return e
 

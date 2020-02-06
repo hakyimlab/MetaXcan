@@ -120,12 +120,12 @@ class TestWeightDBUtilities(unittest.TestCase):
             actual_gene_data = weight_db_entry_logic.gene_data_for_gene[e.gene]
             self.assertExtra([actual_gene_data], [e])
 
-            actual_weights = [w for k,w in weight_db_entry_logic.weights_by_gene[e.gene].iteritems()]
+            actual_weights = [w for k,w in weight_db_entry_logic.weights_by_gene[e.gene].items()]
             e_w = [w for w in expected_weights if w.gene == e.gene]
             self.assertWeights(actual_weights, e_w)
 
         self.assertEqual(len(weight_db_entry_logic.genes_for_an_rsid), 6)
-        for rsid, genes in weight_db_entry_logic.genes_for_an_rsid.iteritems():
+        for rsid, genes in weight_db_entry_logic.genes_for_an_rsid.items():
             expected = [w.gene for w in expected_weights if w.rsid == rsid]
             self.assertEqual(expected, genes)
 

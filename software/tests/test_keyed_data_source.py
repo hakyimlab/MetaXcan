@@ -24,17 +24,17 @@ class TestKeyedDataset(unittest.TestCase):
         Z = [4, 5, 6, 7]
 
         k = KeyedDataSource.load_data("tests/_td/test.txt", key_name="X", value_name="Y")
-        k_ = {X[i]:Y[i] for i in xrange(0, len(X))}
+        k_ = {X[i]:Y[i] for i in range(0, len(X))}
         self.assertEqual(k, k_)
 
         k = KeyedDataSource.load_data("tests/_td/test.txt", key_name="X", value_name="Y", numeric=False)
-        k_ = {X[i]:str(Y[i]) for i in xrange(0, len(X))}
+        k_ = {X[i]:str(Y[i]) for i in range(0, len(X))}
         self.assertEqual(k, k_)
 
         k = KeyedDataSource.load_data("tests/_td/test.txt", key_name="Z", value_name="Y")
-        k_ = {str(Z[i]): Y[i] for i in xrange(0, len(X))}
+        k_ = {str(Z[i]): Y[i] for i in range(0, len(X))}
         self.assertEqual(k, k_)
 
         k = KeyedDataSource.load_data("tests/_td/test.txt", key_name="Z", value_name="Y", numeric=False)
-        k_ = {str(Z[i]): str(Y[i]) for i in xrange(0, len(X))}
+        k_ = {str(Z[i]): str(Y[i]) for i in range(0, len(X))}
         self.assertEqual(k, k_)

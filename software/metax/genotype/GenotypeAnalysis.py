@@ -19,7 +19,7 @@ class GenotypeAnalysisContext(object):
     def standardise_data(self):
         d = {}
         rejected = set()
-        for k,v in self.dosage.iteritems():
+        for k,v in self.dosage.items():
             v = Math.standardize(v)
             if v is None:
                 rejected.add(k)
@@ -52,7 +52,7 @@ class GenotypeAnalysisContext(object):
         return self.dosage[rsid]
 
 def numpify(d):
-    return {k:numpy.array(v, dtype=numpy.float64) for k, v in d.iteritems()}
+    return {k:numpy.array(v, dtype=numpy.float64) for k, v in d.items()}
 
 
 def get_prediction_variance(context, gene):

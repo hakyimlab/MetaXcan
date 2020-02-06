@@ -93,7 +93,7 @@ def association(gene, context, return_snps=False):
         return r
 
 def dataframe_from_results(results):
-    results = zip(*results)
+    results = list(zip(*results))
     if len(results) == 0:
         return pandas.DataFrame({key:[] for order,key in ARF.order})
 
@@ -122,7 +122,7 @@ def additional_stats(gene, context):
     return gene, p, best_weight
 
 def dataframe_from_aditional_stats(stats):
-    stats = zip(*stats)
+    stats = list(zip(*stats))
     if len(stats) == 0:
         return pandas.DataFrame({key:[] for order,key in ASF.order})
 

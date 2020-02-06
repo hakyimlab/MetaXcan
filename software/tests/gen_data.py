@@ -8,7 +8,7 @@ class StructuredExample(object):
 
         if header is not None and dtypes is not None:
             if len(header) != len(dtypes):
-                print "Header and dtypes must be the same size: ", header, dtypes
+                print("Header and dtypes must be the same size: ", header, dtypes)
                 sys.exit(1)
 
 

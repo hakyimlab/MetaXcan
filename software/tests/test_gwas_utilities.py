@@ -12,7 +12,7 @@ from metax.Constants import ZSCORE
 from metax.Constants import CHROMOSOME
 from metax.Constants import POSITION
 
-import SampleData
+from . import SampleData
 
 def assert_gwas_1(unit_test, gwas):
     expected_snp = pandas.Series(["rs1666", "rs1", "rs2", "rs3", "rs4", "rs6", "rs7", "rs7666", "rs8", "rs9"], dtype=numpy.str)

@@ -1,10 +1,11 @@
 import re
 import logging
 import os
+import io
 import gzip
 import pandas
 
-import Expression
+from . import Expression
 from ..misc import Math
 
 ########################################################################################################################
@@ -22,7 +23,7 @@ class ExpressionManager(Expression.ExpressionManager):
 
         if self.standardise:
             k_ = {}
-            for key, value in k.iteritems():
+            for key, value in k.items():
                 t_ = Math.standardize(value)
                 if t_ is not None:
                     k_[key] = t_
@@ -30,7 +31,7 @@ class ExpressionManager(Expression.ExpressionManager):
         return d
 
     def get_genes(self):
-        return self.gene_map.keys()
+        return list(self.gene_map.keys())
 
     def enter(self):
         d = {}
@@ -55,7 +56,7 @@ class ExpressionManagerMemoryEfficient(Expression.ExpressionManager):
         k = {model:pandas.read_table(self.file_map[model], usecols=[gene])[gene].values for model in sorted(m_.keys())}
         if self.standardise:
             k_ = {}
-            for key, value in k.iteritems():
+            for key, value in k.items():
                 t_ = Math.standardize(value)
                 if t_ is not None:
                     k_[key] = t_
@@ -63,7 +64,7 @@ class ExpressionManagerMemoryEfficient(Expression.ExpressionManager):
         return k
 
     def get_genes(self):
-        return self.gene_map.keys()
+        return list(self.gene_map.keys())
 
 _exregex = re.compile("TW_(.*)_0.5.expr.txt")
 def _structure(folder, pattern=None):
@@ -84,7 +85,10 @@ def _structure(folder, pattern=None):
             name = file
         name = name.replace("-", "_")
         path = os.path.join(folder, file)
-        _o = gzip.open if ".gz" in file else open
+
+        def _ogz(p):
+            return io.TextIOWrapper(gzip.open(p, "r"), newline="")
+        _o = _ogz if ".gz" in path else open
         with _o(path) as f:
             comps = f.readline().strip().split()
 

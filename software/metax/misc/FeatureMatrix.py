@@ -1,5 +1,6 @@
 import pandas
 import os
+import io
 import logging
 import re
 import gzip
@@ -45,8 +46,10 @@ class FeatureMatrixManager(object):
         data = data.sort_values(by=column_names[0:2])
         compression = "gzip" if "gz" in path else None
         if append:
-            _open = gzip.open if compression == "gzip" else open
-            with _open(path, 'a') as f:
+            def _ogz(p):
+                return io.TextIOWrapper(gzip.open(p, "r"), newline="")
+            _o = _ogz if ".gz" in path else open
+            with _o(path, 'a') as f:
                 data.to_csv(f, header=False, index=False, sep="\t", compression=compression)
         else:
             data.to_csv(path, index=False, sep="\t", compression=compression)
@@ -104,7 +107,7 @@ def _load_features(files, parse_func, subset):
 def _build_data(data, standardize):
     logging.log(9,"Building data")
     result = {}
-    for k, df in data.iteritems():
+    for k, df in data.items():
         logging.log(9, "Processing %s", k)
         columns = df.columns.values
         for column in columns:
@@ -121,5 +124,5 @@ def _build_data(data, standardize):
 
 def _get_columns(data):
     logging.info("Getting columns")
-    columns = {x for k in data.keys() for x in data[k].columns}
+    columns = {x for k in list(data.keys()) for x in data[k].columns}
     return columns

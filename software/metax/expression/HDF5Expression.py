@@ -5,7 +5,7 @@ import logging
 import h5py
 import h5py_cache
 
-import Expression as _Expression
+from . import Expression as _Expression
 
 from ..misc import Math
 
@@ -35,7 +35,7 @@ class ExpressionManager(_Expression.ExpressionManager):
         if self.standardise:
             logging.log(8, "Standardizing")
             k_ = {}
-            for key, value in k.iteritems():
+            for key, value in k.items():
                 t_ = Math.standardize(value)
                 if t_ is not None:
                     k_[key] = t_
@@ -48,7 +48,7 @@ class ExpressionManager(_Expression.ExpressionManager):
         return k
 
     def get_genes(self):
-        return self.gene_map.keys()
+        return list(self.gene_map.keys())
 
     def enter(self):
         gene_map, h5 = _structure(self.folder, self.pattern)
@@ -90,7 +90,7 @@ def _structure(folder, pattern=None):
     return gene_map, h5
 
 def _close(h5):
-    for name, h_ in h5.iteritems():
+    for name, h_ in h5.items():
         h_.close()
 
 def _code_999(k):
@@ -105,7 +105,7 @@ def _code_999(k):
             x[close] = numpy.nan
         return x
 
-    k = {k:c_(v) for k, v in k.iteritems()}
+    k = {k:c_(v) for k, v in k.items()}
     return  k
 
 ########################################################################################################################
@@ -147,7 +147,7 @@ def _code_999_b(k):
             return numpy.nan
         return x
 
-    k = numpy.array(map(c_, k))
+    k = numpy.array(list(map(c_, k)))
     return  k
 
 def _structure_file(file_path):

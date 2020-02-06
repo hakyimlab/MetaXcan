@@ -10,14 +10,16 @@ TODO:
 
 """
 __author__ = 'heroico'
-import metax
-__version__ = metax.__version__
 import logging
 import os
 import re
 import pandas
 
 from timeit import default_timer as timer
+
+import metax
+__version__ = metax.__version__
+
 
 from metax import Constants
 from metax.misc import GWASAndModels
@@ -136,7 +138,7 @@ def run(args):
 
 if __name__ == "__main__":
     import argparse
-    parser = argparse.ArgumentParser(description='M03_betas.py %s: Build betas from GWAS data as expected by MetaXcan.' % (__version__))
+    parser = argparse.ArgumentParser(description='M03_betas.py {}: Build betas from GWAS data as expected by MetaXcan.'.format(__version__))
 
     parser.add_argument("--model_db_path",
                         help="Name of model db in data folder. "

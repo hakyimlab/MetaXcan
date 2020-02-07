@@ -3,6 +3,8 @@
 MetaXcan is a set of tools to perform integrative gene mapping studies.
 Almost all of the software here is command-line based.
 
+This software has been recently migrated to **python 3** as **python 2** has been sunset.
+
 ## S-PrediXcan
 
 S-PrediXcan is an extension of [PrediXcan](https://github.com/hakyimlab/PrediXcan), that infers PrediXcan's results using only summary statistics. It is a component of MetaXcan.
@@ -18,11 +20,11 @@ If you plan to use that data in a publication, please be sure to take a look at 
 
 The software is developed and tested in Linux and Mac OS environments. The main S-PrediXcan script is also supported in Windows.
 
-To run S-PrediXcan, you need  [Python 2.7](https://www.python.org/), with the following libraries:
+To run S-PrediXcan, you need  [Python 3.5](https://www.python.org/) or higher, with the following libraries:
 * [numpy (>=1.11.1)](http://www.numpy.org/)
 * [scipy (>=0.18.1)](http://www.scipy.org/) 
 * [pandas (>=0.18.1)](http://pandas.pydata.org/)
-* [mock](https://github.com/testing-cabal/mock) and [sqlalchemy](https://www.sqlalchemy.org/) are needed for the unit tests.
+* [sqlalchemy](https://www.sqlalchemy.org/) is needed at some unit tests.
 
 To run PrediXcan and MulTiPrediXcan, you also need:
 * [patsy (>=0.5.0)](https://patsy.readthedocs.io/en/latest/)
@@ -71,7 +73,7 @@ GTEx-based tissues and 1000 Genomes covariances precalculated data can be found 
 
 ## Setup and Usage Example on a UNIX-like operating system
 
-The following example assumes that you have **python 2.7**, **numpy**, and **scipy** installed.
+The following example assumes that you have **python 3.5** (or higher), **numpy**, and **scipy** installed.
 
 1) Clone this repository.
 ```bash

@@ -4,6 +4,8 @@
 MetaXcan is a set of tools to perform integrative gene mapping studies.
 Almost all of the software here is command-line based.
 
+This software has been recently migrated to **python 3** as **python 2** has been sunset.
+
 ## S-PrediXcan
 
 S-PrediXcan is an extension of [PrediXcan](https://github.com/hakyimlab/PrediXcan), that infers PrediXcan's results using only summary statistics. It is a component of MetaXcan.
@@ -26,7 +28,7 @@ Check the root [Readme](https://github.com/hakyimlab/MetaXcan) for a sample scri
 
 The software is developed and tested in Linux and Max OS environments. Should be mostly working on Windows.
 
-To run S-PrediXcan, you need  [Python 2.7](https://www.python.org/), with the following libraries:
+To run S-PrediXcan, you need  [Python 3.5](https://www.python.org/) or higher, with the following libraries:
 * [numpy (>=1.14.2)](http://www.numpy.org/)
 * [scipy (>=1.2.2)](http://www.scipy.org/) 
 * [pandas (>=0.22.0)](http://pandas.pydata.org/)

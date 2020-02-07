@@ -8,10 +8,6 @@ Almost all of the software here is command-line based.
 S-PrediXcan is an extension of [PrediXcan](https://github.com/hakyimlab/PrediXcan), that infers PrediXcan's results using only summary statistics. It is a component of MetaXcan.
 A manuscript describing S-PrediXcan and the MetaXcan framework with an application can be found [here](http://www.biorxiv.org/content/early/2017/05/21/045260).
 
-## Web Application
-
-You can try our web version of the application [here](https://cloud.hakyimlab.org). You will need to create a user or log in using a Google account.
-
 ## Application to over a 100 complex traits
 
 We have ran MetaXcan on over a 100 complex traits in publicly available GWAS summary statistics using models trained on GTEx data. 
@@ -171,6 +167,13 @@ then you should avoid specifying a p-value column because numerical problems mig
 ## S-PrediXcan on windows
 
 Please see the following [article](https://github.com/hakyimlab/MetaXcan/wiki/MetaXcan-on-Windows) in the wiki.
+
+## Useful Data & Prediction models
+
+We make available several transcriptome predictione models and LD references [here](http://predictdb.org).
+These files should be enough for running **MetaXcan.py**, **MulTiXcan.py** and **SMulTiXcan.py** on practically any GWAS study.
+we provide a end-to-end [tutorial](https://github.com/hakyimlab/MetaXcan/wiki/Tutorial:-GTEx-v8-MASH-models-integration-with-a-Coronary-Artery-Disease-GWAS), 
+for integrating GWAS summary statistics on the latest release of GTEx models.
 
 ## Installation
 

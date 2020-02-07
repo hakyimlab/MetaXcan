@@ -27,4 +27,5 @@ setuptools*.zip
 .python-version
 
 venv
+*.bak
 

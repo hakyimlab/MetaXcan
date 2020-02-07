@@ -67,6 +67,7 @@ def association(gene, context, return_snps=False):
     n_snps_in_cov = context.get_n_in_covariance(gene)
 
     zscore, effect_size, sigma_g_2 = numpy.nan, numpy.nan, numpy.nan
+
     if n_snps_used > 0:
         i_weight = i[WDBQF.K_WEIGHT]
         i_zscore = i[Constants.ZSCORE]

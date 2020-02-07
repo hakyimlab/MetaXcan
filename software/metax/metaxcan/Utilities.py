@@ -154,7 +154,7 @@ def _data_intersection_2(weight_data, gwas_data):
     genes = set()
     snps = set()
     for gene, entries in weight_data.items():
-        gs = zip(*entries)[WDBQF.RSID]
+        gs = list(zip(*entries))[WDBQF.RSID]
         for s in gs:
             if s in gwas_data:
                 genes.add(gene)
@@ -170,7 +170,7 @@ def _data_intersection_3(weight_data, gwas_data, gene_list, pedantic):
             if pedantic:
                 logging.warning("Issues processing gene %s, skipped", gene)
             continue
-        gs = zip(*weight_data[gene])[WDBQF.RSID]
+        gs = list(zip(*weight_data[gene]))[WDBQF.RSID]
         for s in gs:
             if s in gwas_data:
                 if not gene in _genes:
@@ -328,12 +328,13 @@ def format_output(results, context, remove_ens_version):
 
     column_order = _results_column_order()
     merged = merged[column_order]
-    merged = merged.fillna("NA")
+
     # since we allow NA in covs, we massage it a little bit into resemblying an int instead of a float
     # (pandas uses the NaN float.)
+
     merged.n_snps_in_cov = merged.n_snps_in_cov.apply(_to_int)
     merged = merged.sort_values(by=Constants.PVALUE)
-
+    merged = merged.fillna("NA")
     return merged
 
 def merge_additional_output(results, stats, context, remove_ens_version):

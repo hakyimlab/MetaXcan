@@ -2,7 +2,8 @@ import logging
 from timeit import default_timer as timer
 
 import metax
-from metax import Logging, Exceptions
+from metax import Logging
+from metax import Exceptions
 
 import Predict
 import PrediXcanAssociation

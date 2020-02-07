@@ -8,7 +8,15 @@ import statsmodels.api as sm
 from .MultiPrediXcanAssociation import Context as _MTPContext, MTPMode
 from .PrediXcanAssociation import Context as _PContext, PMode
 from metax import Exceptions, Utilities
-from .. expression import Expression, HDF5Expression, PlainTextExpression
+
+from .. expression import Expression, PlainTextExpression
+try:
+    from .. expression import  HDF5Expression
+except:
+    logging.info("Could not import HDF5 expression")
+
+
+
 from .. import Exceptions
 
 ########################################################################################################################
@@ -258,7 +266,7 @@ class BasicPredictionRepository(PredictionRepository):
 
 def summary_report(summary_data, extra):
     s = []
-    for k, v in summary_data.stats.items():
+    for k, v in summary_data.items():
         s.append((k, v[0]))
     s = pandas.DataFrame(s, columns=["gene", "n_snps_used"])
     s = extra[['gene', 'gene_name', 'n_snps_in_model', 'pred_perf_r2', 'pred_perf_pval']].merge(s, on="gene", how="left")

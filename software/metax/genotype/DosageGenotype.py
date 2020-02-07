@@ -46,7 +46,7 @@ def dosage_files_geno_lines(dosage_files, snps=None):
             yield e
 
 def dosage_folder_geno_lines(dosage_folder, dosage_pattern, snps=None):
-    logging.log(9, "Processing Dosage Folder geno %s", folder)
+    logging.log(9, "Processing Dosage Folder geno %s", dosage_folder)
     files = Utilities.contentsWithRegexpFromFolder(dosage_folder, dosage_pattern)
     files = sorted([os.path.join(dosage_folder, x) for x in files])
     for e in dosage_files_geno_lines(files, snps=snps):

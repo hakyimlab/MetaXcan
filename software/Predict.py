@@ -1,3 +1,4 @@
+#! /usr/bin/env python
 import logging
 import os
 from timeit import default_timer as timer
@@ -6,7 +7,10 @@ import numpy
 import pandas
 
 import metax
-from metax import Utilities, Logging, Exceptions, PredictionModel
+from metax import Utilities
+from metax import Logging
+from metax import Exceptions
+from metax import PredictionModel
 from metax.genotype import DosageGenotype, Genotype
 from metax.misc import GWASAndModels
 from metax.predixcan.Utilities import BasicPredictionRepository
@@ -60,7 +64,7 @@ def run(args):
                 continue
 
             dosage = numpy.array(e[GF.FIRST_DOSAGE:])
-            for k,v in s[2].iteritems():
+            for k,v in s[2].items():
                 weight = v * allele_align
                 results.update(k, dosage, weight)
 
@@ -99,7 +103,8 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    Logging.configureLogging(int(args.verbosity))
+    Logging.configureLogging(args.verbosity)
+
     if args.throw:
         run(args)
     else:

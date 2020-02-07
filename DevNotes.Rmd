@@ -1,0 +1,13 @@
+# Migration to Python 3
+
+The tool `2to3` was used as a first step.
+
+The code relied extensively on features deprecated in python3.
+
+* `zip()` now returns an iterable: in most of the code, this got replaced to `list(zip())`.
+* `gzip.open` objects (and use in contexts) handled strings in IO. In most places, the calls were wrapped with `io.TextIOWrapper(gzip.open())`
+
+The tests got a cleanup too.
+
+There are minor differences such as string translation tables (used for complementes from `CGTA` to `GCAT`).
+ The code will try to the python3 way, and if it fails, the python 2 way.

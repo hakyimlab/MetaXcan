@@ -163,11 +163,12 @@ It takes a collection of files containing gene expression (each file assumed to 
 This is the summary-data based implementation of MulTiXcan. 
 You need to run `MetaXcan.py` first for the collection of tissues you are interested in, and a reference LD file such as [this one for v6p models](https://s3.amazonaws.com/imlab-open/Data/MetaXcan/multixcan/snp_covariance.txt.gz)
 
-## Useful Data
+## Useful Data & Prediction models
 
-We make available several GTEx tissue models, covariances and 1000 Genomes covariances [here](http://predictdb.hakyimlab.org).
-<!-- old box https://app.box.com/s/gujt4m6njqjfqqc9tu0oqgtjvtz9860w  -->
+We make available several transcriptome predictione models and LD references [here](http://predictdb.org).
 These files should be enough for running **MetaXcan.py**, **MulTiXcan.py** and **SMulTiXcan.py** on practically any GWAS study.
+we provide a end-to-end [tutorial](https://github.com/hakyimlab/MetaXcan/wiki/Tutorial:-GTEx-v8-MASH-models-integration-with-a-Coronary-Artery-Disease-GWAS), 
+for integrating GWAS summary statistics on the latest release of GTEx models.
 
 ## The Rest
 

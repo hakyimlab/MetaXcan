@@ -105,7 +105,7 @@ def run(args):
     if args.output_folder or args.output:
         if args.output_folder and not os.path.exists(args.output_folder):
             os.makedirs(args.output_folder)
-        else:
+        elif args.output:
             Utilities.ensure_requisite_folders(args.output)
 
         for i,name in enumerate(names):

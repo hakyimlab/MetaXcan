@@ -4,13 +4,17 @@ import logging
 
 from ..misc import GWASAndModels
 
-def bgen_file_geno_lines(file, variant_mapping = None, force_colon = False):
+def bgen_file_geno_lines(file, variant_mapping = None, force_colon = False, use_rsid=False, whitelist=None):
     logging.log(9, "Processing bgen %s", file)
     bgen = bgen_reader.read_bgen(file)
     variants = bgen["variants"]
 
     for variant in variants.itertuples():
-        varid = variant.id
+        if use_rsid:
+            varid = variant.rsid
+        else:
+            varid = variant.id
+
         if force_colon:
             varid = varid.replace("_", ":")
 
@@ -27,13 +31,16 @@ def bgen_file_geno_lines(file, variant_mapping = None, force_colon = False):
                 # the alleles in the genotype might be swapped respect the variant in the mapping
                 # You should verify if you must match it
 
+        if whitelist and not varid in whitelist:
+            continue
+
         v = bgen["genotype"][variant.Index].compute()
         d = numpy.apply_along_axis(lambda x: x[1] + x[2] * 2, 1, numpy.array(v["probs"], dtype=numpy.float))
 
         yield (varid, chr, pos, allele_0, allele_1, numpy.mean(d)/2) + tuple(d)
 
-def bgen_files_geno_lines(files, variant_mapping = None, force_colon = False):
+def bgen_files_geno_lines(files, variant_mapping = None, force_colon = False, use_rsid=False, whitelist=None):
     logging.log(9, "Processing bgens")
     for file in files:
-        for l in bgen_file_geno_lines(file, variant_mapping, force_colon):
+        for l in bgen_file_geno_lines(file, variant_mapping, force_colon, use_rsid, whitelist):
             yield l

@@ -18,15 +18,19 @@ from metax.data_management import KeyedDataSource
 
 GF = Genotype.GF
 
-def dosage_generator(args, variant_mapping=None):
+def dosage_generator(args, variant_mapping=None, weights=None):
+    whitelist = None
+    if not variant_mapping and weights is not None:
+        whitelist = set(weights.rsid)
+
     d = None
     if args.text_genotypes:
         from metax.genotype import DosageGenotype
-        d = DosageGenotype.dosage_files_geno_lines(args.text_genotypes)
+        d = DosageGenotype.dosage_files_geno_lines(args.text_genotypes, snps=whitelist)
     elif args.bgen_genotypes:
         from metax.genotype import BGENGenotype
-        d = BGENGenotype.bgen_files_geno_lines(args.bgen_genotypes, variant_mapping, args.force_colon)
-    else:
+        d = BGENGenotype.bgen_files_geno_lines(args.bgen_genotypes, variant_mapping, args.force_colon, args.bgen_use_rsid, whitelist)
+    if d is None:
         raise Exceptions.InvalidArguments("unsupported genotype input")
     if args.force_mapped_metadata:
         d = Genotype.force_mapped_metadata(d, args.force_mapped_metadata)
@@ -43,13 +47,21 @@ def model_structure(args):
 
 
 def load_samples(args):
-    if len(args.text_sample_ids) == 1:
-        return pandas.read_table(args.text_sample_ids[0], header=None, names = ["FID", "IID"])
+    s = None
+    if args.generate_sample_ids:
+        s = ["ID_{}".format(x) for x in range(0, args.generate_sample_ids)]
+        s = [(x, x) for x in s]
+        s = pandas.DataFrame(data=s, columns=["FID", "IID"])
+    elif len(args.text_sample_ids) == 1:
+        s = pandas.read_table(args.text_sample_ids[0], header=None, names = ["FID", "IID"])
     else:
         if args.text_sample_ids[1] == "UKB":
             k = pandas.read_table(args.text_sample_ids[0], sep=" ")
-            k = k[k.sex != "D"]
-            return k[["ID_1", "ID_2"]].rename(columns={ "ID_1": "FID", "ID_2": "IID" })
+            k = k[k.sex != "D"].reset_index(drop=True)
+            s = k[["ID_1", "ID_2"]].rename(columns={ "ID_1": "FID", "ID_2": "IID" })
+    if s is None:
+        raise Exceptions.InvalidArguments("Unsupported samples argument")
+    return s
 
 def get_variant_mapping(args, weights):
     mapping = None
@@ -57,6 +69,8 @@ def get_variant_mapping(args, weights):
         logging.info("Acquiring variant mapping")
         if args.variant_mapping[1] == "UKB":
             mapping = KeyedDataSource.load_data(args.variant_mapping[0], "variant", "panel_variant_id", value_white_list=set(weights.rsid))
+        elif args.variant_mapping[1] == "RSID":
+            mapping = KeyedDataSource.load_data(args.variant_mapping[0], "variant", "rsid", value_white_list=set(weights.rsid))
         else:
             raise Exceptions.InvalidArguments("Unsupported variant mapping argument")
     return mapping
@@ -84,11 +98,14 @@ def run(args):
     variant_mapping = get_variant_mapping(args, weights)
 
     logging.info("Preparing genotype dosages")
-    dosage_source = dosage_generator(args, variant_mapping)
+    dosage_source = dosage_generator(args, variant_mapping, weights)
 
     logging.info("Processing genotypes")
     for i,e in enumerate(dosage_source):
+        if args.stop_at_variant and i>args.stop_at_variant:
+            break
         var_id = e[GF.RSID]
+        logging.log(8, "variant %i:%s", i, var_id)
         if var_id in model:
             s = model[var_id]
             allele_align, strand_align = GWASAndModels.match_alleles(e[GF.REF_ALLELE], e[GF.ALT_ALLELE], s[0], s[1])
@@ -119,12 +136,14 @@ def add_arguments(parser):
                              "If not supplied, will convert the input GWAS as found, one line at a atime, until finishing or encountering an error.")
 
     parser.add_argument("--model_db_snp_key", help="Specify a key to use as snp_id")
-
+    parser.add_argument("--stop_at_variant", help="convenience to do an early exit", type=int, default=None)
     parser.add_argument('--bgen_genotypes', nargs='+', help="genotypes (bgen format) to use")
+    parser.add_argument('--bgen_use_rsid', action="store_true", help="use rsid if available")
     parser.add_argument('--force_colon', action="store_true", help ="will convert variant ids from 'chr:pos_a0_a1' to 'chr:pos:a0:a1'")
     parser.add_argument('--force_mapped_metadata', help="will convert variant ids from 'chr:pos_a0_a1' to 'chr:pos:a0:a1'")
     parser.add_argument('--text_genotypes', nargs='+', help="genotypes to use")
     parser.add_argument('--text_sample_ids', help="path to file with individual samples' ids", nargs="+", default=[])
+    parser.add_argument("--generate_sample_ids", help="Speicify a number of samples, the ordinal number will be used as individual id", type=int, default=None)
     parser.add_argument("--prediction_output", help="name of file to put results in", nargs="+", default=[])
     parser.add_argument("--prediction_summary_output", help="name of file to put summary results in")
     parser.add_argument("--variant_mapping", help="Table to convert from genotype variants to model variants", nargs="+", default=[])

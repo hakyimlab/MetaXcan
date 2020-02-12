@@ -11,14 +11,26 @@ from metax import Utilities
 from metax import Logging
 from metax import Exceptions
 from metax import PredictionModel
-from metax.genotype import DosageGenotype, Genotype
+from metax.genotype import Genotype
 from metax.misc import GWASAndModels
 from metax.predixcan.Utilities import BasicPredictionRepository
+from metax.data_management import KeyedDataSource
 
 GF = Genotype.GF
 
-def dosage_generator(args):
-    return DosageGenotype.dosage_files_geno_lines(args.text_genotypes)
+def dosage_generator(args, variant_mapping=None):
+    d = None
+    if args.text_genotypes:
+        from metax.genotype import DosageGenotype
+        d = DosageGenotype.dosage_files_geno_lines(args.text_genotypes)
+    elif args.bgen_genotypes:
+        from metax.genotype import BGENGenotype
+        d = BGENGenotype.bgen_files_geno_lines(args.bgen_genotypes, variant_mapping, args.force_colon)
+    else:
+        raise Exceptions.InvalidArguments("unsupported genotype input")
+    if args.force_mapped_metadata:
+        d = Genotype.force_mapped_metadata(d, args.force_mapped_metadata)
+    return d
 
 def model_structure(args):
     model = PredictionModel.load_model(args.model_db_path, args.model_db_snp_key)
@@ -31,7 +43,23 @@ def model_structure(args):
 
 
 def load_samples(args):
-    return pandas.read_table(args.text_sample_ids, header=None, names = ["FID", "IID"])
+    if len(args.text_sample_ids) == 1:
+        return pandas.read_table(args.text_sample_ids[0], header=None, names = ["FID", "IID"])
+    else:
+        if args.text_sample_ids[1] == "UKB":
+            k = pandas.read_table(args.text_sample_ids[0], sep=" ")
+            k = k[k.sex != "D"]
+            return k[["ID_1", "ID_2"]].rename(columns={ "ID_1": "FID", "ID_2": "IID" })
+
+def get_variant_mapping(args, weights):
+    mapping = None
+    if len(args.variant_mapping) == 2:
+        logging.info("Acquiring variant mapping")
+        if args.variant_mapping[1] == "UKB":
+            mapping = KeyedDataSource.load_data(args.variant_mapping[0], "variant", "panel_variant_id", value_white_list=set(weights.rsid))
+        else:
+            raise Exceptions.InvalidArguments("Unsupported variant mapping argument")
+    return mapping
 
 def run(args):
     start = timer()
@@ -43,8 +71,7 @@ def run(args):
         logging.info("Summary output exists. Move or remove if you want this ran again.")
         return
 
-    dosage_source = dosage_generator(args)
-
+    logging.info("Loading samples")
     samples = load_samples(args)
 
     logging.info("Loading model")
@@ -54,8 +81,13 @@ def run(args):
     if len(args.prediction_output) < 2:
         results = BasicPredictionRepository(samples, extra)
 
+    variant_mapping = get_variant_mapping(args, weights)
+
+    logging.info("Preparing genotype dosages")
+    dosage_source = dosage_generator(args, variant_mapping)
+
     logging.info("Processing genotypes")
-    for e in dosage_source:
+    for i,e in enumerate(dosage_source):
         var_id = e[GF.RSID]
         if var_id in model:
             s = model[var_id]
@@ -88,10 +120,14 @@ def add_arguments(parser):
 
     parser.add_argument("--model_db_snp_key", help="Specify a key to use as snp_id")
 
+    parser.add_argument('--bgen_genotypes', nargs='+', help="genotypes (bgen format) to use")
+    parser.add_argument('--force_colon', action="store_true", help ="will convert variant ids from 'chr:pos_a0_a1' to 'chr:pos:a0:a1'")
+    parser.add_argument('--force_mapped_metadata', help="will convert variant ids from 'chr:pos_a0_a1' to 'chr:pos:a0:a1'")
     parser.add_argument('--text_genotypes', nargs='+', help="genotypes to use")
-    parser.add_argument('--text_sample_ids', help="path to file with individual samples' ids")
+    parser.add_argument('--text_sample_ids', help="path to file with individual samples' ids", nargs="+", default=[])
     parser.add_argument("--prediction_output", help="name of file to put results in", nargs="+", default=[])
     parser.add_argument("--prediction_summary_output", help="name of file to put summary results in")
+    parser.add_argument("--variant_mapping", help="Table to convert from genotype variants to model variants", nargs="+", default=[])
 
 if __name__ == "__main__":
     import argparse

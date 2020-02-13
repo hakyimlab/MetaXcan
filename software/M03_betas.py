@@ -103,9 +103,10 @@ def run(args):
     model = PredictionModel.load_model(args.model_db_path, args.model_db_snp_key) if args.model_db_path else None
 
     if args.output_folder or args.output:
-        if args.output_folder and not os.path.exists(args.output_folder):
-            os.makedirs(args.output_folder)
-        elif args.output:
+        if args.output_folder:
+            if args.output_folder and not os.path.exists(args.output_folder):
+                os.makedirs(args.output_folder)
+        else:
             Utilities.ensure_requisite_folders(args.output)
 
         for i,name in enumerate(names):

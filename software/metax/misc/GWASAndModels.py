@@ -64,7 +64,7 @@ def match_alleles(l_non_effect_allele, l_effect_allele, r_non_effect_allele, r_e
 
         if l_effect_allele == t_r_effect and  l_non_effect_allele == t_r_non_effect:
             return 1, -1
-        if l_effect_allele == t_r_non_effect and l_non_effect_allele == r_effect_allele:
+        if l_effect_allele == t_r_non_effect and l_non_effect_allele == t_r_effect:
             return -1, -1
 
         return None, None

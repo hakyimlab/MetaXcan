@@ -8,6 +8,7 @@ import logging
 import gzip
 from . import Exceptions
 import pandas
+import numpy
 
 VALID_ALLELES = ["A", "T", "C", "G"]
 
@@ -241,3 +242,9 @@ def save_table(data, path, mode="w", header=None):
             line = _to_line(d)
             file.write(line)
 
+def sub_batch(d, sub_batches, sub_batch):
+    batches = numpy.array_split(range(0, d.shape[0]), sub_batches)
+    batch = batches[sub_batch]
+    d = d.iloc[batch]
+    d = d.reset_index(drop=True)
+    return d

@@ -3,7 +3,10 @@ import re
 import numpy
 import logging
 import h5py
-import h5py_cache
+try:
+    import h5py_cache
+except:
+    logging.info("Couldn't import h5py_cache. Anyway, this dependency should be removed. It has been folded into h5py")
 
 from . import Expression as _Expression
 

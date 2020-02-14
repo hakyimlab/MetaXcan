@@ -15,6 +15,10 @@ try:
 except:
     logging.info("Could not import HDF5 expression")
 
+try:
+    import h5py
+except:
+    logging.info("Could not import h5py module")
 
 
 from .. import Exceptions
@@ -237,32 +241,104 @@ def _get_residual(pheno, covariates):
 
 class PredictionRepository:
     def update(self, gene, dosage, weight): raise Exceptions.NotImplemented("gene_repository is not implemented")
-    def store_prediction(self, path): raise Exceptions.NotImplemented("gene_repository is not implemented")
+    def store_prediction(self): raise Exceptions.NotImplemented("gene_repository is not implemented")
     def summary(self): raise Exceptions.NotImplemented("gene_repository is not implemented")
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        return self
+
 class BasicPredictionRepository(PredictionRepository):
-    def __init__(self, samples, extra):
+    def __init__(self, samples, extra, output_path):
         self.genes = {}
         self.samples = samples
         self.stats = {}
         self.extra = extra
+        self.output_path = output_path
 
     def update(self, gene, dosage, weight):
         if not gene in self.genes:
             self.stats[gene] = [1, ]
-            self.genes[gene] = weight * numpy.array(dosage, dtype=numpy.float)
+            self.genes[gene] = weight * dosage
         else:
             self.stats[gene][0] += 1
-            self.genes[gene] += weight * numpy.array(dosage, dtype=numpy.float)
+            self.genes[gene] += weight * dosage
 
-    def store_prediction(self, path):
+    def store_prediction(self):
+        logging.info("Saving prediction as a text file")
         d = pandas.DataFrame(self.genes)
         result = pandas.concat([self.samples, d], axis=1, sort=False)
-        Utilities.save_dataframe(result, path)
+        Utilities.save_dataframe(result, self.output_path)
 
     def summary(self):
         return summary_report(self.stats, self.extra)
 
+
+class HDF5PredictionRepository(PredictionRepository):
+    def __init__(self, samples, extra, path):
+        self.path = path
+        self.samples = samples
+        self.extra = extra
+        self.genes_index = None
+        self.h5 = None
+        self.d_genes = None
+        self.d_prediction = None
+        self.d_computed = None
+        self.d_samples = None
+        self.stats = {}
+        self.closed = True
+
+    def __enter__(self):
+        logging.log(9, "Creating HDF5 prediction repository")
+        self.h5 = h5py.File(self.path, 'w')
+
+        n_genes = self.extra.shape[0]
+        n_samples = self.samples.shape[0]
+        n_genes_chunk = numpy.min((n_genes, 10))
+
+        logging.log(9, "Creating prediction dataset")
+        self.d_prediction = self.h5.create_dataset("pred_expr", shape=(n_genes, n_samples), chunks=(n_genes_chunk, n_samples), dtype=numpy.dtype('float32'), scaleoffset=4, compression='gzip')
+        self.d_computed = self.h5.create_dataset("computed", (n_genes,), dtype=int)
+
+        logging.log(9, "Creating genes")
+        dt = h5py.string_dtype()
+        self.d_genes = self.h5.create_dataset("genes", (n_genes,), dtype=dt)
+        self.d_genes[:] = list(map(str, self.extra.gene))
+        self.genes_index = {x:i for i,x in enumerate(self.extra.gene)}
+
+        logging.log(9, "Creating samples")
+        dt = h5py.string_dtype()
+        self.d_samples = self.h5.create_dataset("samples", (n_samples,), dtype=dt)
+        self.d_samples[:] = list(map(str,self.samples.IID))
+
+        logging.log(9, "created HDF5 prediction repository")
+        self.closed = False
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        logging.log(9, "closing HDF5 prediction repository")
+        self.h5.file.close()
+        self.closed = True
+        return self
+
+    def store_prediction(self):
+        if not self.closed:
+            logging.log(9, "closing HDF5 prediction repository")
+            self.h5.file.close()
+
+    def update(self, gene, dosage, weight):
+        if not gene in self.stats:
+            self.stats[gene] = [1, ]
+            self.d_prediction[self.genes_index[gene], :] = weight * dosage
+            self.d_computed[self.genes_index[gene]] = 1
+        else:
+            self.stats[gene][0] += 1
+            self.d_prediction[self.genes_index[gene], :] += weight * dosage
+
+    def summary(self):
+        return summary_report(self.stats, self.extra)
 
 def summary_report(summary_data, extra):
     s = []

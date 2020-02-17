@@ -1,3 +1,5 @@
+Version 0.7.1:
+    * Revamped PrediXcan, added trascriptome prediction step, support for bgen input and hdf5 output.
 Version 0.7.0:
     * Migrated to python 3
 Version 0.6.12:

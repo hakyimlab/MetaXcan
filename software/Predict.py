@@ -13,7 +13,7 @@ from metax import Logging
 from metax import Exceptions
 from metax import PredictionModel
 from metax.genotype import Genotype
-from metax.misc import GWASAndModels
+from metax.misc import GWASAndModels, Genomics
 from metax.data_management import KeyedDataSource
 
 GF = Genotype.GF
@@ -31,8 +31,8 @@ def dosage_generator(args, variant_mapping=None, weights=None):
         from metax.genotype import BGENGenotype
         d = BGENGenotype.bgen_files_geno_lines(args.bgen_genotypes, variant_mapping, args.force_colon, args.bgen_use_rsid, whitelist)
     elif args.vcf_genotypes:
-        from metax.genotype import PYVCFGenotype
-        d = PYVCFGenotype.vcf_files_geno_lines(args.vcf_genotypes, args.vcf_mode, whitelist=whitelist)
+        from metax.genotype import CYVCF2Genotype
+        d = CYVCF2Genotype.vcf_files_geno_lines(args.vcf_genotypes, args.vcf_mode, variant_mapping, whitelist=whitelist)
 
     if d is None:
         raise Exceptions.InvalidArguments("unsupported genotype input")
@@ -70,8 +70,8 @@ def load_samples(args):
             k = k[k.sex != "D"].reset_index(drop=True)
             s = k[["ID_1", "ID_2"]].rename(columns={"ID_1": "FID", "ID_2": "IID"})
     elif args.vcf_genotypes and not args.text_sample_ids:
-        from metax.genotype import PYVCFGenotype
-        s = PYVCFGenotype.get_samples(args.vcf_genotypes[0])
+        from metax.genotype import CYVCF2Genotype
+        s = CYVCF2Genotype.get_samples(args.vcf_genotypes[0])
     elif args.generate_sample_ids:
         s = ["ID_{}".format(x) for x in range(0, args.generate_sample_ids)]
         s = [(x, x) for x in s]
@@ -83,12 +83,15 @@ def load_samples(args):
 
 def get_variant_mapping(args, weights):
     mapping = None
-    if len(args.variant_mapping) == 2:
+    if len(args.variant_mapping) > 1:
         logging.info("Acquiring variant mapping")
         if args.variant_mapping[1] == "UKB":
             mapping = KeyedDataSource.load_data(args.variant_mapping[0], "variant", "panel_variant_id", value_white_list=set(weights.rsid))
         elif args.variant_mapping[1] == "RSID":
             mapping = KeyedDataSource.load_data(args.variant_mapping[0], "variant", "rsid", value_white_list=set(weights.rsid))
+        elif args.variant_mapping[1] == "ON_THE_FLY_RSID":
+            m_ = KeyedDataSource.load_data(args.variant_mapping[0], "id", "rsid", value_white_list=set(weights.rsid))
+            mapping = lambda chromosome, position, ref_allele, alt_allele:  Genomics.map_on_the_fly(m_, args.variant_mapping[2], chromosome, position, ref_allele, alt_allele)
         else:
             raise Exceptions.InvalidArguments("Unsupported variant mapping argument")
     return mapping
@@ -144,7 +147,6 @@ def run(args):
             logging.log(8, "variant %i:%s", i, var_id)
             if var_id in model:
                 s = model[var_id]
-
                 allele_align, strand_align = GWASAndModels.match_alleles(e[GF.REF_ALLELE], e[GF.ALT_ALLELE], s[0], s[1])
                 if not allele_align or not strand_align:
                     continue

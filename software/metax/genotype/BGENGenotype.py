@@ -8,7 +8,7 @@ def bgen_file_geno_lines(file, variant_mapping = None, force_colon = False, use_
     logging.log(9, "Processing bgen %s", file)
     bgen = bgen_reader.read_bgen(file)
     variants = bgen["variants"]
-
+    dict_mapping = variant_mapping is not None and type(variant_mapping) == dict
     for variant in variants.itertuples():
         if use_rsid:
             varid = variant.rsid
@@ -22,14 +22,18 @@ def bgen_file_geno_lines(file, variant_mapping = None, force_colon = False, use_
         pos = variant.pos
         chr = "chr"+variant.chrom
         if variant_mapping:
-            if not varid in variant_mapping:
-                continue
+            if dict_mapping:
+                if not varid in variant_mapping:
+                    continue
+                else:
+                    varid_ = varid
+                    varid = variant_mapping[varid]
             else:
-                varid_ = varid
-                varid = variant_mapping[varid]
-                # subtlety: even though we replace the variant id,
-                # the alleles in the genotype might be swapped respect the variant in the mapping
-                # You should verify if you must match it
+                raise RuntimeError("BGEN code doessn't support variant mapping through a method")
+        # subtlety: even though we replace the variant id,
+        # the alleles in the genotype might be swapped respect the variant in the mapping
+        # You should verify if you must match it
+
 
         if whitelist and not varid in whitelist:
             continue

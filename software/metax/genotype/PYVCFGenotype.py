@@ -2,8 +2,20 @@ import vcf
 import logging
 import pandas
 import numpy
-import re
 
+def int_treatment(x, allele_index):
+    try:
+        d_ = (int(x) == allele_index + 1)
+    except:
+        d_ = 0
+    return d_
+
+def float_treatment(x):
+    try:
+        d_ = float(x)
+    except:
+        d_ =0
+    return d_
 
 def vcf_file_geno_lines(path, mode="genotyped", whitelist=None):
     vcf_reader = vcf.Reader(filename=path)
@@ -22,11 +34,8 @@ def vcf_file_geno_lines(path, mode="genotyped", whitelist=None):
                 d = []
                 for sample in record.samples:
                     d_ = 0
-                    try:
-                        _a0, _a1 = int(sample.gt_alleles[0]), int(sample.gt_alleles[1])
-                        d_ = (_a0 == a+1) + (_a1 == a+1)
-                    except:
-                        pass
+                    d_ += int_treatment(sample.gt_alleles[0], a)
+                    d_ += int_treatment(sample.gt_alleles[1], a)
                     d.append(d_)
                 f = numpy.mean(numpy.array(d,dtype=numpy.int32))/2
                 yield (variant_id, chr, pos, ref, alt, f) + tuple(d)
@@ -36,23 +45,14 @@ def vcf_file_geno_lines(path, mode="genotyped", whitelist=None):
             d = []
             for sample in record.samples:
                 d_ = 0
-                try:
-                    d_ += float(sample.gt_alleles[0])
-                except:
-                    pass
-                try:
-                    d_ += float(sample.gt_alleles[1])
-                except:
-                    pass
+                d_ += float_treatment(sample.gt_alleles[0])
+                d_ += float_treatment(sample.gt_alleles[1])
                 d.append(d_)
             f = numpy.mean(numpy.array(d, dtype=numpy.float64)) / 2
             yield (variant_id, chr, pos, ref, alt, f) + tuple(d)
         else:
             raise  RuntimeError("Unsupported vcf mode")
-        # if len(alts) > 1 and "CN0" not in {x.type for x in alts}:
-        #     from IPython import embed;
-        #     embed();
-        #     exit()
+
 
 
 def vcf_files_geno_lines(files, mode="genotyped", whitelist=None):

@@ -30,6 +30,10 @@ def dosage_generator(args, variant_mapping=None, weights=None):
     elif args.bgen_genotypes:
         from metax.genotype import BGENGenotype
         d = BGENGenotype.bgen_files_geno_lines(args.bgen_genotypes, variant_mapping, args.force_colon, args.bgen_use_rsid, whitelist)
+    elif args.vcf_genotypes:
+        from metax.genotype import PYVCFGenotype
+        d = PYVCFGenotype.vcf_files_geno_lines(args.vcf_genotypes, args.vcf_mode, whitelist=whitelist)
+
     if d is None:
         raise Exceptions.InvalidArguments("unsupported genotype input")
     if args.force_mapped_metadata:
@@ -58,17 +62,21 @@ def model_structure(args):
 
 def load_samples(args):
     s = None
-    if args.generate_sample_ids:
+    if args.text_sample_ids:
+        if len(args.text_sample_ids) == 1:
+            s = pandas.read_table(args.text_sample_ids[0], header=None, names=["FID", "IID"])
+        elif args.text_sample_ids[1] == "UKB":
+            k = pandas.read_table(args.text_sample_ids[0], sep=" ")
+            k = k[k.sex != "D"].reset_index(drop=True)
+            s = k[["ID_1", "ID_2"]].rename(columns={"ID_1": "FID", "ID_2": "IID"})
+    elif args.vcf_genotypes and not args.text_sample_ids:
+        from metax.genotype import PYVCFGenotype
+        s = PYVCFGenotype.get_samples(args.vcf_genotypes[0])
+    elif args.generate_sample_ids:
         s = ["ID_{}".format(x) for x in range(0, args.generate_sample_ids)]
         s = [(x, x) for x in s]
         s = pandas.DataFrame(data=s, columns=["FID", "IID"])
-    elif len(args.text_sample_ids) == 1:
-        s = pandas.read_table(args.text_sample_ids[0], header=None, names = ["FID", "IID"])
-    else:
-        if args.text_sample_ids[1] == "UKB":
-            k = pandas.read_table(args.text_sample_ids[0], sep=" ")
-            k = k[k.sex != "D"].reset_index(drop=True)
-            s = k[["ID_1", "ID_2"]].rename(columns={ "ID_1": "FID", "ID_2": "IID" })
+
     if s is None:
         raise Exceptions.InvalidArguments("Unsupported samples argument")
     return s
@@ -132,6 +140,7 @@ def run(args):
             if args.stop_at_variant and i>args.stop_at_variant:
                 break
             var_id = e[GF.RSID]
+
             logging.log(8, "variant %i:%s", i, var_id)
             if var_id in model:
                 s = model[var_id]
@@ -184,6 +193,8 @@ def add_arguments(parser):
     parser.add_argument("--stop_at_variant", help="convenience to do an early exit", type=int, default=None)
     parser.add_argument('--bgen_genotypes', nargs='+', help="genotypes (bgen format) to use")
     parser.add_argument('--bgen_use_rsid', action="store_true", help="use rsid if available")
+    parser.add_argument("--vcf_genotypes", nargs='+', help="genotypes (vcf format) to use")
+    parser.add_argument("--vcf_mode", help="genotyped or imputed")
     parser.add_argument('--force_colon', action="store_true", help ="will convert variant ids from 'chr:pos_a0_a1' to 'chr:pos:a0:a1'")
     parser.add_argument('--force_mapped_metadata', help="will convert variant ids from 'chr:pos_a0_a1' to 'chr:pos:a0:a1'")
     parser.add_argument('--text_genotypes', nargs='+', help="genotypes to use")

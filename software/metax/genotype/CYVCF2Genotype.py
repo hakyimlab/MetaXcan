@@ -48,19 +48,18 @@ def vcf_file_geno_lines(path, mode="genotyped", variant_mapping=None, whitelist=
 
         elif mode == "imputed":
             if len(alts) > 1:
-                raise RuntimeError("VCF imputed mode doesn't support multiple ALTs")
+                logging.log("VCF imputed mode doesn't support multiple ALTs, skipping %s", variant_id)
+                continue
+
             alt = alts[0]
             _varid, variant_id = maybe_map_variant(variant_id, chr, pos, ref, alt, variant_mapping, is_dict_mapping)
             if variant_id is None: continue
 
-            d = []
-            for sample in variant.genotypes:
-                d_ = sample[0] + sample[1]
-                d.append(d_)
-            f = numpy.mean(numpy.array(d, dtype=numpy.float64)) / 2
+            d = numpy.apply_along_axis(lambda x: x[0], 1, variant.format("DS"))
+            f = numpy.mean(numpy.array(d)) / 2
             yield (variant_id, chr, pos, ref, alt, f) + tuple(d)
         else:
-            raise  RuntimeError("Unsupported vcf mode")
+            raise RuntimeError("Unsupported vcf mode")
 
 
 def vcf_files_geno_lines(files, mode="genotyped", variant_mapping=None, whitelist=None):

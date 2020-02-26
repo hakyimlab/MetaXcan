@@ -83,17 +83,29 @@ def load_samples(args):
 
 def get_variant_mapping(args, weights):
     mapping = None
-    if len(args.variant_mapping) > 1:
-        logging.info("Acquiring variant mapping")
-        if args.variant_mapping[1] == "UKB":
-            mapping = KeyedDataSource.load_data(args.variant_mapping[0], "variant", "panel_variant_id", value_white_list=set(weights.rsid))
-        elif args.variant_mapping[1] == "RSID":
-            mapping = KeyedDataSource.load_data(args.variant_mapping[0], "variant", "rsid", value_white_list=set(weights.rsid))
-        elif args.variant_mapping[1] == "ON_THE_FLY_RSID":
-            m_ = KeyedDataSource.load_data(args.variant_mapping[0], "id", "rsid", value_white_list=set(weights.rsid))
-            mapping = lambda chromosome, position, ref_allele, alt_allele:  Genomics.map_on_the_fly(m_, args.variant_mapping[2], chromosome, position, ref_allele, alt_allele)
+    if len(args.variant_mapping):
+        if len(args.variant_mapping) == 3:
+            logging.info("Acquiring variant mapping")
+            mapping = KeyedDataSource.load_data(args.variant_mapping[0], args.variant_mapping[1], args.variant_mapping[2], value_white_list=set(weights.rsid))
+            # if args.variant_mapping[1] == "UKB":
+            #     mapping = KeyedDataSource.load_data(args.variant_mapping[0], "variant", "panel_variant_id", value_white_list=set(weights.rsid))
+            # elif args.variant_mapping[1] == "RSID":
+            #     mapping = KeyedDataSource.load_data(args.variant_mapping[0], "variant", "rsid", value_white_list=set(weights.rsid))
+            # elif args.variant_mapping[1] == "ID_TO_RSID":
+            #     mapping = KeyedDataSource.load_data(args.variant_mapping[0], "id", "rsid", value_white_list=set(weights.rsid))
         else:
             raise Exceptions.InvalidArguments("Unsupported variant mapping argument")
+
+    if len(args.on_the_fly_mapping) > 0:
+        logging.info("Acquiring on-the-fly mapping")
+        if args.on_the_fly_mapping[0] == "METADATA":
+            if mapping:
+                _mapping = mapping # Python scope subtlety, they are not blocks like swift
+                mapping = lambda chromosome, position, ref_allele, alt_allele: Genomics.map_on_the_fly(_mapping, args.on_the_fly_mapping[1], chromosome, position, ref_allele, alt_allele)
+            else:
+                mapping = lambda chromosome, position, ref_allele, alt_allele: Genomics.coordinate_format(args.on_the_fly_mapping[1], chromosome, position, ref_allele, alt_allele)
+        else:
+            raise RuntimeError("Unsupported on_the_fly argument")
     return mapping
 
 def prepare_prediction(args, extra, samples):
@@ -137,7 +149,6 @@ def run(args):
 
     logging.info("Processing genotypes")
     dcapture = []
-    print("capture: ", args.capture)
     with prepare_prediction(args, extra, samples) as results:
         for i,e in enumerate(dosage_source):
             if args.stop_at_variant and i>args.stop_at_variant:
@@ -205,6 +216,7 @@ def add_arguments(parser):
     parser.add_argument("--prediction_output", help="name of file to put results in", nargs="+", default=[])
     parser.add_argument("--prediction_summary_output", help="name of file to put summary results in")
     parser.add_argument("--variant_mapping", help="Table to convert from genotype variants to model variants", nargs="+", default=[])
+    parser.add_argument("--on_the_fly_mapping", help="Option to convert from genotype variants to model variants", nargs="+", default=[])
     parser.add_argument("--sub_batches", help="split data in slices", type=int, default=None)
     parser.add_argument("--sub_batch", help="compute on a specific slice of data", type=int, default=None)
     parser.add_argument("--only_entries", help="Compute only these genes", nargs="+")

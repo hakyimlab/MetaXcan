@@ -345,5 +345,5 @@ def summary_report(summary_data, extra):
     for k, v in summary_data.items():
         s.append((k, v[0]))
     s = pandas.DataFrame(s, columns=["gene", "n_snps_used"])
-    s = extra[['gene', 'gene_name', 'n_snps_in_model', 'pred_perf_r2', 'pred_perf_pval']].merge(s, on="gene", how="left")
+    s = extra.merge(s, on="gene", how="left")[['gene', 'gene_name', 'n_snps_in_model', 'n_snps_used', 'pred_perf_r2', 'pred_perf_pval']]
     return s

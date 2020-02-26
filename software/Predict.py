@@ -20,7 +20,11 @@ GF = Genotype.GF
 
 def dosage_generator(args, variant_mapping=None, weights=None):
     whitelist = None
-    if not variant_mapping and weights is not None:
+    if variant_mapping and type(variant_mapping) == dict:
+        logging.info("Setting whitelist from mapping keys")
+        whitelist = set(variant_mapping.keys())
+    elif weights is not None:
+        logging.info("Setting whitelist from available models")
         whitelist = set(weights.rsid)
 
     d = None

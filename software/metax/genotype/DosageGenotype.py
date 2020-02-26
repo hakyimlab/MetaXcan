@@ -6,6 +6,7 @@ import numpy
 
 from .Genotype import GF
 from .. import Utilities
+from ..misc import Genomics
 
 class DTF:
     """Format of dosage"""
@@ -17,7 +18,7 @@ class DTF:
     FREQ= 5
     FIRST_DATA_COLUMN = 6
 
-def dosage_file_geno_lines(file, snps=None):
+def dosage_file_geno_lines(file, snps=None, skip_palindromic=False):
     logging.log(9, "Processing Dosage geno %s", file)
     for i, line in enumerate(Utilities.generate_from_any_plain_file(file)):
         comps = line.strip().split()
@@ -26,12 +27,16 @@ def dosage_file_geno_lines(file, snps=None):
         if snps and not id in snps:
             continue
 
+        ref_allele, alt_allele = comps[DTF.ALLELE_0], comps[DTF.ALLELE_1]
+        if skip_palindromic and Genomics.is_palindromic(ref_allele, alt_allele):
+            continue
+
         dosage = numpy.array(comps[DTF.FIRST_DATA_COLUMN:], dtype=numpy.float64)
         chrom = comps[DTF.CHR].replace("chr", "")
 
-        yield (id, int(chrom), int(comps[DTF.POSITION]), comps[DTF.ALLELE_0], comps[DTF.ALLELE_1], float(comps[DTF.FREQ])) + tuple(dosage)
+        yield (id, int(chrom), int(comps[DTF.POSITION]), ref_allele, alt_allele, float(comps[DTF.FREQ])) + tuple(dosage)
 
-def dosage_files_geno_lines(dosage_files, snps=None):
+def dosage_files_geno_lines(dosage_files, snps=None, skip_palindromic=False):
     chr_ = re.compile(".*chr(\d+).*")
     def sort_geno(x):
         x_ = chr_.search(x).group(1)
@@ -42,7 +47,7 @@ def dosage_files_geno_lines(dosage_files, snps=None):
     dosage_files = sorted(dosage_files, key=sort_geno)
 
     for f in dosage_files:
-        for e in dosage_file_geno_lines(f, snps=snps):
+        for e in dosage_file_geno_lines(f, snps=snps, skip_palindromic=skip_palindromic):
             yield e
 
 def dosage_folder_geno_lines(dosage_folder, dosage_pattern, snps=None):

@@ -2,9 +2,9 @@ import bgen_reader
 import numpy
 import logging
 
-from ..misc import GWASAndModels
+from ..misc import Genomics
 
-def bgen_file_geno_lines(file, variant_mapping = None, force_colon = False, use_rsid=False, whitelist=None):
+def bgen_file_geno_lines(file, variant_mapping = None, force_colon = False, use_rsid=False, whitelist=None, skip_palindromic=False):
     logging.log(9, "Processing bgen %s", file)
     bgen = bgen_reader.read_bgen(file)
     variants = bgen["variants"]
@@ -19,6 +19,9 @@ def bgen_file_geno_lines(file, variant_mapping = None, force_colon = False, use_
             varid = varid.replace("_", ":")
 
         allele_0, allele_1 = variant.allele_ids.split(",")
+        if skip_palindromic and Genomics.is_palindromic(allele_0, allele_1):
+            continue
+
         pos = variant.pos
         chr = "chr"+variant.chrom
         if variant_mapping:
@@ -43,8 +46,8 @@ def bgen_file_geno_lines(file, variant_mapping = None, force_colon = False, use_
 
         yield (varid, chr, pos, allele_0, allele_1, numpy.mean(d)/2) + tuple(d)
 
-def bgen_files_geno_lines(files, variant_mapping = None, force_colon = False, use_rsid=False, whitelist=None):
+def bgen_files_geno_lines(files, variant_mapping = None, force_colon = False, use_rsid=False, whitelist=None, skip_palindromic=False):
     logging.log(9, "Processing bgens")
     for file in files:
-        for l in bgen_file_geno_lines(file, variant_mapping, force_colon, use_rsid, whitelist):
+        for l in bgen_file_geno_lines(file, variant_mapping=variant_mapping, force_colon=force_colon, use_rsid=use_rsid, whitelist=whitelist, skip_palindromic=skip_palindromic):
             yield l

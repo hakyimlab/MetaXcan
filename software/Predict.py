@@ -30,13 +30,14 @@ def dosage_generator(args, variant_mapping=None, weights=None):
     d = None
     if args.text_genotypes:
         from metax.genotype import DosageGenotype
-        d = DosageGenotype.dosage_files_geno_lines(args.text_genotypes, snps=whitelist)
+        d = DosageGenotype.dosage_files_geno_lines(args.text_genotypes, snps=whitelist, skip_palindromic=args.skip_palindromic)
     elif args.bgen_genotypes:
         from metax.genotype import BGENGenotype
-        d = BGENGenotype.bgen_files_geno_lines(args.bgen_genotypes, variant_mapping, args.force_colon, args.bgen_use_rsid, whitelist)
+        d = BGENGenotype.bgen_files_geno_lines(args.bgen_genotypes,
+            variant_mapping=variant_mapping, force_colon=args.force_colon, use_rsid=args.bgen_use_rsid, whitelist=whitelist, skip_palindromic=args.skip_palindromic)
     elif args.vcf_genotypes:
         from metax.genotype import CYVCF2Genotype
-        d = CYVCF2Genotype.vcf_files_geno_lines(args.vcf_genotypes, args.vcf_mode, variant_mapping, whitelist=whitelist)
+        d = CYVCF2Genotype.vcf_files_geno_lines(args.vcf_genotypes, mode=args.vcf_mode, variant_mapping=variant_mapping, whitelist=whitelist, skip_palindromic=args.skip_palindromic)
 
     if d is None:
         raise Exceptions.InvalidArguments("unsupported genotype input")
@@ -162,7 +163,9 @@ def run(args):
             logging.log(8, "variant %i:%s", i, var_id)
             if var_id in model:
                 s = model[var_id]
-                allele_align, strand_align = GWASAndModels.match_alleles(e[GF.REF_ALLELE], e[GF.ALT_ALLELE], s[0], s[1])
+                ref_allele, alt_allele = e[GF.REF_ALLELE], e[GF.ALT_ALLELE]
+
+                allele_align, strand_align = GWASAndModels.match_alleles(ref_allele, alt_allele, s[0], s[1])
                 if not allele_align or not strand_align:
                     continue
 
@@ -174,13 +177,14 @@ def run(args):
                 for gene, weight in s[2].items():
                     results.update(gene, dosage, weight)
                     if args.capture:
-                        dcapture.append((gene, weight, var_id, s[0], s[1], e[GF.REF_ALLELE], e[GF.ALT_ALLELE]) + e[GF.FIRST_DOSAGE:])
+                        dcapture.append((gene, weight, var_id, s[0], s[1], ref_allele, alt_allele, strand_align, allele_align) + e[GF.FIRST_DOSAGE:])
 
 
     if args.capture:
         logging.info("Saving data capture")
+        Utilities.ensure_requisite_folders(args.capture)
         with gzip.open(args.capture, "w") as f:
-            header = "gene\tweight\tvariant_id\tref_allele\teff_allele\ta0\ta1\t" + "\t".join( ["ID_{}".format(x) for x in range(0, len(dcapture[0][7:]))]) + "\n"
+            header = "gene\tweight\tvariant_id\tref_allele\teff_allele\ta0\ta1\tstrand_align\tallele_align\t" + "\t".join( ["ID_{}".format(x) for x in range(0, len(dcapture[0][7:]))]) + "\n"
             f.write(header.encode())
             for c in dcapture:
                 l = "\t".join(map(str, c)) + "\n"
@@ -207,6 +211,7 @@ def add_arguments(parser):
                              "If not supplied, will convert the input GWAS as found, one line at a atime, until finishing or encountering an error.")
 
     parser.add_argument("--model_db_snp_key", help="Specify a key to use as snp_id")
+    parser.add_argument('--skip_palindromic', action="store_true", help="ignore palindromic variants (i.e. C/G)")
     parser.add_argument("--stop_at_variant", help="convenience to do an early exit", type=int, default=None)
     parser.add_argument('--bgen_genotypes', nargs='+', help="genotypes (bgen format) to use")
     parser.add_argument('--bgen_use_rsid', action="store_true", help="use rsid if available")
@@ -223,7 +228,7 @@ def add_arguments(parser):
     parser.add_argument("--on_the_fly_mapping", help="Option to convert from genotype variants to model variants", nargs="+", default=[])
     parser.add_argument("--sub_batches", help="split data in slices", type=int, default=None)
     parser.add_argument("--sub_batch", help="compute on a specific slice of data", type=int, default=None)
-    parser.add_argument("--only_entries", help="Compute only these genes", nargs="+")
+    parser.add_argument("--only_entries", help="Compute only these entries in the models (e.g. a whitelist of genes)", nargs="+")
     parser.add_argument("--capture")
 
 if __name__ == "__main__":
@@ -245,6 +250,7 @@ if __name__ == "__main__":
             run(args)
         except Exceptions.ReportableException as e:
             logging.error("Error:%s", e.msg)
+            exit(1)
         except Exception as e:
             logging.info("Unexpected error: %s" % str(e))
             exit(1)

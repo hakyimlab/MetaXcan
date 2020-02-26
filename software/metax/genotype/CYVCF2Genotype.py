@@ -3,7 +3,7 @@ from cyvcf2 import VCF
 import logging
 import pandas
 import numpy
-
+from ..misc import Genomics
 
 def maybe_map_variant(varid, chr, pos, ref, alt, variant_mapping, is_dict_mapping):
     _varid = varid
@@ -18,7 +18,7 @@ def maybe_map_variant(varid, chr, pos, ref, alt, variant_mapping, is_dict_mappin
             varid = variant_mapping(chr, pos, ref, alt)
     return _varid, varid
 
-def vcf_file_geno_lines(path, mode="genotyped", variant_mapping=None, whitelist=None):
+def vcf_file_geno_lines(path, mode="genotyped", variant_mapping=None, whitelist=None, skip_palindromic=False):
     logging.log(9, "Processing vcf %s", path)
     vcf_reader = VCF(path)
 
@@ -36,6 +36,8 @@ def vcf_file_geno_lines(path, mode="genotyped", variant_mapping=None, whitelist=
 
         if mode == "genotyped":
             for a,alt in enumerate(alts):
+                if skip_palindromic and Genomics.is_palindromic(ref, alt):
+                    continue
                 _varid, variant_id = maybe_map_variant(variant_id, chr, pos, ref, alt, variant_mapping, is_dict_mapping)
                 if variant_id is None: continue
 
@@ -52,6 +54,9 @@ def vcf_file_geno_lines(path, mode="genotyped", variant_mapping=None, whitelist=
                 continue
 
             alt = alts[0]
+            if skip_palindromic and Genomics.is_palindromic(ref, alt):
+                continue
+
             _varid, variant_id = maybe_map_variant(variant_id, chr, pos, ref, alt, variant_mapping, is_dict_mapping)
             if variant_id is None: continue
 
@@ -62,10 +67,10 @@ def vcf_file_geno_lines(path, mode="genotyped", variant_mapping=None, whitelist=
             raise RuntimeError("Unsupported vcf mode")
 
 
-def vcf_files_geno_lines(files, mode="genotyped", variant_mapping=None, whitelist=None):
+def vcf_files_geno_lines(files, mode="genotyped", variant_mapping=None, whitelist=None, skip_palindromic=False):
     logging.log(9, "Processing vcfs")
     for file in files:
-        for l in vcf_file_geno_lines(file, mode, variant_mapping, whitelist):
+        for l in vcf_file_geno_lines(file, mode=mode, variant_mapping=variant_mapping, whitelist=whitelist, skip_palindromic=skip_palindromic):
             yield l
 
 def get_samples(path):

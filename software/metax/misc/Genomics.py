@@ -56,3 +56,17 @@ def lift(liftover, chr, pos, zero_based_positions=False):
     except:
         pass
     return _new_chromosome, _new_position
+
+
+def maybe_map_variant(varid, chr, pos, ref, alt, variant_mapping, is_dict_mapping):
+    _varid = varid
+
+    if variant_mapping:
+        if is_dict_mapping:
+            if not varid in variant_mapping:
+                varid = None
+            else:
+                varid = variant_mapping[varid]
+        else:
+            varid = variant_mapping(chr, pos, ref, alt)
+    return _varid, varid

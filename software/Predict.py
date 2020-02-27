@@ -39,7 +39,8 @@ def dosage_generator(args, variant_mapping=None, weights=None):
     d = None
     if args.text_genotypes:
         from metax.genotype import DosageGenotype
-        d = DosageGenotype.dosage_files_geno_lines(args.text_genotypes, snps=whitelist, skip_palindromic=args.skip_palindromic)
+        d = DosageGenotype.dosage_files_geno_lines(args.text_genotypes, variant_mapping=variant_mapping,
+                whitelist=whitelist, skip_palindromic=args.skip_palindromic, liftover_conversion=liftover_conversion)
     elif args.bgen_genotypes:
         from metax.genotype import BGENGenotype
         d = BGENGenotype.bgen_files_geno_lines(args.bgen_genotypes,
@@ -194,7 +195,7 @@ def run(args):
         logging.info("Saving data capture")
         Utilities.ensure_requisite_folders(args.capture)
         with gzip.open(args.capture, "w") as f:
-            header = "gene\tweight\tvariant_id\tref_allele\teff_allele\ta0\ta1\tstrand_align\tallele_align\t" + "\t".join( ["ID_{}".format(x) for x in range(0, len(dcapture[0][7:]))]) + "\n"
+            header = "gene\tweight\tvariant_id\tref_allele\teff_allele\ta0\ta1\tstrand_align\tallele_align\t" + "\t".join(samples.IID.values) + "\n"
             f.write(header.encode())
             for c in dcapture:
                 l = "\t".join(map(str, c)) + "\n"

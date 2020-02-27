@@ -3,20 +3,8 @@ from cyvcf2 import VCF
 import logging
 import pandas
 import numpy
-from ..misc import Genomics
 
-def maybe_map_variant(varid, chr, pos, ref, alt, variant_mapping, is_dict_mapping):
-    _varid = varid
-
-    if variant_mapping:
-        if is_dict_mapping:
-            if not varid in variant_mapping:
-                varid = None
-            else:
-                varid = variant_mapping[varid]
-        else:
-            varid = variant_mapping(chr, pos, ref, alt)
-    return _varid, varid
+from metax.misc import Genomics
 
 def vcf_file_geno_lines(path, mode="genotyped", variant_mapping=None, whitelist=None, skip_palindromic=False, liftover_conversion=None):
     logging.log(9, "Processing vcf %s", path)
@@ -41,7 +29,8 @@ def vcf_file_geno_lines(path, mode="genotyped", variant_mapping=None, whitelist=
             for a,alt in enumerate(alts):
                 if skip_palindromic and Genomics.is_palindromic(ref, alt):
                     continue
-                _varid, variant_id = maybe_map_variant(variant_id, chr, pos, ref, alt, variant_mapping, is_dict_mapping)
+
+                _varid, variant_id = Genomics.maybe_map_variant(variant_id, chr, pos, ref, alt, variant_mapping, is_dict_mapping)
                 if variant_id is None: continue
 
                 if whitelist and variant_id not in whitelist:
@@ -63,7 +52,7 @@ def vcf_file_geno_lines(path, mode="genotyped", variant_mapping=None, whitelist=
             if skip_palindromic and Genomics.is_palindromic(ref, alt):
                 continue
 
-            _varid, variant_id = maybe_map_variant(variant_id, chr, pos, ref, alt, variant_mapping, is_dict_mapping)
+            _varid, variant_id = Genomics.maybe_map_variant(variant_id, chr, pos, ref, alt, variant_mapping, is_dict_mapping)
             if variant_id is None: continue
 
             if whitelist and variant_id not in whitelist:

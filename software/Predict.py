@@ -6,6 +6,7 @@ from timeit import default_timer as timer
 import numpy
 import pandas
 import gzip
+import pyliftover
 
 import metax
 from metax import Utilities
@@ -19,11 +20,19 @@ from metax.data_management import KeyedDataSource
 GF = Genotype.GF
 
 def dosage_generator(args, variant_mapping=None, weights=None):
+    if args.liftover:
+        logging.info("Acquiring liftover conversion")
+        liftover_chain = pyliftover.LiftOver(args.liftover)
+        liftover_conversion = lambda chr,pos: Genomics.lift(liftover_chain, chr, pos, args.zero_based_positions)
+    else:
+        liftover_chain = None
+        liftover_conversion = None
+
     whitelist = None
     if variant_mapping and type(variant_mapping) == dict:
         logging.info("Setting whitelist from mapping keys")
         whitelist = set(variant_mapping.keys())
-    elif weights is not None:
+    else:
         logging.info("Setting whitelist from available models")
         whitelist = set(weights.rsid)
 
@@ -37,7 +46,7 @@ def dosage_generator(args, variant_mapping=None, weights=None):
             variant_mapping=variant_mapping, force_colon=args.force_colon, use_rsid=args.bgen_use_rsid, whitelist=whitelist, skip_palindromic=args.skip_palindromic)
     elif args.vcf_genotypes:
         from metax.genotype import CYVCF2Genotype
-        d = CYVCF2Genotype.vcf_files_geno_lines(args.vcf_genotypes, mode=args.vcf_mode, variant_mapping=variant_mapping, whitelist=whitelist, skip_palindromic=args.skip_palindromic)
+        d = CYVCF2Genotype.vcf_files_geno_lines(args.vcf_genotypes, mode=args.vcf_mode, variant_mapping=variant_mapping, whitelist=whitelist, skip_palindromic=args.skip_palindromic, liftover_conversion=liftover_conversion)
 
     if d is None:
         raise Exceptions.InvalidArguments("unsupported genotype input")
@@ -155,6 +164,7 @@ def run(args):
     logging.info("Processing genotypes")
     dcapture = []
     with prepare_prediction(args, extra, samples) as results:
+
         for i,e in enumerate(dosage_source):
             if args.stop_at_variant and i>args.stop_at_variant:
                 break
@@ -207,10 +217,11 @@ def run(args):
 def add_arguments(parser):
     parser.add_argument("--model_db_path",
                         help="Name of model db in data folder. "
-                             "If supplied, will filter input GWAS snps that are not present; this script will not produce output if any error is encountered."
-                             "If not supplied, will convert the input GWAS as found, one line at a atime, until finishing or encountering an error.")
+                             "PrediXcan will filter input GWAS snps that are not present in the model")
 
     parser.add_argument("--model_db_snp_key", help="Specify a key to use as snp_id")
+    parser.add_argument("--liftover", help = "File with liftover chain. Liftover conversion will take place before any variant mapping or whitelisting.")
+    parser.add_argument("--zero_based_positions", help="chromosome postions start at 0", action="store_true")
     parser.add_argument('--skip_palindromic', action="store_true", help="ignore palindromic variants (i.e. C/G)")
     parser.add_argument("--stop_at_variant", help="convenience to do an early exit", type=int, default=None)
     parser.add_argument('--bgen_genotypes', nargs='+', help="genotypes (bgen format) to use")
@@ -221,11 +232,11 @@ def add_arguments(parser):
     parser.add_argument('--force_mapped_metadata', help="will convert variant ids from 'chr:pos_a0_a1' to 'chr:pos:a0:a1'")
     parser.add_argument('--text_genotypes', nargs='+', help="genotypes to use")
     parser.add_argument('--text_sample_ids', help="path to file with individual samples' ids", nargs="+", default=[])
-    parser.add_argument("--generate_sample_ids", help="Speicify a number of samples, the ordinal number will be used as individual id", type=int, default=None)
+    parser.add_argument("--generate_sample_ids", help="Specify a number of samples, the ordinal number will be used as individual id", type=int, default=None)
     parser.add_argument("--prediction_output", help="name of file to put results in", nargs="+", default=[])
     parser.add_argument("--prediction_summary_output", help="name of file to put summary results in")
-    parser.add_argument("--variant_mapping", help="Table to convert from genotype variants to model variants", nargs="+", default=[])
-    parser.add_argument("--on_the_fly_mapping", help="Option to convert from genotype variants to model variants", nargs="+", default=[])
+    parser.add_argument("--variant_mapping", help="Table to convert from genotype variants to model variants.", nargs="+", default=[])
+    parser.add_argument("--on_the_fly_mapping", help="Option to convert input genotype metadata to a variant id; this can then be used with a variant mapping or directly match the models.", nargs="+", default=[])
     parser.add_argument("--sub_batches", help="split data in slices", type=int, default=None)
     parser.add_argument("--sub_batch", help="compute on a specific slice of data", type=int, default=None)
     parser.add_argument("--only_entries", help="Compute only these entries in the models (e.g. a whitelist of genes)", nargs="+")
@@ -234,7 +245,6 @@ def add_arguments(parser):
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description='Predict.py %s: Predict transcriptome from a model.' % (metax.__version__))
-
     add_arguments(parser)
     parser.add_argument("--verbosity", help="Log verbosity level. 1 is everything being logged. 10 is only high level messages, above 10 will hardly log anything", default = 10, type = int)
     parser.add_argument("--throw", action="store_true", help="Throw exception on error")

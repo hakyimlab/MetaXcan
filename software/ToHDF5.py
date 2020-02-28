@@ -45,6 +45,7 @@ def run(args):
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser("""Convert expression text file to HDF5.
+WARNING: h5py _cache has been deprecated.
 Input format should be a tab-separated text file like so:
 FID IID GENE1   GENE2 ...
 I1  I1  0.1     0.2   ...

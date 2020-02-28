@@ -155,8 +155,7 @@ def _code_999_b(k):
 
 def _structure_file(file_path):
     logging.info("Acquiring HDF5 expression cache")
-    HDF5_CACHE = int(60 * (1024 ** 2))
-    file =  h5py_cache.File(file_path, 'r', chunk_cache_mem_size=HDF5_CACHE, w0=1.0, dtype='float32')
+    file = h5py.File(file_path, 'r')
     genes = [g for g in file['genes']]
     h5 = file['pred_expr']
     return genes, h5

@@ -303,13 +303,17 @@ class HDF5PredictionRepository(PredictionRepository):
         self.d_computed = self.h5.create_dataset("computed", (n_genes,), dtype=int)
 
         logging.log(9, "Creating genes")
-        dt = h5py.string_dtype()
+        try:
+            dt = h5py.string_dtype()
+        except:
+            logging.info("h5py data initialization failed, last-ditch attempt")
+            dt = h5py.special_dtype(vlen=str)
+
         self.d_genes = self.h5.create_dataset("genes", (n_genes,), dtype=dt)
         self.d_genes[:] = list(map(str, self.extra.gene))
         self.genes_index = {x:i for i,x in enumerate(self.extra.gene)}
 
         logging.log(9, "Creating samples")
-        dt = h5py.string_dtype()
         self.d_samples = self.h5.create_dataset("samples", (n_samples,), dtype=dt)
         self.d_samples[:] = list(map(str,self.samples.IID))
 
@@ -345,5 +349,5 @@ def summary_report(summary_data, extra):
     for k, v in summary_data.items():
         s.append((k, v[0]))
     s = pandas.DataFrame(s, columns=["gene", "n_snps_used"])
-    s = extra[['gene', 'gene_name', 'n_snps_in_model', 'pred_perf_r2', 'pred_perf_pval']].merge(s, on="gene", how="left")
+    s = extra.merge(s, on="gene", how="left")[['gene', 'gene_name', 'n_snps_in_model', 'n_snps_used', 'pred_perf_r2', 'pred_perf_pval']]
     return s

@@ -6,6 +6,7 @@ import numpy
 
 from .Genotype import GF
 from .. import Utilities
+from ..misc import Genomics
 
 class DTF:
     """Format of dosage"""
@@ -17,21 +18,35 @@ class DTF:
     FREQ= 5
     FIRST_DATA_COLUMN = 6
 
-def dosage_file_geno_lines(file, snps=None):
+def dosage_file_geno_lines(file, variant_mapping=None, whitelist=None, skip_palindromic=False, liftover_conversion=None):
     logging.log(9, "Processing Dosage geno %s", file)
+    is_dict_mapping = variant_mapping is not None and type(variant_mapping) == dict
     for i, line in enumerate(Utilities.generate_from_any_plain_file(file)):
         comps = line.strip().split()
         id = comps[DTF.ID]
 
-        if snps and not id in snps:
+        ref_allele, alt_allele = comps[DTF.ALLELE_0], comps[DTF.ALLELE_1]
+        if skip_palindromic and Genomics.is_palindromic(ref_allele, alt_allele):
             continue
 
         dosage = numpy.array(comps[DTF.FIRST_DATA_COLUMN:], dtype=numpy.float64)
         chrom = comps[DTF.CHR].replace("chr", "")
+        pos = int(comps[DTF.POSITION])
+        if liftover_conversion:
+            chrom_, pos_ = chrom, pos
+            chrom, pos = liftover_conversion(chrom, pos)
+            if chrom == "NA" or pos == "NA":
+                continue
 
-        yield (id, int(chrom), int(comps[DTF.POSITION]), comps[DTF.ALLELE_0], comps[DTF.ALLELE_1], float(comps[DTF.FREQ])) + tuple(dosage)
+        _id, id = Genomics.maybe_map_variant(id, chrom, pos, ref_allele, alt_allele, variant_mapping, is_dict_mapping)
+        if id is None: continue
 
-def dosage_files_geno_lines(dosage_files, snps=None):
+        if whitelist and not id in whitelist:
+            continue
+
+        yield (id, int(chrom), pos, ref_allele, alt_allele, float(comps[DTF.FREQ])) + tuple(dosage)
+
+def dosage_files_geno_lines(dosage_files, variant_mapping=None, whitelist=None, skip_palindromic=False, liftover_conversion=None):
     chr_ = re.compile(".*chr(\d+).*")
     def sort_geno(x):
         x_ = chr_.search(x).group(1)
@@ -42,17 +57,17 @@ def dosage_files_geno_lines(dosage_files, snps=None):
     dosage_files = sorted(dosage_files, key=sort_geno)
 
     for f in dosage_files:
-        for e in dosage_file_geno_lines(f, snps=snps):
+        for e in dosage_file_geno_lines(f, variant_mapping=variant_mapping, whitelist=whitelist, skip_palindromic=skip_palindromic, liftover_conversion=liftover_conversion):
             yield e
 
-def dosage_folder_geno_lines(dosage_folder, dosage_pattern, snps=None):
+def dosage_folder_geno_lines(dosage_folder, dosage_pattern, variant_mapping=None, whitelist=None, skip_palindromic=False, liftover_conversion=None):
     logging.log(9, "Processing Dosage Folder geno %s", dosage_folder)
     files = Utilities.contentsWithRegexpFromFolder(dosage_folder, dosage_pattern)
     files = sorted([os.path.join(dosage_folder, x) for x in files])
-    for e in dosage_files_geno_lines(files, snps=snps):
+    for e in dosage_files_geno_lines(files, variant_mapping=variant_mapping, whitelist=whitelist, skip_palindromic=skip_palindromic, liftover_conversion=liftover_conversion):
         yield e
 
-def dosage_geno_by_chromosome(dosage_folder, dosage_pattern, snps=None):
+def dosage_geno_by_chromosome(dosage_folder, dosage_pattern, variant_mapping=None, whitelist=None, skip_palindromic=False, liftover_conversion=None):
     buffer = []
     last_chr = None
 
@@ -71,7 +86,7 @@ def dosage_geno_by_chromosome(dosage_folder, dosage_pattern, snps=None):
         return chromosome, metadata, dosage_data
 
     logging.log(8, "Starting to process lines")
-    for line in dosage_folder_geno_lines(dosage_folder, dosage_pattern, snps):
+    for line in dosage_folder_geno_lines(dosage_folder, dosage_pattern, variant_mapping=variant_mapping, whitelist=whitelist, skip_palindromic=skip_palindromic, liftover_conversion=liftover_conversion):
         chromosome = line[GF.CHROMOSOME]
 
         if last_chr is None: last_chr = chromosome

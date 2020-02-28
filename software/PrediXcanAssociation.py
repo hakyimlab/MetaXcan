@@ -36,13 +36,13 @@ def run(args, prediction_results = None):
             reporter.update(i, "%d %% of model's genes processed so far")
         reporter.update(i, "%d %% of model's genes processed so far")
         results = PA.dataframe_from_results(results)
-        results = results.fillna("NA")
         results = results.sort_values(by="pvalue")
+        results = results.fillna("NA")
 
         Utilities.save_dataframe(results, args.output)
 
     end = timer()
-    logging.info("Ran predixcan associations in %s seconds" % (str(end - start)))
+    logging.info("Successfully ran predixcan associations in %s seconds" % (str(end - start)))
 
 
 def add_arguments(parser):

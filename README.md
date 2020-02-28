@@ -5,10 +5,22 @@ Almost all of the software here is command-line based.
 
 This software has been recently migrated to **python 3** as **python 2** has been sunset.
 
+## PrediXcan
+
+[PrediXcan](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4552594/) 
+is a method initially devised to compute gene-trait associations using individual-level data.
+It can be applied to other intermediate phenotypes such as splicing too.
+
 ## S-PrediXcan
 
-S-PrediXcan is an extension of [PrediXcan](https://github.com/hakyimlab/PrediXcan), that infers PrediXcan's results using only summary statistics. It is a component of MetaXcan.
+[S-PrediXcan](https://www.ncbi.nlm.nih.gov/pubmed/29739930) is an extension of PrediXcan, that infers PrediXcan's results using only summary statistics.
 A manuscript describing S-PrediXcan and the MetaXcan framework with an application can be found [here](http://www.biorxiv.org/content/early/2017/05/21/045260).
+
+## MultiXcan and S-MultiXcan
+
+[MultiXcan](https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1007889) 
+and S-MultiXcan are improvements that compute associations integrating information from multiple tissues simultaneously
+while accounting for correlation.
 
 ## Application to over a 100 complex traits
 

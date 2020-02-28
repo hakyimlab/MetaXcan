@@ -42,7 +42,7 @@ def run(args, prediction_results = None):
         Utilities.save_dataframe(results, args.output)
 
     end = timer()
-    logging.info("Ran predixcan associations in %s seconds" % (str(end - start)))
+    logging.info("Successfully ran predixcan associations in %s seconds" % (str(end - start)))
 
 
 def add_arguments(parser):

@@ -111,7 +111,6 @@ def _results(result, context):
 def predixcan_association(gene_, context):
     gene, effect_size, se, zscore, pvalue, n_samples, status = None, None, None, None, None, None, None
     gene = gene_
-
     model_keys, e_ = _acquire(gene_, context)
 
     try:

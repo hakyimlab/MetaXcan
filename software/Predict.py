@@ -84,9 +84,12 @@ def load_samples(args):
             k = pandas.read_table(args.text_sample_ids[0], sep=" ")
             k = k[k.sex != "D"].reset_index(drop=True)
             s = k[["ID_1", "ID_2"]].rename(columns={"ID_1": "FID", "ID_2": "IID"})
-    elif args.vcf_genotypes and not args.text_sample_ids:
+    elif args.vcf_genotypes:
         from metax.genotype import CYVCF2Genotype
         s = CYVCF2Genotype.get_samples(args.vcf_genotypes[0])
+    elif args.bgen_genotypes:
+        from metax.genotype import BGENGenotype
+        s = BGENGenotype.get_samples(args.bgen_genotypes[0])
     elif args.generate_sample_ids:
         s = ["ID_{}".format(x) for x in range(0, args.generate_sample_ids)]
         s = [(x, x) for x in s]
@@ -98,6 +101,7 @@ def load_samples(args):
 
 def get_variant_mapping(args, weights):
     mapping = None
+
     if len(args.variant_mapping):
         if len(args.variant_mapping) == 3:
             logging.info("Acquiring variant mapping")
@@ -164,6 +168,8 @@ def run(args):
 
     logging.info("Processing genotypes")
     dcapture = []
+    reporter = Utilities.PercentReporter(logging.INFO, len(set(weights.rsid.values)))
+    snps_found = set()
     with prepare_prediction(args, extra, samples) as results:
 
         for i,e in enumerate(dosage_source):
@@ -185,11 +191,16 @@ def run(args):
                     dosage = tuple(map(lambda x: 2 - x, dosage))
                 dosage = numpy.array(dosage, dtype=numpy.float)
 
+                snps_found.add(var_id)
+
                 for gene, weight in s[2].items():
                     results.update(gene, dosage, weight)
                     if args.capture:
                         dcapture.append((gene, weight, var_id, s[0], s[1], ref_allele, alt_allele, strand_align, allele_align) + e[GF.FIRST_DOSAGE:])
 
+                reporter.update(len(snps_found), "%d %% of models' snps used")
+
+    reporter.update(len(snps_found), "%d %% of models' snps used", force=True)
 
     if args.capture:
         logging.info("Saving data capture")

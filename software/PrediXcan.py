@@ -10,9 +10,10 @@ import PrediXcanAssociation
 
 def run(args):
     start = timer()
-    logging.info("Starting PrediXcan")
+    logging.info("Running prediction")
     prediction_results = Predict.run(args)
 
+    logging.info("Running association")
     PrediXcanAssociation.run(args, prediction_results)
 
     end = timer()

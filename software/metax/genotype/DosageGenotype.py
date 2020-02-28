@@ -67,7 +67,7 @@ def dosage_folder_geno_lines(dosage_folder, dosage_pattern, variant_mapping=None
     for e in dosage_files_geno_lines(files, variant_mapping=variant_mapping, whitelist=whitelist, skip_palindromic=skip_palindromic, liftover_conversion=liftover_conversion):
         yield e
 
-def dosage_geno_by_chromosome(dosage_folder, dosage_pattern, variant_mapping=None, whitelist=None, skip_palindromic=False):
+def dosage_geno_by_chromosome(dosage_folder, dosage_pattern, variant_mapping=None, whitelist=None, skip_palindromic=False, liftover_conversion=None):
     buffer = []
     last_chr = None
 
@@ -86,7 +86,7 @@ def dosage_geno_by_chromosome(dosage_folder, dosage_pattern, variant_mapping=Non
         return chromosome, metadata, dosage_data
 
     logging.log(8, "Starting to process lines")
-    for line in dosage_folder_geno_lines(dosage_folder, dosage_pattern, variant_mapping=variant_mapping, whitelist=whitelist, skip_palindromic=skip_palindromic):
+    for line in dosage_folder_geno_lines(dosage_folder, dosage_pattern, variant_mapping=variant_mapping, whitelist=whitelist, skip_palindromic=skip_palindromic, liftover_conversion=liftover_conversion):
         chromosome = line[GF.CHROMOSOME]
 
         if last_chr is None: last_chr = chromosome

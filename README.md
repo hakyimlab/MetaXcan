@@ -23,7 +23,7 @@ This is effectively a meta-analysis across tissues, where each tissue is an expe
 ## Application to over a 100 complex traits
 
 We have ran MetaXcan on over a 100 complex traits in publicly available GWAS summary statistics using models trained on GTEx v6 data. 
-An SQLite database can be downloaded [here](https://s3.amazonaws.com/imlab-open/Data/MetaXcan/results/metaxcan_results_database_v0.1.tar.gz)(1.3GB). 
+An SQLite database can be downloaded [here TODO: move results to zenodo and link]()(1.3GB). 
 An usage example in R is provided.
 If you plan to use that data in a publication, please be sure to take a look at that package's README and make sure you are compliant with the data usage restrictions.
 This is provided to illustrate a phenome-wide application.

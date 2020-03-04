@@ -1,3 +1,5 @@
+Version 0.7.3:
+    * Fixed issue in the upstream repository.
 Version 0.7.2:
     * Additional PrediXcan features. Updated readmes and coumentation. HDF5 library changed its API so that we had to hot-fix our code.
 Version 0.7.1:

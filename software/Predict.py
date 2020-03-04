@@ -14,8 +14,7 @@ from metax import Logging
 from metax import Exceptions
 from metax import PredictionModel
 from metax.genotype import Genotype
-from metax.misc import GWASAndModels, Genomics
-from metax.data_management import KeyedDataSource
+from metax.misc import GWASAndModels, Genomics, KeyedDataSource
 
 GF = Genotype.GF
 

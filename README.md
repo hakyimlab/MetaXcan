@@ -43,6 +43,9 @@ To run prediction of biological mechanisms on individual-level data, you will al
 [R](https://www.r-project.org/) with [ggplot](http://ggplot2.org/) and [dplyr](https://cran.r-project.org/web/packages/dplyr/index.html) 
 is needed for some optional statistics and charts.
 
+We recommend a tool like [Conda](https://www.anaconda.com/distribution/) to set up a working environment for MetaXcan.
+Tools like [pyenv](https://github.com/pyenv/pyenv) also work, but the **bgen-reader** dependency currently takes some effort to get going on **pyenv**.
+
 ## Project Layout
 
 **software** folder contains an implementation of S-PrediXcan's method and associated tools. 

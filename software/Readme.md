@@ -67,53 +67,16 @@ where more specific coverage is given to the tools contained here.
 Scripts **M00_prerequisites.py**, **M01_covariances_correlations.py**, **M02_variances.py**, **M03_betas.py**
 and **M04_zscores.py** are steps in a MetaXcan pipeline, although tipically a user will only need to
 use the last two. For ease of use, there is a script that performs these last two steps at once, **MetaXcan.py**.
-There is also a GUI app, **MetaXcanUI.py**, that offers a simplified operation for **MetaXcan.py**'s functionality.
 
-All of these runable scripts take different number of command line parameters. Run them with
-**--help** option to see the options, or check the [Wiki](https://github.com/hakyimlab/MetaXcan/wiki) for examples.
+The following scripts are considereded deprecated, 
+and exist only for reference purposes:
+- **MetaXcanUI.py**, that offers a simplified operation for **MetaXcan.py**'s functionality.
+- **M00_prerequisites.py**: Filter down individual dosage data, and convert to supported 'PrediXcan' format.
+- **M01_covariances_correlations.py**: builds LD references out of the products from `MOO_prerequisites.py`
 
-## M00_prerequisites.py
+All of these runable scripts take different number of command line parameters. 
+Run them with **--help** option to see the options, or check the [Wiki](https://github.com/hakyimlab/MetaXcan/wiki) for examples.
 
-This script is considered deprecated and left here for future reference only.
-
-This script takes extensive genotype data sets such as Thousand Genomes Haplotypes 
-([here](https://mathgen.stats.ox.ac.uk/impute/1000GP%20Phase%203%20haplotypes%206%20October%202014.html))
-allows for some filtering based on population or ID, and selects those entries
-present in hapmap2 biallelic SNP's.
-
-It supports input and output into a custom format that we call internally "PrediXcan Format". It is composed of
-gzip compressed textfiles, without headers, where each row contains:
-
-```bash
-chromosome SNP_id SNP_position reference_allele effect_allele allele_frequency ...
-# "..." stands for allele dosage data, one value per sample individual, value in [0, 2]
-```
-
-It is assumed that a "samples file" is provided, describing each sample individual's metadata, which is a plain text file
-that looks like:
-
-```bash
-ID POP GROUP SEX
-HG00096 GBR EUR male
-HG00097 GBR EUR female
-HG00099 GBR EUR female
-HG00100 GBR EUR female
-HG00101 GBR EUR male
-HG00102 GBR EUR female
-...
-```
-This script is hardly ever necessary. You might use it occasionally to reduce file sizes
-used at the covariance script step (**M01_covariances_correlations.py**).
-
-## M01_covariances_correlations.py
-
-This script is considered deprecated and left here for future reference only. This script builds the covariance matrices needed at **M04_zscores.py**.
-You will run it once in a while, if ever.
-It takes input from **M00_prerequisites.py**'s output, and a genetic expression model database, such as in
-[the example data](https://uchicago.box.com/s/us7qhue3juubq66tktpogeansahxszg9).
-
-It will build the correlation matrix between SNP's in a same gene's model, for each gene, and save them
-in a gzip-compressed text file.
 
 ## M03_betas.py
 

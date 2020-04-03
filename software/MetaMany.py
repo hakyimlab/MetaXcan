@@ -11,7 +11,6 @@ from metax import Exceptions
 from metax import Utilities
 from metax.gwas import Utilities as GWASUtilities
 
-# import MetaXcan
 import SPrediXcan
 
 __author__ = 'heroico, Eric Torstenson'
@@ -99,7 +98,6 @@ def process(args, db_filename):
     args.output_file = os.path.join(output_folder, report_prefix + "-" + file_prefix + suffix)  # output_folder       #os.path.join(output_folder, file_prefix) + ".csv"
 
     # Run!
-    # MetaXcan.run(args)
     SPrediXcan.run(args)
 
 def run(args):

@@ -195,7 +195,7 @@ def multi_predixcan_association(gene_, context, callbacks=None):
             for callback in callbacks:
                 callback(gene, model, result, vt_projection, variance, original_models, coefs)
     except Exception as ex:
-        status = ex.message.replace(" ", "_").replace(",", "_")
+        status = str(ex).replace(" ", "_").replace(",", "_")
 
     return gene, pvalue, n_models, n_samples, p_i_best, m_i_best, p_i_worst,  m_i_worst, status, n_used, max_eigen, min_eigen, min_eigen_kept
 

@@ -23,8 +23,9 @@ class ExpressionManager(Expression.ExpressionManager):
 
         if self.standardise:
             k_ = {}
-            for key, value in k.items():
+            for key, value in d.items():
                 t_ = Math.standardize(value)
+
                 if t_ is not None:
                     k_[key] = t_
             d = k_
@@ -38,7 +39,10 @@ class ExpressionManager(Expression.ExpressionManager):
         for name in sorted(self.file_map.keys()):
             path = self.file_map[name]
             logging.log(9, "Loading %s", path)
-            d[name] = pandas.read_table(path)
+            d_ = pandas.read_table(path)
+            if "FID" in d_:
+                d_ = d_.drop(["FID", "IID"], axis=1)
+            d[name] = d_
         self.d = d
 
     def exit(self):
@@ -93,6 +97,8 @@ def _structure(folder, pattern=None):
             comps = f.readline().strip().split()
 
             for i,gene in enumerate(comps):
+                if gene == "FID" or gene == "IID":
+                    continue
                 if not gene in gene_map:
                     gene_map[gene] = {}
                 gene_map[gene][name] = i

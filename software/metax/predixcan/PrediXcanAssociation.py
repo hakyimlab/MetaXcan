@@ -122,7 +122,7 @@ def predixcan_association(gene_, context):
         effect_size, se, zscore, pvalue = _results(result, context)
         status = specifics[K_STATUS](result)
     except Exception as ex:
-        status = ex.message.replace(" ", "_").replace(",", "_")
+        status = str(ex).replace(" ", "_").replace(",", "_")
 
     return gene, effect_size, se, zscore, pvalue, n_samples, status
 

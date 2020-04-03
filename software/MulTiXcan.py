@@ -57,8 +57,8 @@ def run(args):
 
         reporter.update(i, "%d %% of model's genes processed so far")
         results = MultiPrediXcanAssociation.dataframe_from_results(results, context)
-        results = results.fillna("NA")
         results = results.sort_values(by="pvalue")
+        results = results.fillna("NA")
 
         Utilities.save_dataframe(results, args.output)
         if args.coefficient_output:
@@ -80,10 +80,11 @@ if __name__ == "__main__":
     parser.add_argument("--standardize_expression", help="Standardise input predicted expressions.", action="store_true", default=False)
     parser.add_argument("--code_999", help="values of -999 in expression are to be ignored", action="store_true", default=False)
     parser.add_argument("--expression_pattern", help="Patterns to select expression files", default=None)
-    parser.add_argument("--input_phenos_file", help="Text file (or gzip-compressed) where one column will be used as phenotype")
     parser.add_argument('--covariates', type=str, nargs='+',help='Names of covariates in the file', default=[])
     parser.add_argument('--covariates_file', help="Text file (or gzip-compressed) with covariate data. If provided, will force OLS regression")
+    parser.add_argument("--input_phenos_file", help="Text file (or gzip-compressed) where one column will be used as phenotype")
     parser.add_argument("--input_phenos_column", help="Name of column from input file to be used as phenotype")
+    parser.add_argument("--input_phenos_na_values", help="scalar value to be interpreted as 'NA' in the phenotype", nargs="+")
     parser.add_argument("--output", help="File where stuff will be saved.")
     parser.add_argument("--coefficient_output", help="File where coefficients will be saved (when using regularization, built from loadings)")
     parser.add_argument("--loadings_output",help="File where PC loadings will be saved")

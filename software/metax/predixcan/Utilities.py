@@ -187,7 +187,7 @@ def p_context_from_args(args, prediction_results=None):
 
 def _prepare_phenotype(context):
     logging.info("Accquiring phenotype")
-    context.pheno = _pheno_from_file_and_column(context.args.input_phenos_file, context.args.input_phenos_column)
+    context.pheno = _pheno_from_file_and_column(context.args.input_phenos_file, context.args.input_phenos_column, context.args.input_phenos_na_values)
     if context.args.mode == MTPMode.K_LOGISTIC:
         try:
             v = set([str(float(x)) for x in context.pheno])
@@ -204,10 +204,12 @@ def _prepare_phenotype(context):
         logging.info("Replacing phenotype with residuals")
         context.pheno = _get_residual(context.pheno, context.covariates)
 
-def _pheno_from_file_and_column(path, column):
-    x = pandas.read_table(path, usecols=[column], sep="\s+")
+def _pheno_from_file_and_column(path, column, na_rep=None):
+    x = pandas.read_table(path, usecols=[column], sep="\s+", na_values=na_rep)
     p = x[column]
-    p.loc[numpy.isclose(p, -999.0, atol=1e-3, rtol=0)] = numpy.nan
+    if not na_rep:
+        # Default UKB NA is represented as -999
+        p.loc[numpy.isclose(p, -999.0, atol=1e-3, rtol=0)] = numpy.nan
     p = p.values
     return p
 

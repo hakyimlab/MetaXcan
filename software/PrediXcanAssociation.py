@@ -55,6 +55,7 @@ def add_arguments(parser):
     parser.add_argument('--covariates_file',
                         help="Text file (or gzip-compressed) with covariate data. If provided, will force OLS regression")
     parser.add_argument("--input_phenos_column", help="Name of column from input file to be used as phenotype")
+    parser.add_argument("--input_phenos_na_values", help="scalar value to be interpreted as 'NA' in the phenotype", nargs="+")
     parser.add_argument("--output", help="File where stuff will be saved.")
     parser.add_argument("--mode", help="Type of regression. Can be: {}".format(PA.PMode.K_MODES), default=PA.PMode.K_LINEAR)
 

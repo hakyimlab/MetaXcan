@@ -1,3 +1,5 @@
+Version 0.7.4:
+    * Added support for specifying NA marker in PrediXcan phenotype text file
 Version 0.7.3:
     * Fixed issue in the upstream repository.
 Version 0.7.2:

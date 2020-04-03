@@ -11,7 +11,8 @@ from metax import Exceptions
 from metax import Utilities
 from metax.gwas import Utilities as GWASUtilities
 
-import MetaXcan
+# import MetaXcan
+import SPrediXcan
 
 __author__ = 'heroico, Eric Torstenson'
 
@@ -98,7 +99,8 @@ def process(args, db_filename):
     args.output_file = os.path.join(output_folder, report_prefix + "-" + file_prefix + suffix)  # output_folder       #os.path.join(output_folder, file_prefix) + ".csv"
 
     # Run!
-    MetaXcan.run(args)
+    # MetaXcan.run(args)
+    SPrediXcan.run(args)
 
 def run(args):
     for weight_db in args.weight_dbs:
@@ -148,7 +150,7 @@ arguments --covariance_directory and --covariance_suffix. """)
 
 
     if "-v" in sys.argv or "--verbose" in sys.argv:
-        print metax.__version__
+        print(metax.__version__)
         sys.exit(0)
     args = parser.parse_args()
 
@@ -159,5 +161,5 @@ arguments --covariance_directory and --covariance_suffix. """)
     else:
         try:
             run(args)
-        except Exceptions.ReportableException, e:
+        except Exceptions.ReportableException as e:
             logging.error(e.msg)

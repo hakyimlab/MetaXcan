@@ -43,6 +43,8 @@ class ProcessWeightDB(object):
 
         self.max_snps_in_gene = int(args.max_snps_in_gene) if args.max_snps_in_gene else None
 
+        self.delimiter = args.delimiter
+
     def run(self):
         start = timer()
 
@@ -107,7 +109,7 @@ class ProcessWeightDB(object):
         elif self.input_format == Formats.PrediXcan:
             #dosageName = Utilities.dosageName(name)
             path = os.path.join(self.data_folder, name)
-            dosageLoader = PrediXcanFormatUtilities.PrediXcanFormatDosageLoader(path, weight_db_logic)
+            dosageLoader = PrediXcanFormatUtilities.PrediXcanFormatDosageLoader(path, weight_db_logic, self.delimiter)
         else:
             logging.info("Invalid input format: %s", self.input_format)
             return
@@ -345,6 +347,8 @@ if __name__ == "__main__":
                         help="Ignore any gene that has snps above this value",
                         type=int,
                         default=None)
+
+    parser.add_argument("--delimiter", help="dosage delimiter", default=" ")
 
     args = parser.parse_args()
 

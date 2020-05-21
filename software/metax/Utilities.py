@@ -27,8 +27,8 @@ def dosageNamesFromFolder(folder):
         names = contentsWithRegexpFromFolder(folder, ".*.dos.gz")
     if not names:
         names = contentsWithRegexpFromFolder(folder, "chr.*.txt.gz")
-    if not names:
-        raise Exceptions.ReportableException("Couldn't identify any dosages from {}".format(folder))
+    #if not names:
+    #    raise Exceptions.ReportableException("Couldn't identify any dosages from {}".format(folder))
     return names
 
 def hapNamesFromFolder(folder):

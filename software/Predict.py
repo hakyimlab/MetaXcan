@@ -157,7 +157,7 @@ def run(args):
     logging.info("Loading samples")
     samples = load_samples(args)
     if args.vcf_mode == 'haplotyped':
-        samples = pandas.concat((samples.apply(lambda x: x + '_h1'), samples.apply(lambda x: x + '_h2')), axis=0)
+        samples = pandas.concat((samples.apply(lambda x: x + '_h1'), samples.apply(lambda x: x + '_h2')), axis=0).reset_index(drop=True)
 
     logging.info("Loading model")
     model, weights, extra = model_structure(args)

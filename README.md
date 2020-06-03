@@ -47,6 +47,13 @@ is needed for some optional statistics and charts.
 We recommend a tool like [Conda](https://www.anaconda.com/distribution/) to set up a working environment for MetaXcan.
 Tools like [pyenv](https://github.com/pyenv/pyenv) also work, but the **bgen-reader** dependency currently takes some effort to get going on **pyenv**.
 
+A quick-and-dirty solution to install the basic requirements is using [Miniconda](https://www.anaconda.com/open-source) and the file `software/conda_env.yaml`
+in this repository to create a working environment.
+
+```bash
+conda env create -f /path/to/this/repo/software/conda_env.yml
+conda activate imlab
+```
 
 ## Useful Data & Prediction models
 

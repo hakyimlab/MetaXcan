@@ -51,7 +51,7 @@ A quick-and-dirty solution to install the basic requirements is using [Miniconda
 in this repository to create a working environment.
 
 ```bash
-conda env create -f /path/to/this/repo/software/conda_env.yml
+conda env create -f /path/to/this/repo/software/conda_env.yaml
 conda activate imlabtools
 ```
 

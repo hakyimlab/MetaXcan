@@ -35,7 +35,7 @@ To run PrediXcan Associations and MulTiXcan, you also need:
 * [patsy (>=0.5.0)](https://patsy.readthedocs.io/en/latest/)
 * [statsmodels (>=0.8.0)](https://www.statsmodels.org/stable/index.html)
 * [h5py (>=2.7.1)](https://github.com/h5py/h5py)
-* [h5py-cache (>=1.0.0)](https://pypi.python.org/pypi/h5py-cache/1.0)
+* [h5py-cache (>=1.0.0)](https://pypi.python.org/pypi/h5py-cache/1.0) *Now folded into h5py
 
 To run prediction of biological mechanisms on individual-level data, you will also need:
 * [bgen_reader (>=3.0.3)](https://pypi.org/project/bgen-reader/)

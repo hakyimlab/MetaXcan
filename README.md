@@ -52,7 +52,7 @@ in this repository to create a working environment.
 
 ```bash
 conda env create -f /path/to/this/repo/software/conda_env.yml
-conda activate imlab
+conda activate imlabtools
 ```
 
 ## Useful Data & Prediction models

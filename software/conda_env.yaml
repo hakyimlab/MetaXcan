@@ -1,8 +1,9 @@
-name: imlab
+name: imlabtools
 channels:
   - defaults
   - conda-forge
   - moble
+  - bioconda
 dependencies:
   - python=3.7
   - pandas=0.25.3

@@ -60,7 +60,7 @@ conda activate imlabtools
 ## Useful Data & Prediction models
 
 We make available several transcriptome predictione models and LD references [here](http://predictdb.org).
-These files should be enough for running **MetaXcan.py**, **MulTiXcan.py** and **SMulTiXcan.py** on practically any GWAS study.
+These files should be enough for running **SPrediXcan.py**, **MulTiXcan.py** and **SMulTiXcan.py** on practically any GWAS study.
 We highly recommend **MASHR** models therein, as they are parsimonious and biologically-informed, using fine-mapped variants and cross-tissue QTL patterns.
 In the following we use `gene` recurrently to refer to the prediction model of a genetic feature,
 but it can stand for other units such as prediction of an intron's quantification.
@@ -162,7 +162,7 @@ tar -xzvpf sample_data.tar.gz
 
 4) Run the High-Level S-PrediXcan Script
 ```bash
-./MetaXcan.py \
+./SPrediXcan.py \
 --model_db_path data/DGN-WB_0.5.db \
 --covariance data/covariance.DGN-WB_0.5.txt.gz \
 --gwas_folder data/GWAS \
@@ -290,6 +290,8 @@ if a user updates their repository clone to the latest version and MetaXcan comp
 please check if new databases [have been published here](http://predictdb.org).
 
 For the time being, the only way to use old transcriptome models is to use older versions of MetaXcan.
+
+Older versions of MetaXcan have a **MetaXcan.py** script, when it meant to be an entry point to all MetaXcan tools, but it has since been renamed **SPrediXcan.py**.
 
 ## Where to go from here
 

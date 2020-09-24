@@ -49,7 +49,7 @@ Tools like [pyenv](https://github.com/pyenv/pyenv) also work, but the **bgen-rea
 
 ## Example conda environment setup
 
-A quick-and-dirty solution to install the basic requirements is using [Miniconda](https://www.anaconda.com/open-source) and the file `software/conda_env.yaml`
+A quick-and-dirty solution to install the basic requirements is using [Miniconda](https://www.anaconda.com/open-source) and the file [`software/conda_env.yaml`](https://github.com/hakyimlab/MetaXcan/blob/master/software/conda_env.yaml)
 in this repository to create a working environment.
 
 ```bash

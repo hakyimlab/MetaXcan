@@ -53,3 +53,6 @@ class TestPrediXcanFormatUtilities(unittest.TestCase):
         self.assertEqual(snps[5].data, [0, 0, 0, 2])
 
         # 7th row doesn't get loaded because it doesn't belong to weight db
+
+if __name__ == '__main__':
+    unittest.main()

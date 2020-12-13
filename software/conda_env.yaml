@@ -1,0 +1,18 @@
+name: imlabtools
+channels:
+  - defaults
+  - conda-forge
+  - moble
+  - bioconda
+dependencies:
+  - python=3.7
+  - pandas=0.25.3
+  - scipy=1.4.1
+  - numpy=1.18.1
+  - bgen_reader=3.0.2
+  - cyvcf2=0.20.0
+  - pyliftover=0.4
+  - statsmodels=0.11.1
+  - h5py=2.10.0
+  - pyarrow=0.11.0
+

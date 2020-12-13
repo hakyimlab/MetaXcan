@@ -35,7 +35,7 @@ To run PrediXcan Associations and MulTiXcan, you also need:
 * [patsy (>=0.5.0)](https://patsy.readthedocs.io/en/latest/)
 * [statsmodels (>=0.8.0)](https://www.statsmodels.org/stable/index.html)
 * [h5py (>=2.7.1)](https://github.com/h5py/h5py)
-* [h5py-cache (>=1.0.0)](https://pypi.python.org/pypi/h5py-cache/1.0)
+* [h5py-cache (>=1.0.0)](https://pypi.python.org/pypi/h5py-cache/1.0) *Now folded into h5py
 
 To run prediction of biological mechanisms on individual-level data, you will also need:
 * [bgen_reader (>=3.0.3)](https://pypi.org/project/bgen-reader/)
@@ -47,11 +47,20 @@ is needed for some optional statistics and charts.
 We recommend a tool like [Conda](https://www.anaconda.com/distribution/) to set up a working environment for MetaXcan.
 Tools like [pyenv](https://github.com/pyenv/pyenv) also work, but the **bgen-reader** dependency currently takes some effort to get going on **pyenv**.
 
+## Example conda environment setup
+
+A quick-and-dirty solution to install the basic requirements is using [Miniconda](https://www.anaconda.com/open-source) and the file [`software/conda_env.yaml`](https://github.com/hakyimlab/MetaXcan/blob/master/software/conda_env.yaml)
+in this repository to create a working environment.
+
+```bash
+conda env create -f /path/to/this/repo/software/conda_env.yaml
+conda activate imlabtools
+```
 
 ## Useful Data & Prediction models
 
 We make available several transcriptome predictione models and LD references [here](http://predictdb.org).
-These files should be enough for running **MetaXcan.py**, **MulTiXcan.py** and **SMulTiXcan.py** on practically any GWAS study.
+These files should be enough for running **SPrediXcan.py**, **MulTiXcan.py** and **SMulTiXcan.py** on practically any GWAS study.
 We highly recommend **MASHR** models therein, as they are parsimonious and biologically-informed, using fine-mapped variants and cross-tissue QTL patterns.
 In the following we use `gene` recurrently to refer to the prediction model of a genetic feature,
 but it can stand for other units such as prediction of an intron's quantification.
@@ -153,7 +162,7 @@ tar -xzvpf sample_data.tar.gz
 
 4) Run the High-Level S-PrediXcan Script
 ```bash
-./MetaXcan.py \
+./SPrediXcan.py \
 --model_db_path data/DGN-WB_0.5.db \
 --covariance data/covariance.DGN-WB_0.5.txt.gz \
 --gwas_folder data/GWAS \
@@ -281,6 +290,8 @@ if a user updates their repository clone to the latest version and MetaXcan comp
 please check if new databases [have been published here](http://predictdb.org).
 
 For the time being, the only way to use old transcriptome models is to use older versions of MetaXcan.
+
+Older versions of MetaXcan have a **MetaXcan.py** script, when it meant to be an entry point to all MetaXcan tools, but it has since been renamed **SPrediXcan.py**.
 
 ## Where to go from here
 

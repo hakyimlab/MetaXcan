@@ -19,9 +19,10 @@ class PDTF:
 
 class PrediXcanFormatDosageLoader(object):
     #weight_db_logic is used only for discarding absent snps.
-    def __init__(self, path, weight_db_logic):
+    def __init__(self, path, weight_db_logic, delimiter = " "):
         self.path = path
         self.weight_db_logic = weight_db_logic
+        self.delimiter = delimiter
 
     def load(self):
         logging.info("Loading %s dosage", self.path)
@@ -58,7 +59,7 @@ class PrediXcanFormatDosageLoader(object):
                 self.snps.append(snp)
                 self.snps_by_rsid[snp.name] = snp
 
-        loader = Utilities.CSVFileIterator(self.path, compressed=True)
+        loader = Utilities.CSVFileIterator(self.path, compressed=True, delimiter=self.delimiter)
         collector = PrediXcanCollector(weight_db_logic=self.weight_db_logic)
         loader.iterate(collector)
         return collector.snps, collector.snps_by_rsid

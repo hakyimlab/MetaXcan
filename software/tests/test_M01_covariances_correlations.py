@@ -30,6 +30,7 @@ def buildDummyArgs(root):
     dummy.min_maf_filter = None
     dummy.max_maf_filter = None
     dummy.max_snps_in_gene = None
+    dummy.delimiter = " "
     return dummy
 
 def setupDataForArgs(args, root):

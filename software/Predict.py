@@ -156,8 +156,6 @@ def run(args):
 
     logging.info("Loading samples")
     samples = load_samples(args)
-    if args.vcf_mode == 'haplotyped':
-        samples = pandas.concat((samples.apply(lambda x: x + '_h1'), samples.apply(lambda x: x + '_h2')), axis=0).reset_index(drop=True)
 
     logging.info("Loading model")
     model, weights, extra = model_structure(args)
@@ -171,7 +169,6 @@ def run(args):
     dcapture = []
     reporter = Utilities.PercentReporter(logging.INFO, len(set(weights.rsid.values)))
     snps_found = set()
-    nploid = 1 if args.vcf_mode == 'haplotyped' else 2  # ploidy is 1 when doing one haplotype at a time
     with prepare_prediction(args, extra, samples) as results:
 
         for i,e in enumerate(dosage_source):
@@ -190,7 +187,7 @@ def run(args):
 
                 dosage = e[GF.FIRST_DOSAGE:]
                 if allele_align == -1:
-                    dosage = tuple(map(lambda x: nploid - x, dosage))
+                    dosage = tuple(map(lambda x: 2 - x, dosage))
                 dosage = numpy.array(dosage, dtype=numpy.float)
 
                 snps_found.add(var_id)

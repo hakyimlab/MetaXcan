@@ -61,33 +61,6 @@ def vcf_file_geno_lines(path, mode="genotyped", variant_mapping=None, whitelist=
             d = numpy.apply_along_axis(lambda x: x[0], 1, variant.format("DS"))
             f = numpy.mean(numpy.array(d)) / 2
             yield (variant_id, chr, pos, ref, alt, f) + tuple(d)
-        
-        elif mode == 'haplotyped':
-            if len(alts) > 1:
-                logging.log("VCF haplotyped mode doesn't support multiple ALTs, skipping %s", variant_id)
-                continue
-            alt = alts[0]
-            a = 0
-            
-            if skip_palindromic and Genomics.is_palindromic(ref, alt):
-                continue
-
-            _varid, variant_id = Genomics.maybe_map_variant(variant_id, chr, pos, ref, alt, variant_mapping, is_dict_mapping)
-            if variant_id is None: continue
-
-            if whitelist and variant_id not in whitelist:
-                continue
-
-            d1 = []  # haplotype1
-            d2 = []  # haplotype2
-            for sample in variant.genotypes:
-                d1_ = sample[0] == a+1
-                d2_ = sample[1] == a+1
-                d1.append(d1_)
-                d2.append(d2_)
-            f = numpy.mean(numpy.array(d1,dtype=numpy.int32) + numpy.array(d2,dtype=numpy.int32))/2
-            yield (variant_id, chr, pos, ref, alt, f) + tuple(d1) + tuple(d2)
-            
         else:
             raise RuntimeError("Unsupported vcf mode")
 

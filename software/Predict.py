@@ -171,7 +171,11 @@ def run(args):
     snps_found = set()
     with prepare_prediction(args, extra, samples) as results:
 
-        for i,e in enumerate(dosage_source):
+        for contents in enumerate(dosage_source):
+            if isinstance(contents, RuntimeError):
+                raise contents
+            else:
+                i, e = contents
             if args.stop_at_variant and i>args.stop_at_variant:
                 break
             var_id = e[GF.RSID]

@@ -57,12 +57,15 @@ def vcf_file_geno_lines(path, mode="genotyped", variant_mapping=None, whitelist=
 
             if whitelist and variant_id not in whitelist:
                 continue
-
-            d = numpy.apply_along_axis(lambda x: x[0], 1, variant.format("DS"))
-            f = numpy.mean(numpy.array(d)) / 2
-            yield (variant_id, chr, pos, ref, alt, f) + tuple(d)
+            
+            try:
+                d = numpy.apply_along_axis(lambda x: x[0], 1, variant.format("DS"))
+                f = numpy.mean(numpy.array(d)) / 2
+                yield (variant_id, chr, pos, ref, alt, f) + tuple(d)
+            except KeyError:
+                yield RuntimeError("VCF mode was selected to be imputed but do not have DS field in the VCF.")
         else:
-            raise RuntimeError("Unsupported vcf mode")
+            yield RuntimeError("Unsupported vcf mode")
 
 
 def vcf_files_geno_lines(files, mode="genotyped", variant_mapping=None, whitelist=None, skip_palindromic=False, liftover_conversion=None):

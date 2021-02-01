@@ -250,7 +250,7 @@ class PredictionRepository:
         return self
 
     def __exit__(self, type, value, traceback):
-        return self
+        pass
 
 class BasicPredictionRepository(PredictionRepository):
     def __init__(self, samples, extra, output_path):
@@ -276,7 +276,12 @@ class BasicPredictionRepository(PredictionRepository):
 
     def summary(self):
         return summary_report(self.stats, self.extra)
-
+    
+    def __enter__(self):
+        return self
+        
+    def __exit__(self, exc_type, exc_value, traceback):
+        pass
 
 class HDF5PredictionRepository(PredictionRepository):
     def __init__(self, samples, extra, path):

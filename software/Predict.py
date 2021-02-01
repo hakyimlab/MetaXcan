@@ -174,6 +174,8 @@ def run(args):
     with prepare_prediction(args, extra, samples) as results:
 
         for i,e in enumerate(dosage_source):
+            if isinstance(e, RuntimeError):
+                raise e
             if args.stop_at_variant and i>args.stop_at_variant:
                 break
             var_id = e[GF.RSID]

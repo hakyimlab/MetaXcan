@@ -5,16 +5,38 @@ def coordinate_format(format, chromosome, position, ref_allele, alt_allele):
     return format.format(chromosome, position, ref_allele, alt_allele)
 
 def map_on_the_fly(mapping, format, chromosome, position, ref_allele, alt_allele):
+    nt = {"A":"T","C":"G", "G":"C","T":"A"}
     r = None
     v = format.format(chromosome, position, ref_allele, alt_allele)
 
     if v in mapping:
-        r = mapping[v]
+        if type(mapping) == dict:
+            r = mapping[v]
+        else:
+            r = v
     elif len(ref_allele) == 1 and len(alt_allele) == 1:
         #try swapped
-        v = format.format(chromosome, position, alt_allele, ref_allele)
-        if v in mapping:
-            r = mapping[v]
+        v_ = format.format(chromosome, position, alt_allele, ref_allele)
+        #try complement
+        c = format.format(chromosome, position, nt[ref_allele], nt[alt_allele])
+        # try swapped complement
+        c_ = format.format(chromosome, position, nt[alt_allele], nt[ref_allele])
+        if v_ in mapping:
+            if type(mapping) == dict:
+                r = mapping[v_]
+            else:
+                r = v_
+        elif c in mapping:              
+            if type(mapping) == dict:  
+                r = mapping[c]        
+            else:                      
+                r = c  
+        elif c_ in mapping:              
+            if type(mapping) == dict:  
+                r = mapping[c_]        
+            else:                      
+                r = c_  
+
     return r
 
 def is_palindromic(ref_allele, alt_allele):

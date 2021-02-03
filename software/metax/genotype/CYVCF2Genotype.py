@@ -31,15 +31,9 @@ def vcf_file_geno_lines(path, mode="genotyped", variant_mapping=None, whitelist=
                     continue
 
                 _varid, variant_id = Genomics.maybe_map_variant(variant_id, chr, pos, ref, alt, variant_mapping, is_dict_mapping)
-                
                 if variant_id is None: continue
 
-                vcf_id = mod_id = True
-                if whitelist and _varid not in whitelist:  # when using variant_mapping (dict)
-                    vcf_id = False
-                if whitelist and variant_id not in whitelist: # when using on_the fly mapping
-                    mod_id = False
-                if vcf_id == False and mod_id == False:
+                if whitelist and variant_id not in whitelist:
                     continue
 
                 d = []
@@ -61,12 +55,7 @@ def vcf_file_geno_lines(path, mode="genotyped", variant_mapping=None, whitelist=
             _varid, variant_id = Genomics.maybe_map_variant(variant_id, chr, pos, ref, alt, variant_mapping, is_dict_mapping)
             if variant_id is None: continue
 
-            vcf_id = mod_id = True
-            if whitelist and _varid not in whitelist:  # when using variant_mapping (dict)
-                vcf_id = False
-            if whitelist and variant_id not in whitelist: # when using on_the fly mapping
-                mod_id = False
-            if vcf_id == False and mod_id == False:
+            if whitelist and variant_id not in whitelist:
                 continue
             
             try:

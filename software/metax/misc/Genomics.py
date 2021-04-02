@@ -1,20 +1,55 @@
 import pyliftover
 import logging
 
-def coordinate_format(format, chromosome, position, ref_allele, alt_allele):
-    return format.format(chromosome, position, ref_allele, alt_allele)
+def coordinate_format(checklist, format, chromosome, position, ref_allele, alt_allele):
+    nt = {"A":"T","C":"G", "G":"C","T":"A"}
+    r = None
+    # direct formatting
+    v = format.format(chromosome, position, ref_allele, alt_allele)
+    # flipped formatting
+    v_ = format.format(chromosome, position, alt_allele, ref_allele)
+    # complement formatting
+    c = format.format(chromosome, position, nt[ref_allele], nt[alt_allele])
+    # flipped complement formatting
+    c_ = format.format(chromosome, position, nt[alt_allele], nt[ref_allele])
+
+    if v in checklist:
+        r = v
+    elif v_ in checklist:
+        r = v_
+    elif c in checklist:
+        r = c
+    elif c_ in checklist:
+        r = c_
+
+
+    return r
 
 def map_on_the_fly(mapping, format, chromosome, position, ref_allele, alt_allele):
+    nt = {"A":"T","C":"G", "G":"C","T":"A"}
     r = None
     v = format.format(chromosome, position, ref_allele, alt_allele)
 
     if v in mapping:
         r = mapping[v]
+
     elif len(ref_allele) == 1 and len(alt_allele) == 1:
         #try swapped
-        v = format.format(chromosome, position, alt_allele, ref_allele)
-        if v in mapping:
-            r = mapping[v]
+        v_ = format.format(chromosome, position, alt_allele, ref_allele)
+        #try complement
+        c = format.format(chromosome, position, nt[ref_allele], nt[alt_allele])
+        # try swapped complement
+        c_ = format.format(chromosome, position, nt[alt_allele], nt[ref_allele])
+
+        if v_ in mapping:
+            r = mapping[v_]
+
+        elif c in mapping:              
+            r = mapping[c]
+        
+        elif c_ in mapping:              
+            r = mapping[c_]        
+
     return r
 
 def is_palindromic(ref_allele, alt_allele):

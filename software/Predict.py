@@ -113,6 +113,8 @@ def get_variant_mapping(args, weights):
             #     mapping = KeyedDataSource.load_data(args.variant_mapping[0], "id", "rsid", value_white_list=set(weights.rsid))
         else:
             raise Exceptions.InvalidArguments("Unsupported variant mapping argument")
+    elif len(args.on_the_fly_mapping):
+        checklist = set(weights.rsid)
 
     if len(args.on_the_fly_mapping) > 0:
         logging.info("Acquiring on-the-fly mapping")
@@ -121,7 +123,7 @@ def get_variant_mapping(args, weights):
                 _mapping = mapping # Python scope subtlety, they are not blocks like swift
                 mapping = lambda chromosome, position, ref_allele, alt_allele: Genomics.map_on_the_fly(_mapping, args.on_the_fly_mapping[1], chromosome, position, ref_allele, alt_allele)
             else:
-                mapping = lambda chromosome, position, ref_allele, alt_allele: Genomics.coordinate_format(args.on_the_fly_mapping[1], chromosome, position, ref_allele, alt_allele)
+                mapping = lambda chromosome, position, ref_allele, alt_allele: Genomics.coordinate_format(checklist, args.on_the_fly_mapping[1], chromosome, position, ref_allele, alt_allele)
         else:
             raise RuntimeError("Unsupported on_the_fly argument")
     return mapping
@@ -202,7 +204,7 @@ def run(args):
                 reporter.update(len(snps_found), "%d %% of models' snps used")
 
     reporter.update(len(snps_found), "%d %% of models' snps used", force=True)
-
+     
     if args.capture:
         logging.info("Saving data capture")
         Utilities.ensure_requisite_folders(args.capture)

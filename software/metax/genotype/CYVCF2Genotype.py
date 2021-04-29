@@ -8,7 +8,7 @@ from metax.misc import Genomics
 
 def vcf_file_geno_lines(path, mode="genotyped", variant_mapping=None, whitelist=None, skip_palindromic=False, liftover_conversion=None):
     logging.log(9, "Processing vcf %s", path)
-    vcf_reader = VCF(path)
+    vcf_reader = VCF(path, gts012=True)
 
     is_dict_mapping = variant_mapping is not None and type(variant_mapping) == dict
 

@@ -44,7 +44,7 @@ def vcf_file_geno_lines(path, mode="genotyped", variant_mapping=None, whitelist=
                 yield (variant_id, chr, pos, ref, alt, f) + tuple(d)
 
         elif mode == "imputed":
-            if len(alts) > 1:
+            if len(alts[0]) > 1:
                 logging.log("VCF imputed mode doesn't support multiple ALTs, skipping %s", variant_id)
                 continue
 

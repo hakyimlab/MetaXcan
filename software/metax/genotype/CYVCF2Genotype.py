@@ -40,7 +40,7 @@ def vcf_file_geno_lines(path, mode="genotyped", variant_mapping=None, whitelist=
                 for sample in variant.genotypes:
                     d_ = (sample[0] == a+1) + (sample[1] == a+1)
                     d.append(d_)
-                f = numpy.mean(numpy.array(d,dtype=numpy.int32))/2
+                f = numpy.nanmean(numpy.array(d,dtype=numpy.int32))/2
                 yield (variant_id, chr, pos, ref, alt, f) + tuple(d)
 
         elif mode == "imputed":
@@ -60,7 +60,7 @@ def vcf_file_geno_lines(path, mode="genotyped", variant_mapping=None, whitelist=
             
             try:
                 d = numpy.apply_along_axis(lambda x: x[0], 1, variant.format("DS"))
-                f = numpy.mean(numpy.array(d)) / 2
+                f = numpy.nanmean(numpy.array(d)) / 2
                 yield (variant_id, chr, pos, ref, alt, f) + tuple(d)
             except KeyError:
                 yield RuntimeError("Missing DS field when vcf mode is imputed")

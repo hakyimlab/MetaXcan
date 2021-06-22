@@ -1,17 +1,35 @@
 import pyliftover
 import logging
 
+BASEPAIR = {
+    "A": "T",
+    "C": "G", 
+    "G": "C",
+    "T": "A"
+}
+
+def try_reverse_compelement(str_):
+    '''
+    If reverse complement fails, return empty string
+    '''
+    res = ''
+    for i in str_:
+        if i in BASEPAIR:
+            res = BASEPAIR[i] + res
+        else:
+            return ''
+    return res
+
 def coordinate_format(checklist, format, chromosome, position, ref_allele, alt_allele):
-    nt = {"A":"T","C":"G", "G":"C","T":"A"}
     r = None
     # direct formatting
     v = format.format(chromosome, position, ref_allele, alt_allele)
     # flipped formatting
     v_ = format.format(chromosome, position, alt_allele, ref_allele)
     # complement formatting
-    c = format.format(chromosome, position, nt[ref_allele], nt[alt_allele])
+    c = format.format(chromosome, position, try_reverse_compelement(ref_allele), try_reverse_compelement(alt_allele))
     # flipped complement formatting
-    c_ = format.format(chromosome, position, nt[alt_allele], nt[ref_allele])
+    c_ = format.format(chromosome, position, try_reverse_compelement(alt_allele), try_reverse_compelement(ref_allele))
 
     if v in checklist:
         r = v
@@ -26,7 +44,6 @@ def coordinate_format(checklist, format, chromosome, position, ref_allele, alt_a
     return r
 
 def map_on_the_fly(mapping, format, chromosome, position, ref_allele, alt_allele):
-    nt = {"A":"T","C":"G", "G":"C","T":"A"}
     r = None
     v = format.format(chromosome, position, ref_allele, alt_allele)
 
@@ -37,9 +54,9 @@ def map_on_the_fly(mapping, format, chromosome, position, ref_allele, alt_allele
         #try swapped
         v_ = format.format(chromosome, position, alt_allele, ref_allele)
         #try complement
-        c = format.format(chromosome, position, nt[ref_allele], nt[alt_allele])
+        c = format.format(chromosome, position, try_reverse_compelement(ref_allele), try_reverse_compelement(alt_allele))
         # try swapped complement
-        c_ = format.format(chromosome, position, nt[alt_allele], nt[ref_allele])
+        c_ = format.format(chromosome, position, try_reverse_compelement(alt_allele), try_reverse_compelement(ref_allele))
 
         if v_ in mapping:
             r = mapping[v_]
@@ -53,13 +70,7 @@ def map_on_the_fly(mapping, format, chromosome, position, ref_allele, alt_allele
     return r
 
 def is_palindromic(ref_allele, alt_allele):
-    if ref_allele == "C" and alt_allele == "G":
-        return True
-    elif ref_allele == "G" and alt_allele == "C":
-        return True
-    elif ref_allele == "A" and alt_allele == "T":
-        return True
-    elif ref_allele == "T" and alt_allele == "A":
+    if try_reverse_compelement(ref_allele) == alt_allele:
         return True
     return False
 

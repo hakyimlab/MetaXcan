@@ -252,7 +252,7 @@ def build_context(args, gwas):
 
     if args.shuffle_weights:
         logging.info("Shuffling weights in model")
-        model.weights['weight'] = numpy.random.permutation(model.weights['weight'].values)
+        model.weights["weight"] = model.weights.groupby("gene")["weight"].transform(numpy.random.permutation)
 
     if not args.single_snp_model:
         if not args.stream_covariance:

@@ -164,7 +164,7 @@ def run(args):
     
     if args.shuffle_weights:
         logging.info("Shuffling weights in model")
-        weights['weight'] = numpy.random.permutation(weights['weight'].values)
+        weights["weight"] = weights.groupby("gene")["weight"].transform(numpy.random.permutation)
 
     variant_mapping = get_variant_mapping(args, weights)
 

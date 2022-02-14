@@ -250,6 +250,10 @@ def build_context(args, gwas):
     logging.info("Loading model from: %s", args.model_db_path)
     model = load_model(args.model_db_path, args.model_db_snp_key)
 
+    if args.shuffle_weights:
+        logging.info("Shuffling weights in model")
+        model.weights['weight'] = numpy.random.permutation(model.weights['weight'].values)
+
     if not args.single_snp_model:
         if not args.stream_covariance:
             logging.info("Loading covariance data from: %s", args.covariance)

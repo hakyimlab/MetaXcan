@@ -161,6 +161,10 @@ def run(args):
 
     logging.info("Loading model")
     model, weights, extra = model_structure(args)
+    
+    if args.shuffle_weights:
+        logging.info("Shuffling weights in model")
+        weights['weight'] = numpy.random.permutation(weights['weight'].values)
 
     variant_mapping = get_variant_mapping(args, weights)
 
@@ -256,6 +260,7 @@ def add_arguments(parser):
     parser.add_argument("--sub_batch", help="compute on a specific slice of data", type=int, default=None)
     parser.add_argument("--only_entries", help="Compute only these entries in the models (e.g. a whitelist of genes)", nargs="+")
     parser.add_argument("--capture")
+    parser.add_argument('--shuffle_weights', action="store_true", help="shuffle model weights to check for inflation")
 
 if __name__ == "__main__":
     import argparse

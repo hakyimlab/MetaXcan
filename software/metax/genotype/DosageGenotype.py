@@ -49,7 +49,9 @@ def dosage_file_geno_lines(file, variant_mapping=None, whitelist=None, skip_pali
 def dosage_files_geno_lines(dosage_files, variant_mapping=None, whitelist=None, skip_palindromic=False, liftover_conversion=None):
     chr_ = re.compile(".*chr(\d+).*")
     def sort_geno(x):
-        x_ = chr_.search(x).group(1)
+        x_ = chr_.search(x)
+        if x_ is not None:
+            x_ = chr_.search(x).group(1)
         if x_:
             return int(x_)
         else:

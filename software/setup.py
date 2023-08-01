@@ -3,6 +3,7 @@ ez_setup.use_setuptools()
 
 import setuptools
 import os
+from setuptools import find_packages
 
 # Use app's version
 import metax
@@ -16,7 +17,7 @@ setuptools.setup(name="MetaXcan",
                  author="Alvaro Barbeira, Eric Torstenson",
                  author_email='alvarobarbeira@gmail.com, eric.s.torstenson@vanderbilt.edu',
                  url="TBD",
-                 packages=['metax', 'tests','metax.misc', 'metax.gwas','metax.metaxcan', 'metax.deprecated'],
+                 packages=find_packages(),
                  license="TBD",
                  scripts=[  'M00_prerequisites.py',
                             'M01_covariances_correlations.py',

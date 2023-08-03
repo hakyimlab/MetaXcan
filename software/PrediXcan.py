@@ -5,8 +5,8 @@ import metax
 from metax import Logging
 from metax import Exceptions
 
-import Predict
-import PrediXcanAssociation
+from metax import Predict
+from metax import PrediXcanAssociation
 
 def run(args):
     start = timer()

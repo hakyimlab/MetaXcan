@@ -54,9 +54,9 @@ def bgen_file_geno_lines(file, variant_mapping = None, force_colon = False, use_
 
         v = bgen["genotype"][variant.Index].compute()
         if v["phased"]:
-            d = numpy.apply_along_axis(lambda x: x[1] + x[3], 1, numpy.array(v["probs"], dtype=numpy.float))
+            d = numpy.apply_along_axis(lambda x: x[1] + x[3], 1, numpy.array(v["probs"], dtype=float))
         else:
-            d = numpy.apply_along_axis(lambda x: x[1] + x[2] * 2, 1, numpy.array(v["probs"], dtype=numpy.float))
+            d = numpy.apply_along_axis(lambda x: x[1] + x[2] * 2, 1, numpy.array(v["probs"], dtype=float))
 
         #e = bgen_reader.allele_expectation(bgen, variant.Index)
         #d2 = bgen_reader.compute_dosage(e, alt=1)

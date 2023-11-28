@@ -192,7 +192,7 @@ def run(args):
                 dosage = e[GF.FIRST_DOSAGE:]
                 if allele_align == -1:
                     dosage = tuple(map(lambda x: 2 - x, dosage))
-                dosage = numpy.array(dosage, dtype=numpy.float)
+                dosage = numpy.array(dosage, dtype=float)
 
                 snps_found.add(var_id)
 

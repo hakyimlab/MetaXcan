@@ -1,10 +1,10 @@
 import pandas
 import numpy
 
-expected_snp = pandas.Series(["rs940550", "rs6650104", "rs6594028", "rs9701055", "rs7417504", "rs12082473", "rs3094315", "rs3131971", "rs61770173", ], dtype=numpy.str)
-expected_effect = pandas.Series(["C", "T", "T", "A", "T", "A", "A", "T", "A"], dtype=numpy.str)
-expected_non_effect = pandas.Series(["G", "C", "C", "T", "C", "G", "G", "C", "C"], dtype=numpy.str)
-expected_chromosome = pandas.Series(["chr1", "chr1", "chr1", "chr1", "chr1", "chr1", "chr1", "chr22", "chr22"], dtype=numpy.str)
+expected_snp = pandas.Series(["rs940550", "rs6650104", "rs6594028", "rs9701055", "rs7417504", "rs12082473", "rs3094315", "rs3131971", "rs61770173", ], dtype=str)
+expected_effect = pandas.Series(["C", "T", "T", "A", "T", "A", "A", "T", "A"], dtype=str)
+expected_non_effect = pandas.Series(["G", "C", "C", "T", "C", "G", "G", "C", "C"], dtype=str)
+expected_chromosome = pandas.Series(["chr1", "chr1", "chr1", "chr1", "chr1", "chr1", "chr1", "chr22", "chr22"], dtype=str)
 expected_position = pandas.Series([729679, 731718, 734349, 736289, 751756, 752566, 752721, 752894, 753405])
 expected_se = pandas.Series( [0.0173, 0.0198, 0.02, 0.0193, 0.0164, 0.0149, 0.0146, 0.015, 0.0159], dtype=numpy.float32)
 expected_p = pandas.Series( [0.2083, 0.3298, 0.3055, 0.5132, 0.8431, 0.7870, 0.8229, 0.5065, 0.8181], dtype=numpy.float32)

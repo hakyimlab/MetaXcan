@@ -48,19 +48,19 @@ def assert_gwas_zscore_pb(unit_test, gwas):
     numpy.testing.assert_allclose(gwas[PVALUE], scz2_sample.expected_p, rtol=0.001)
 
 def assert_gwas_extracted_from_data_3(unit_test, gwas):
-    expected_snp = pandas.Series(["rs3", "rs6", "rs7"], dtype=numpy.str)
+    expected_snp = pandas.Series(["rs3", "rs6", "rs7"], dtype=str)
     numpy.testing.assert_array_equal(gwas[SNP], expected_snp)
 
-    expected_effect = pandas.Series(["G", "G", "T"], dtype=numpy.str)
+    expected_effect = pandas.Series(["G", "G", "T"], dtype=str)
     numpy.testing.assert_array_equal(gwas[EFFECT_ALLELE], expected_effect)
 
-    expected_non_effect = pandas.Series(["A", "A", "C"], dtype=numpy.str)
+    expected_non_effect = pandas.Series(["A", "A", "C"], dtype=str)
     numpy.testing.assert_array_equal(gwas[NON_EFFECT_ALLELE], expected_non_effect)
 
     expected_zscore = pandas.Series([1.3, 2.9, 4.35], dtype=numpy.float32)
     numpy.testing.assert_allclose(gwas[ZSCORE], expected_zscore, rtol=0.001)
 
-    expected_chromosome = pandas.Series(["chr1", "chr1", "chr1"], dtype=numpy.str)
+    expected_chromosome = pandas.Series(["chr1", "chr1", "chr1"], dtype=str)
     numpy.testing.assert_array_equal(gwas[CHROMOSOME], expected_chromosome)
 
 def _add_basic_to_format(format):
@@ -169,10 +169,10 @@ class TestGWAS(unittest.TestCase):
 
         gwas = GWAS.load_gwas("tests/_td/GWAS/scz2/scz2.gwas.results.txt.gz", gwas_format, snps={"rs940550", "rs6650104", "rs61770173"})
 
-        numpy.testing.assert_array_equal(gwas[SNP], pandas.Series(["rs940550", "rs6650104", "rs61770173", ], dtype=numpy.str))
-        numpy.testing.assert_array_equal(gwas[EFFECT_ALLELE], pandas.Series(["C", "T",  "A"], dtype=numpy.str))
-        numpy.testing.assert_array_equal(gwas[NON_EFFECT_ALLELE], pandas.Series(["G", "C", "C"], dtype=numpy.str))
-        numpy.testing.assert_array_equal(gwas[CHROMOSOME], pandas.Series(["chr1", "chr1",  "chr22"], dtype=numpy.str))
+        numpy.testing.assert_array_equal(gwas[SNP], pandas.Series(["rs940550", "rs6650104", "rs61770173", ], dtype=str))
+        numpy.testing.assert_array_equal(gwas[EFFECT_ALLELE], pandas.Series(["C", "T",  "A"], dtype=str))
+        numpy.testing.assert_array_equal(gwas[NON_EFFECT_ALLELE], pandas.Series(["G", "C", "C"], dtype=str))
+        numpy.testing.assert_array_equal(gwas[CHROMOSOME], pandas.Series(["chr1", "chr1",  "chr22"], dtype=str))
         numpy.testing.assert_allclose(gwas[ZSCORE], pandas.Series([-1.254557, 0.974874, -0.232505],dtype=numpy.float32), rtol=0.001)
         numpy.testing.assert_allclose(gwas[BETA], pandas.Series([-0.0217038334437866, 0.0193025022544974, -0.00369682484428976], dtype=numpy.float32), rtol=0.001)
         numpy.testing.assert_allclose(gwas[SE], pandas.Series([0.0173, 0.0198,  0.0159], dtype=numpy.float32), rtol=0.001)

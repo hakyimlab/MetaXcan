@@ -5,7 +5,10 @@ __version__ = metax.__version__
 
 import logging
 import os
-
+import sqlite3
+import pandas as pd
+import numpy as np
+from scipy.stats import chi2
 from timeit import default_timer as timer
 
 from metax import Logging
@@ -14,6 +17,42 @@ from metax import Exceptions
 from metax.metaxcan import AssociationCalculation
 from metax.metaxcan import Utilities as MetaxcanUtilities
 
+#calibration functions
+def get_phi(db):
+    # get phi from SQLite database
+    try:
+        conn = sqlite3.connect(db)
+        extras = pd.read_sql_query("SELECT gene, phi FROM extra", conn)
+        extras = extras.dropna(subset=['phi'])
+        return extras
+    except (sqlite3.DatabaseError, sqlite3.OperationalError) as e:
+        # Log any database-related errors
+        logging.error(f"An error occurred while accessing the database: {e}")
+    finally:
+        # Ensure the connection is closed
+        if conn:
+            conn.close()
+
+def correct_inf_phi(xcan_df, predict_db, N, h2):
+    
+    extras = get_phi(predict_db)
+    xcan_df = xcan_df.merge(extras, on='gene', how='inner')
+
+    xcan_df['uncalibrated_pvalue'] = xcan_df['pvalue']
+    xcan_df['uncalibrated_zscore'] = xcan_df['zscore']
+
+    #QC: Replace negative phi values with 0
+    xcan_df['phi'] = np.where(xcan_df['phi'] < 0, 0, xcan_df['phi'])
+    
+    # Calibration value
+    denominator = 1 + (xcan_df['phi'] * N * h2)
+    
+    # calibrated p-value
+    xcan_df['pvalue'] = chi2.sf(xcan_df['zscore']**2 / denominator, df=1)
+    # calibrated z-score
+    xcan_df['zscore'] = np.sqrt(chi2.ppf(xcan_df['pvalue'],df = 1)) * np.sign(xcan_df['zscore'])
+    logging.info("The pvalue and zscore have been calibrated successfully")
+    return xcan_df
 
 def run_metaxcan(args, context):
     logging.info("Started metaxcan association")
@@ -47,6 +86,12 @@ def run_metaxcan(args, context):
     if args.additional_output:
         additional = AssociationCalculation.dataframe_from_aditional_stats(additional)
         results = MetaxcanUtilities.merge_additional_output(results, additional, context, args.remove_ens_version)
+
+    if args.gwas_h2 is not None and args.gwas_N is not None:
+        logging.info("Calibrating pvalue and zscore using phi in model, N and h2")
+        results = correct_inf_phi(results, args.model_db_path, args.gwas_N, args.gwas_h2)
+    else:
+        logging.warning("IMPORTANT: The pvalue and zscore are uncalibrated for inflation")
 
     if args.output_file:
         Utilities.ensure_requisite_folders(args.output_file)

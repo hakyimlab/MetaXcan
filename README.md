@@ -1,3 +1,6 @@
+> NEW VERSION: we are now correcting the inflation in TWAS due to the pervasive polygenicity of most complex traits. You will need to download the new release of the summary predixcan software as well as the new prediction models, which include necessary correction factors.
+> See [TWAS inflation paper here](https://doi.org/10.1101/2023.10.17.562831)
+
 # MetaXcan
 
 MetaXcan is a set of tools to integrate genomic information of biological mechanisms with complex traits.

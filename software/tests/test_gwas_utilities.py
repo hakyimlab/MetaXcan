@@ -15,38 +15,38 @@ from metax.Constants import POSITION
 from . import SampleData
 
 def assert_gwas_1(unit_test, gwas):
-    expected_snp = pandas.Series(["rs1666", "rs1", "rs2", "rs3", "rs4", "rs6", "rs7", "rs7666", "rs8", "rs9"], dtype=numpy.str)
+    expected_snp = pandas.Series(["rs1666", "rs1", "rs2", "rs3", "rs4", "rs6", "rs7", "rs7666", "rs8", "rs9"], dtype=str)
     numpy.testing.assert_array_equal(gwas[SNP], expected_snp)
 
-    expected_effect = pandas.Series(["A", "C", "C", "G", "A", "G", "T", "A", "A", "A"], dtype=numpy.str)
+    expected_effect = pandas.Series(["A", "C", "C", "G", "A", "G", "T", "A", "A", "A"], dtype=str)
     numpy.testing.assert_array_equal(gwas[EFFECT_ALLELE], expected_effect)
 
-    expected_non_effect = pandas.Series(["G", "T", "T", "A", "G", "A", "C", "G", "G", "G"], dtype=numpy.str)
+    expected_non_effect = pandas.Series(["G", "T", "T", "A", "G", "A", "C", "G", "G", "G"], dtype=str)
     numpy.testing.assert_array_equal(gwas[NON_EFFECT_ALLELE], expected_non_effect)
 
     expected_zscore = pandas.Series([0.3, -0.2, 0.5, 1.3, -0.3, 2.9, 4.35, 1.3, 0.09, 0.09], dtype=numpy.float32)
     numpy.testing.assert_allclose(gwas[ZSCORE], expected_zscore, rtol=0.001)
 
-    expected_chromosome = pandas.Series(["chr1", "chr1", "chr1", "chr1", "chr1", "chr1", "chr1", "chr1", "chr1", "chr1"], dtype=numpy.str)
+    expected_chromosome = pandas.Series(["chr1", "chr1", "chr1", "chr1", "chr1", "chr1", "chr1", "chr1", "chr1", "chr1"], dtype=str)
     numpy.testing.assert_array_equal(gwas[CHROMOSOME], expected_chromosome)
 
     expected_position = pandas.Series([0, 1, 5, 20, 30, 42, 43, 45, 50, 70])
     numpy.testing.assert_array_equal(gwas[POSITION], expected_position)
 
 def assert_gwas_2(unit_test, gwas):
-    expected_snp = pandas.Series(["rsC", "rs1666", "rs1", "rs2",  "rs4", "rsB", "rsA", "rs7666", "rs8", "rs9"], dtype=numpy.str)
+    expected_snp = pandas.Series(["rsC", "rs1666", "rs1", "rs2",  "rs4", "rsB", "rsA", "rs7666", "rs8", "rs9"], dtype=str)
     numpy.testing.assert_array_equal(gwas[SNP], expected_snp)
 
-    expected_effect = pandas.Series(["T", "A", "C", "C", "A", "G", "G", "A", "A", "A"], dtype=numpy.str)
+    expected_effect = pandas.Series(["T", "A", "C", "C", "A", "G", "G", "A", "A", "A"], dtype=str)
     numpy.testing.assert_array_equal(gwas[EFFECT_ALLELE], expected_effect)
 
-    expected_non_effect = pandas.Series(["C", "G", "T", "T", "G", "A", "A", "G", "G", "G"], dtype=numpy.str)
+    expected_non_effect = pandas.Series(["C", "G", "T", "T", "G", "A", "A", "G", "G", "G"], dtype=str)
     numpy.testing.assert_array_equal(gwas[NON_EFFECT_ALLELE], expected_non_effect)
 
     expected_zscore = pandas.Series([4.35, 0.3, -0.2, 1.3, -0.3, 2.9, 1.3, 1.3, 0.09, 0.09], dtype=numpy.float32)
     numpy.testing.assert_allclose(gwas[ZSCORE], expected_zscore, rtol=0.001)
 
-    expected_chromosome = pandas.Series(["chr1", "chr1", "chr1", "chr1", "chr1", "chr1", "chr1", "chr1", "chr1", "chr1"], dtype=numpy.str)
+    expected_chromosome = pandas.Series(["chr1", "chr1", "chr1", "chr1", "chr1", "chr1", "chr1", "chr1", "chr1", "chr1"], dtype=str)
     numpy.testing.assert_array_equal(gwas[CHROMOSOME], expected_chromosome)
 
     expected_position = pandas.Series([None, None, None, None, None, None, None, None, None, None])

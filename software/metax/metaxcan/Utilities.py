@@ -115,7 +115,7 @@ class OptimizedContext(SimpleContext):
             while True:
                 w = self._get_weights(gene)
                 gwas = self._get_gwas(list(w.keys()))
-                type = [numpy.str, numpy.float64, numpy.float64, numpy.float64]
+                type = [str, numpy.float64, numpy.float64, numpy.float64]
                 columns = [Constants.SNP, WDBQF.K_WEIGHT, Constants.ZSCORE, Constants.BETA]
                 d = {x: v for x, v in w.items() if x in gwas}
 

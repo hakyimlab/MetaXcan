@@ -39,7 +39,8 @@ if __name__ == "__main__":
     parser.add_argument("--model_db_snp_key", help="Specify a key to use as snp_id")
 #GWAS betas
     parser.add_argument("--gwas_file", help="Load a single GWAS file. (Alternative to providing a gwas_folder and gwas_file_pattern)")
-
+    parser.add_argument("--gwas_h2", help="GWAS heritability (h2)", type=float, default=None, required=False)
+    parser.add_argument("--gwas_N", help="GWAS sample size (N)", type=int, default=None, required=False)
     parser.add_argument("--gwas_folder", help="name of folder containing GWAS data. All files in the folder are assumed to belong to a single study.")
     parser.add_argument("--gwas_file_pattern", help="Pattern to recognice GWAS files in folders (in case there are extra files and you don't want them selected).")
 
@@ -60,6 +61,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     Logging.configureLogging(int(args.verbosity))
+
+    if args.gwas_h2 is None or args.gwas_N is None:
+        logging.warning("Missing --gwas_h2 and --gwas_N are required to calibrate the pvalue and zscore.")
 
     if args.throw:
         run(args)

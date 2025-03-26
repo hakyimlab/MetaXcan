@@ -47,10 +47,10 @@ def correct_inf_phi(xcan_df, predict_db, N, h2):
     # Calibration value
     denominator = 1 + (xcan_df['phi'] * N * h2)
     
-    # calibrated p-value
-    xcan_df['pvalue'] = chi2.sf(xcan_df['zscore']**2 / denominator, df=1)
-    # calibrated z-score
-    xcan_df['zscore'] = np.sqrt(chi2.ppf(xcan_df['pvalue'],df = 1)) * np.sign(xcan_df['zscore'])
+    # calibrated z-score and pvalue
+    xcan_df['zscore'] = xcan_df['zscore'] / np.sqrt(denominator)
+    xcan_df['pvalue'] = 2 * norm.sf(abs(xcan_df['zscore']))
+    
     logging.info("The pvalue and zscore have been calibrated successfully")
     return xcan_df
 

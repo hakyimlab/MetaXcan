@@ -89,11 +89,11 @@ def gwas_from_data(data, extra_columns=None):
     else:
         rsid, chromosome, position, non_effect_allele, effect_allele, zscore = [], [], [], [], [], []
 
-    g = pandas.DataFrame({Constants.SNP:numpy.array(rsid, dtype=numpy.str),
-                        Constants.CHROMOSOME:numpy.array(chromosome, dtype=numpy.str),
+    g = pandas.DataFrame({Constants.SNP:numpy.array(rsid, dtype=str),
+                        Constants.CHROMOSOME:numpy.array(chromosome, dtype=str),
                         Constants.POSITION:numpy.array(position),
-                        Constants.EFFECT_ALLELE:numpy.array(effect_allele, dtype=numpy.str),
-                        Constants.NON_EFFECT_ALLELE:numpy.array(non_effect_allele, dtype=numpy.str),
+                        Constants.EFFECT_ALLELE:numpy.array(effect_allele, dtype=str),
+                        Constants.NON_EFFECT_ALLELE:numpy.array(non_effect_allele, dtype=str),
                         Constants.ZSCORE:numpy.array(zscore)})
     if len(data) and extra_columns:
         for k,i in extra_columns:

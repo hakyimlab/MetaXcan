@@ -9,6 +9,7 @@ import sqlite3
 import pandas as pd
 import numpy as np
 from scipy.stats import chi2
+from scipy.stats import norm
 from timeit import default_timer as timer
 
 from metax import Logging

@@ -5,14 +5,16 @@ channels:
   - moble
   - bioconda
 dependencies:
-  - python=3.7
-  - pandas=0.25.3
-  - scipy=1.4.1
-  - numpy=1.18.1
-  - bgen_reader=3.0.2
-  - cyvcf2=0.20.0
+  - python=3.9
+  - pandas=2.2
+  - scipy=1.12
+  - numpy=1.26
   - pyliftover=0.4
-  - statsmodels=0.11.1
-  - h5py=2.10.0
-  - pyarrow=0.11.0
+  - statsmodels=0.14
+  - h5py=3.12
+  - pyarrow=19.0
+  - pip=25.0
+  - pip:
+    - cyvcf2==0.30.28
+    - bgen-reader==4.0.8
 

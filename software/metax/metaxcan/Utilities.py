@@ -312,7 +312,7 @@ def _results_column_order(with_additional=False):
     return column_order
 
 def format_output(results, context, remove_ens_version):
-    results = results.drop("n_snps_in_model",1)
+    results = results.drop("n_snps_in_model",axis=1)
 
     # Dodge the use of cdf on non finite values
     i = numpy.isfinite(results.zscore)

@@ -8,7 +8,7 @@ from metax.misc import Genomics
 
 def vcf_file_geno_lines(path, mode="genotyped", variant_mapping=None, whitelist=None, skip_palindromic=False, liftover_conversion=None):
     logging.log(9, "Processing vcf %s", path)
-    vcf_reader = VCF(path)
+    vcf_reader = VCF(path, gts012=True)
 
     is_dict_mapping = variant_mapping is not None and type(variant_mapping) == dict
 
@@ -40,12 +40,12 @@ def vcf_file_geno_lines(path, mode="genotyped", variant_mapping=None, whitelist=
                 for sample in variant.genotypes:
                     d_ = (sample[0] == a+1) + (sample[1] == a+1)
                     d.append(d_)
-                f = numpy.mean(numpy.array(d,dtype=numpy.int32))/2
+                f = numpy.nanmean(numpy.array(d,dtype=numpy.int32))/2
                 yield (variant_id, chr, pos, ref, alt, f) + tuple(d)
 
         elif mode == "imputed":
-            if len(alts) > 1:
-                logging.log("VCF imputed mode doesn't support multiple ALTs, skipping %s", variant_id)
+            if (len(ref)) | (len(alts[0])) > 1:
+                logging.log(8, "VCF imputed mode doesn't support multiple REFs or ALTs, skipping %s", variant_id)
                 continue
 
             alt = alts[0]
@@ -60,7 +60,7 @@ def vcf_file_geno_lines(path, mode="genotyped", variant_mapping=None, whitelist=
             
             try:
                 d = numpy.apply_along_axis(lambda x: x[0], 1, variant.format("DS"))
-                f = numpy.mean(numpy.array(d)) / 2
+                f = numpy.nanmean(numpy.array(d)) / 2
                 yield (variant_id, chr, pos, ref, alt, f) + tuple(d)
             except KeyError:
                 yield RuntimeError("Missing DS field when vcf mode is imputed")

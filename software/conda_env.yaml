@@ -16,5 +16,5 @@ dependencies:
   - pip=25.0
   - pip:
     - cyvcf2==0.30.28
-    - bgen-reader==4.0.8
+    - bgen==1.9.9
 

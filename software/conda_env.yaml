@@ -10,7 +10,6 @@ dependencies:
   - pyliftover=0.4
   - statsmodels=0.14
   - h5py=3.12
-  - pyarrow=19.0
   - pip=25.0
   - pip:
     - cyvcf2==0.30.28

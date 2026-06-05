@@ -4,7 +4,7 @@ import logging
 from metax import Logging, Utilities
 
 import numpy as np
-import h5py_cache
+import h5py
 import pandas
 
 def run(args):
@@ -18,7 +18,7 @@ def run(args):
     data = pandas.read_table(args.input)
 
     logging.info("Opening output")
-    f = h5py_cache.File(args.output, 'w', chunk_cache_mem_size=int(50 * (1024 ** 2)))
+    f = h5py.File(args.output, 'w', rdcc_nbytes=int(50 * (1024 ** 2)))
 
     n_genes = data.shape[1]-2
     n_samples = data.shape[0]

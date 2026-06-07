@@ -99,7 +99,7 @@ class ProcessWeightDB(object):
 
     def writeFileHeader(self,path):
         with io.TextIOWrapper(gzip.open(path, "ab"), newline="") as file:
-            file.write("GENE RSID1 RSID2 VALUE\n")
+            file.write("GENE\tRSID1\tRSID2\tVALUE\n")
 
     def getSNPS(self, name, weight_db_logic):
         dosageLoader = None
@@ -141,7 +141,7 @@ class ProcessWeightDB(object):
     def addToFile(self, path, gene, entries):
         with io.TextIOWrapper(gzip.open(path, "ab"), newline="") as file:
             for entry in entries:
-                line = " ".join([gene, entry[0], entry[1], entry[2]])+"\n"
+                line = "\t".join([gene, entry[0], entry[1], entry[2]])+"\n"
                 file.write(line)
 
     def buildCovarianceEntries(self, name, gene, weight_db_logic, snps_by_rsid):

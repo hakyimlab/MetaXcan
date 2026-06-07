@@ -349,7 +349,7 @@ class MainScreen(object):
             def run(self):
                 try:
                     MetaXcan.run(self.args)
-                except Exceptions.ReportableException, e:
+                except Exceptions.ReportableException as e:
                     logging.error(e.msg)
                 except Exception as e:
                     logging.info("Exception when running task: %s", str(e))
@@ -368,7 +368,7 @@ class MainScreen(object):
                         work = self.works[i]
                         work.run()
                         del self.works[i]
-                except Exceptions.ReportableException, e:
+                except Exceptions.ReportableException as e:
                     logging.error(e.msg)
                 except Exception as e:
                     logging.info("Exception when running task: %s", str(e))

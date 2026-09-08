@@ -37,6 +37,9 @@ class SimpleContext(AssociationCalculation.Context):
     def get_model_snps(self):
         return set(self.model.weights.rsid)
 
+    def get_gwas_snps(self):
+        return set(self.gwas[Constants.SNP])
+
     def get_data_intersection(self):
         return _data_intersection(self.model, self.gwas)
 
@@ -87,6 +90,9 @@ class OptimizedContext(SimpleContext):
 
     def get_model_snps(self):
         return set(self.snps_in_model)
+
+    def get_gwas_snps(self):
+        return set(self.gwas_data.keys())
 
     def _get_gwas(self, snps):
         snps = set(snps)
@@ -179,6 +185,44 @@ def _data_intersection_3(weight_data, gwas_data, gene_list, pedantic):
                 snps.add(s)
 
     return genes, snps
+
+def check_snp_overlap(model_snps, gwas_snps, min_pct=1.0, sample_n=5):
+    """Compares the model's SNP set against the GWAS's SNP set.
+
+    Returns (overlap_pct, message). message is None unless overlap_pct is
+    below min_pct, in which case it is a human-readable diagnostic meant to
+    help identify SNP id/build mismatches (e.g. rsid vs varID) that would
+    otherwise silently produce a near-empty result set.
+    """
+    total = len(model_snps)
+    if total == 0:
+        return 0.0, None
+
+    overlap = model_snps & gwas_snps
+    pct = 100.0 * len(overlap) / total
+    if pct >= min_pct:
+        return pct, None
+
+    model_sample = sorted(model_snps)[:sample_n]
+    gwas_sample = sorted(gwas_snps)[:sample_n]
+    message = (
+        "Only {:.2f}% of the model's SNPs were found in the GWAS data ({} of {}). "
+        "This usually means the model and GWAS use different variant id formats "
+        "or genome builds, and the results file will be mostly empty.\n"
+        "Example model SNP ids: {}\n"
+        "Example GWAS SNP ids: {}\n"
+        "Things to check:\n"
+        "- If your model uses MASHR (varID-keyed) variants, pass "
+        "--model_db_snp_key varID and make sure --snp_column points at a "
+        "matching chr_pos_ref_alt(_build) column, or provide --snp_map_file.\n"
+        "- If your GWAS uses non-rsID variant ids, pass --keep_non_rsid.\n"
+        "- Check that your GWAS and model use the same genome build "
+        "(GTEx v8 models are hg38; liftover otherwise).\n"
+        "- As a rule of thumb, overlap below ~80% is suspect; single digits "
+        "to teens usually means a mismatch. See "
+        "https://github.com/hakyimlab/MetaXcan/wiki for guidance."
+    ).format(pct, len(overlap), total, model_sample, gwas_sample)
+    return pct, message
 
 def _sanitized_gwas(gwas):
     gwas = gwas[[Constants.SNP, Constants.ZSCORE, Constants.BETA]]

@@ -113,6 +113,10 @@ def run(args, _gwas=None):
 
     context = MetaxcanUtilities.build_context(args, _gwas)
 
+    _, overlap_message = MetaxcanUtilities.check_snp_overlap(context.get_model_snps(), context.get_gwas_snps())
+    if overlap_message:
+        logging.warning(overlap_message)
+
     results = run_metaxcan(args, context)
 
     end = timer()

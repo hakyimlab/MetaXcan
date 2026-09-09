@@ -1,25 +1,24 @@
-import bgen_reader
 import numpy
 import pandas
 import logging
+from bgen import BgenReader
 
 from ..misc import Genomics
 
 def bgen_file_geno_lines(file, variant_mapping = None, force_colon = False, use_rsid=False, whitelist=None, skip_palindromic=False, liftover_conversion=None):
     logging.log(9, "Processing bgen %s", file)
-    bgen = bgen_reader.read_bgen(file)
-    variants = bgen["variants"]
+    bfile = BgenReader(file)
     dict_mapping = variant_mapping is not None and type(variant_mapping) == dict
-    for variant in variants.itertuples():
+    for variant in bfile:
         if use_rsid:
             varid = variant.rsid
         else:
-            varid = variant.id
+            varid = variant.varid
 
         if force_colon:
             varid = varid.replace("_", ":")
 
-        alleles = variant.allele_ids.split(",")
+        alleles = variant.alleles
         if len(alleles) > 2:
             logging.info("variant %s is multiallelic, skipping", varid)
             continue
@@ -51,11 +50,10 @@ def bgen_file_geno_lines(file, variant_mapping = None, force_colon = False, use_
         # the alleles in the genotype might be swapped respect the variant in the mapping
         # You should verify if you must match it
 
-        v = bgen["genotype"][variant.Index].compute()
-        if v["phased"]:
-            d = numpy.apply_along_axis(lambda x: x[1] + x[3], 1, numpy.array(v["probs"], dtype=float))
+        if variant.is_phased:
+            d = numpy.apply_along_axis(lambda x: x[1] + x[3], 1, variant.probabilities)
         else:
-            d = numpy.apply_along_axis(lambda x: x[1] + x[2] * 2, 1, numpy.array(v["probs"], dtype=float))
+            d = numpy.apply_along_axis(lambda x: x[1] + x[2] * 2, 1, variant.probabilities)
 
         #e = bgen_reader.allele_expectation(bgen, variant.Index)
         #d2 = bgen_reader.compute_dosage(e, alt=1)
@@ -70,7 +68,6 @@ def bgen_files_geno_lines(files, variant_mapping = None, force_colon = False, us
 
 def get_samples(path):
     logging.info("Opening bgen to get samples")
-    bgen = bgen_reader.read_bgen(path, verbose=False)
-    samples = bgen["samples"].values
-    samples = pandas.DataFrame({"FID":samples, "IID":samples})[["FID", "IID"]]
+    bfile = BgenReader(path)
+    samples = pandas.DataFrame({"FID":bfile.samples, "IID":bfile.samples})[["FID", "IID"]]
     return samples

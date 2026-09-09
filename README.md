@@ -41,7 +41,7 @@ To run PrediXcan Associations and MulTiXcan, you also need:
 * [h5py-cache (>=1.0.0)](https://pypi.python.org/pypi/h5py-cache/1.0) *Now folded into h5py
 
 To run prediction of biological mechanisms on individual-level data, you will also need:
-* [bgen_reader (>=3.0.3)](https://pypi.org/project/bgen-reader/)
+* [bgen (>=1.9.10)](https://pypi.org/project/bgen/)
 * [cyvcf2 (>=0.8.0)](https://brentp.github.io/cyvcf2)
 
 [R](https://www.r-project.org/) with [ggplot](http://ggplot2.org/) and [dplyr](https://cran.r-project.org/web/packages/dplyr/index.html) 

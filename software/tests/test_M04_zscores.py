@@ -158,6 +158,7 @@ class _SPrediXcanArgs(object):
 
         self.model_db_path = os.path.join(_QGT, "mashr_Whole_Blood_chr1_subset.db")
         self.model_db_snp_key = model_db_snp_key
+        self.gwas_snp_key = None
         self.covariance = os.path.join(_QGT, "mashr_Whole_Blood_chr1_subset.txt.gz")
         self.stream_covariance = False
         self.single_snp_model = False

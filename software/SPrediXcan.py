@@ -45,6 +45,10 @@ if __name__ == "__main__":
 #weight db model
     parser.add_argument("--model_db_path", help="name of model db in data folder")
     parser.add_argument("--model_db_snp_key", help="Specify a key to use as snp_id")
+    parser.add_argument("--gwas_snp_key", help="Model db column the GWAS's own variant ids are in, when that is not "
+                                               "--model_db_snp_key (e.g. -rsid- for an rsID GWAS against a varID-keyed "
+                                               "covariance). The GWAS's ids are translated to the key through the db's "
+                                               "own weights table. Left to be worked out from the data if not given.")
 #GWAS betas
     parser.add_argument("--gwas_file", help="Load a single GWAS file. (Alternative to providing a gwas_folder and gwas_file_pattern)")
     parser.add_argument("--gwas_h2", help="GWAS heritability (h2)", type=float, default=None, required=False)

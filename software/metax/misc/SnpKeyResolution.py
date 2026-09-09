@@ -23,6 +23,7 @@ import sqlite3
 import pandas
 
 from . import SnpOverlapDiagnostics
+from .. import PredictionModel
 from .. import Utilities
 
 # Columns of a weights table that are never variant ids.
@@ -38,34 +39,67 @@ UNRECOGNIZED = SnpOverlapDiagnostics.UNRECOGNIZED
 # caller then leaves everything alone: guessing from a failed read is worse
 # than the mismatch we are trying to catch.
 
-def model_db_id_columns(path):
-    """The weights-table columns of a model db that could serve as a matching key."""
+def _query_model_db(path, query):
+    """Runs a read-only query against a model db, or None if it can't be read.
+
+    Goes through os.path.exists first because sqlite3.connect happily creates
+    an empty db at a path that doesn't exist, which would turn a mistyped
+    --model_db_path into a silent empty model.
+    """
     if not path or not os.path.exists(path):
-        return []
+        return None
     try:
         connection = sqlite3.connect(path)
         try:
-            columns = [x[1] for x in connection.execute("PRAGMA table_info(weights);")]
+            return list(connection.execute(query))
         finally:
             connection.close()
     except sqlite3.Error as e:
-        logging.log(9, "Could not inspect model db columns: %s", str(e))
+        logging.log(9, "Could not read model db %s: %s", path, str(e))
+        return None
+
+def model_db_id_columns(path):
+    """The weights-table columns of a model db that could serve as a matching key."""
+    rows = _query_model_db(path, "PRAGMA table_info(weights);")
+    if rows is None:
         return []
-    return [x for x in columns if x.lower() not in _NOT_AN_ID]
+    return [x[1] for x in rows if x[1].lower() not in _NOT_AN_ID]
 
 def sample_model_ids(path, column, n=1000):
     """A sample of one weights-table column's values, to tell its id format."""
-    try:
-        connection = sqlite3.connect(path)
-        try:
-            # the column name comes from the db's own schema, never from user input
-            q = 'SELECT "{}" FROM weights LIMIT {};'.format(column, int(n))
-            return [x[0] for x in connection.execute(q) if x[0] is not None]
-        finally:
-            connection.close()
-    except sqlite3.Error as e:
-        logging.log(9, "Could not sample model db column %s: %s", column, str(e))
-        return []
+    # the column name comes from the db's own schema, never from user input
+    rows = _query_model_db(path, 'SELECT "{}" FROM weights LIMIT {};'.format(column, int(n)))
+    return [x[0] for x in rows if x[0] is not None] if rows else []
+
+def model_id_translation(path, from_column, to_column):
+    """A variant id lookup built from the model db's own weights table.
+
+    Both columns describe the same row, hence the same variant with the same
+    alleles, so this renames ids and nothing else -- no position is parsed and
+    no allele is inferred. Ids that name more than one variant in the target
+    column (the same rsID at a multi-allelic site, say) are dropped rather than
+    resolved arbitrarily.
+    """
+    if from_column == to_column:
+        return {}
+    # column names come from the db's own schema, never from user input
+    rows = _query_model_db(path, 'SELECT DISTINCT "{}", "{}" FROM weights;'.format(from_column, to_column))
+    if not rows:
+        return {}
+
+    pairs = [x for x in rows if x[0] is not None and x[1] is not None]
+    targets = PredictionModel.patch_variant_names([x[1] for x in pairs])
+
+    translation, ambiguous = {}, set()
+    for (source, _), target in zip(pairs, targets):
+        if source in translation and translation[source] != target:
+            ambiguous.add(source)
+        translation[source] = target
+    for source in ambiguous:
+        del translation[source]
+    if ambiguous:
+        logging.log(9, "Dropped %d ambiguous variant ids from the translation", len(ambiguous))
+    return translation
 
 def sample_gwas_ids(path, snp_column, separator=None, n=1000):
     """A sample of the GWAS's variant ids, read straight off the file.
@@ -100,60 +134,98 @@ def sample_covariance_ids(path, id_column="RSID1", n=1000):
 
 _WIKI = "See https://github.com/hakyimlab/MetaXcan/wiki for guidance."
 
-def choose_model_snp_key(model_formats, current_key, gwas_format, covariance_format=None):
-    """Which of the model db's id columns to match the GWAS on.
+def choose_keys(model_formats, current_key, gwas_format, covariance_format=None, allow_key_switch=True):
+    """Which db column to key the model on, and which one the GWAS's ids are in.
 
     model_formats maps each candidate column of the weights table to the id
-    format its values are in. Returns (key, message): key is None when the
-    current key should stand, message is None when there is nothing worth
-    telling the user.
+    format its values hold. Returns (model_key, gwas_key, message):
 
-    Only a column whose format matches the GWAS's is ever chosen, and only when
-    the user did not name a key explicitly (that is the caller's business).
+    - model_key is the column to match on, or None to leave the current one be.
+      It is chosen to agree with the covariance when the covariance's format is
+      known, because a model the covariance can't be looked up in produces an
+      all-NA results file no matter how well the GWAS matched.
+    - gwas_key is the column the GWAS's own ids are in, when that isn't the
+      model key -- the GWAS then has to be translated from that column to the
+      key, which the db itself can do since it carries both.
+    - message is None when there is nothing worth telling the user.
+
     An unrecognized format on any side means we can't reason about it, so we
     say nothing rather than guess.
     """
     if gwas_format == UNRECOGNIZED or current_key not in model_formats:
-        return None, None
+        return None, None, None
 
-    current_format = model_formats[current_key]
+    # first column holding each format, so the choice is deterministic
+    by_format = {}
+    for column, fmt in sorted(model_formats.items()):
+        by_format.setdefault(fmt, column)
+
+    gwas_column = by_format.get(gwas_format)
+    if gwas_column is None:
+        # nothing in the db is in the GWAS's format; neither a column choice nor
+        # a translation through the db can help, and the overlap diagnostics
+        # will say so with the actual numbers
+        return None, None, None
+
     cov_known = covariance_format not in (None, UNRECOGNIZED)
+    if cov_known:
+        target = by_format.get(covariance_format)
+        if target is None:
+            return None, None, _foreign_covariance_message(model_formats, covariance_format)
+    else:
+        target = gwas_column
 
-    if current_format == gwas_format:
-        if cov_known and covariance_format != current_format:
-            return None, _unfixable_conflict_message(current_key, current_format, gwas_format, covariance_format)
-        return None, None
+    if not allow_key_switch and target != current_key:
+        message = _explicit_key_message(current_key, target, gwas_format, covariance_format if cov_known else None)
+        target = current_key
+    else:
+        message = None
 
-    candidates = sorted(k for k, f in model_formats.items() if f == gwas_format)
-    if not candidates:
-        return None, None
+    model_key = target if target != current_key else None
+    gwas_key = gwas_column if gwas_column != target else None
 
-    if cov_known and covariance_format != gwas_format:
-        return None, _unfixable_conflict_message(current_key, current_format, gwas_format, covariance_format)
+    if message is None and (model_key or gwas_key):
+        message = _plan_message(current_key, model_formats[current_key], target, gwas_column,
+                                gwas_format, covariance_format if cov_known else None)
+    return model_key, gwas_key, message
 
-    return candidates[0], _switch_message(current_key, current_format, candidates[0], gwas_format)
+def _plan_message(current_key, current_format, target, gwas_column, gwas_format, covariance_format):
+    if gwas_column == target:
+        return (
+            "The model db's -{}- column holds {} ids but the GWAS's variant ids look like {}, "
+            "so matching on -{}- would have found almost nothing. Matching on the db's -{}- column "
+            "instead, which is in the same format as the GWAS.\n"
+            "Pass --model_db_snp_key {} to make this explicit, or --model_db_snp_key {} to force "
+            "the original behavior."
+        ).format(current_key, current_format, gwas_format, current_key, target, target, current_key)
 
-def _switch_message(current_key, current_format, new_key, gwas_format):
     return (
-        "The model db's -{}- column holds {} ids but the GWAS's variant ids look like {}, "
-        "so matching on -{}- would have found almost nothing. Matching on the db's -{}- column "
-        "instead, which is in the same format as the GWAS.\n"
-        "Pass --model_db_snp_key {} to make this explicit, or --model_db_snp_key {} to force the "
-        "original behavior."
-    ).format(current_key, current_format, gwas_format, current_key, new_key, new_key, current_key)
+        "The GWAS's variant ids look like {} but the covariance is keyed by {} ids, so the model "
+        "has to be matched on its -{}- column for the covariance to be found at all -- otherwise "
+        "every gene is computed from zero SNPs and every result is NA. Translating the GWAS's ids "
+        "from the db's -{}- column to -{}-, which is a lookup in the model db's own weights table; "
+        "alleles are matched afterwards as usual.\n"
+        "Pass --model_db_snp_key {} --gwas_snp_key {} to make this explicit."
+    ).format(gwas_format, covariance_format, target, gwas_column, target, target, gwas_column)
 
-def _unfixable_conflict_message(current_key, current_format, gwas_format, covariance_format):
+def _explicit_key_message(current_key, target, gwas_format, covariance_format):
     return (
-        "The GWAS's variant ids look like {} and the covariance's look like {}, so no single "
-        "column of the model db can match both: matching the GWAS leaves the covariance empty "
-        "(every gene computed from zero SNPs, all-NA results) and matching the covariance leaves "
-        "the GWAS empty. Currently matching on -{}-, which holds {} ids.\n"
-        "Things to check:\n"
-        "- Use a GWAS column in the same format as the covariance if your input has one "
-        "(harmonized GWAS usually carry both an rsID and a chr_pos_ref_alt id).\n"
-        "- Make sure the covariance you passed to --covariance is the one distributed with this "
+        "Using --model_db_snp_key {} as requested, but the GWAS's ids look like {}{} and the db's "
+        "-{}- column is the one that lines up. Drop --model_db_snp_key to let it be chosen from "
+        "the data."
+    ).format(current_key, gwas_format,
+             ", the covariance's like {}".format(covariance_format) if covariance_format else "",
+             target)
+
+def _foreign_covariance_message(model_formats, covariance_format):
+    return (
+        "The covariance's variant ids look like {}, which is not the format of any id column in "
+        "the model db ({}). Every gene will be computed from zero SNPs and the results will be "
+        "all NA.\n"
+        "- Check that the covariance you passed to --covariance is the one distributed with this "
         "model.\n"
-    ).format(gwas_format, covariance_format, current_key, current_format) + _WIKI
+    ).format(covariance_format,
+             ", ".join("{}: {}".format(k, v) for k, v in sorted(model_formats.items()))) + _WIKI
 
 def should_keep_non_rsid(gwas_format):
     """Whether the GWAS loader's rsid-only filter has to be lifted.
@@ -182,11 +254,13 @@ def _gwas_path(args):
     return os.path.join(folder, names[0])
 
 def resolve_snp_key_arguments(args):
-    """Line up --model_db_snp_key and --keep_non_rsid with the input's actual ids.
+    """Line up --model_db_snp_key, --gwas_snp_key and --keep_non_rsid with the input's actual ids.
 
     Mutates args in place and logs what it changed. Returns the list of
     messages, for tests. Anything the user asked for explicitly is left alone:
-    an explicit --model_db_snp_key is never overridden, only diagnosed.
+    an explicit --model_db_snp_key is never overridden, only diagnosed, and an
+    explicit --gwas_snp_key or --snp_map_file means the ids are already being
+    mapped by hand and none of this applies.
     """
     messages = []
 
@@ -198,6 +272,10 @@ def resolve_snp_key_arguments(args):
         # the header isn't where a plain read expects it, and reproducing
         # GWASSpecialHandling's parsing just to peek isn't worth it
         logging.log(9, "Skipping snp key resolution: --skip_until_header in use")
+        return messages
+
+    if getattr(args, "snp_map_file", None) or getattr(args, "gwas_snp_key", None):
+        logging.log(9, "Skipping snp key resolution: variant ids are being mapped explicitly")
         return messages
 
     path = _gwas_path(args)
@@ -218,19 +296,14 @@ def resolve_snp_key_arguments(args):
     columns = model_db_id_columns(model_db_path)
     model_formats = {c: SnpOverlapDiagnostics.dominant_id_format(sample_model_ids(model_db_path, c)) for c in columns}
 
-    key, message = choose_model_snp_key(model_formats, current_key, gwas_format, covariance_format)
-    if key is None:
-        if message:
-            messages.append(message)
-    elif not user_key:
-        args.model_db_snp_key = key
+    model_key, gwas_key, message = choose_keys(model_formats, current_key, gwas_format,
+                                               covariance_format, allow_key_switch=not user_key)
+    if message:
         messages.append(message)
-    else:
-        # the user named a key; report the disagreement but do as told
-        messages.append(
-            "Using --model_db_snp_key {} as requested, but the GWAS's variant ids look like {}, "
-            "which matches the model db's -{}- column instead. Drop --model_db_snp_key to let it "
-            "be chosen from the data.".format(user_key, gwas_format, key))
+    if model_key:
+        args.model_db_snp_key = model_key
+    if gwas_key:
+        args.gwas_snp_key = gwas_key
 
     if should_keep_non_rsid(gwas_format) and not getattr(args, "keep_non_rsid", False):
         args.keep_non_rsid = True

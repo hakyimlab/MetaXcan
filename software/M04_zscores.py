@@ -117,6 +117,10 @@ def run(args, _gwas=None):
     if overlap_message:
         logging.warning(overlap_message)
 
+    _, covariance_message = MetaxcanUtilities.check_covariance_overlap(context.get_model_snps(), context.get_covariance_snps())
+    if covariance_message:
+        logging.warning(covariance_message)
+
     results = run_metaxcan(args, context)
 
     end = timer()

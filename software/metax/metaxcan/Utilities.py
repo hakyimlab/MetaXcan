@@ -9,6 +9,7 @@ from .. import Utilities
 from .. import MatrixManager
 from ..PredictionModel import WDBQF, WDBEQF, load_model, dataframe_from_weight_data
 from ..misc import DataFrameStreamer
+from ..misc import SnpOverlapDiagnostics
 from . import AssociationCalculation
 
 class SimpleContext(AssociationCalculation.Context):
@@ -39,6 +40,9 @@ class SimpleContext(AssociationCalculation.Context):
 
     def get_gwas_snps(self):
         return set(self.gwas[Constants.SNP])
+
+    def get_covariance_snps(self):
+        return self.covariance.snps()
 
     def get_data_intersection(self):
         return _data_intersection(self.model, self.gwas)
@@ -186,13 +190,37 @@ def _data_intersection_3(weight_data, gwas_data, gene_list, pedantic):
 
     return genes, snps
 
+_ID_ADVICE = (
+    "- If your model uses MASHR (varID-keyed) variants, pass "
+    "--model_db_snp_key varID and make sure --snp_column points at a "
+    "matching chr_pos_ref_alt(_build) column, or provide --snp_map_file.\n"
+    "- If your GWAS uses non-rsID variant ids, pass --keep_non_rsid, which "
+    "otherwise drops every id that doesn't look like an rsID.\n"
+)
+
+_BUILD_ADVICE = (
+    "- Check that your GWAS and model use the same genome build "
+    "(GTEx v8 models are hg38; liftover otherwise) and compatible "
+    "reference panels.\n"
+)
+
+_WIKI_ADVICE = "See https://github.com/hakyimlab/MetaXcan/wiki for guidance."
+
 def check_snp_overlap(model_snps, gwas_snps, min_pct=1.0, sample_n=5):
     """Compares the model's SNP set against the GWAS's SNP set.
 
-    Returns (overlap_pct, message). message is None unless overlap_pct is
-    below min_pct, in which case it is a human-readable diagnostic meant to
-    help identify SNP id/build mismatches (e.g. rsid vs varID) that would
-    otherwise silently produce a near-empty result set.
+    Returns (overlap_pct, message). message is None unless the two look
+    mismatched, in which case it is a human-readable diagnostic meant to help
+    identify SNP id/build mismatches (e.g. rsid vs varID) that would otherwise
+    silently produce a near-empty result set.
+
+    A low overlap percentage on its own is not enough to call a mismatch: a
+    GWAS covering a single chromosome legitimately overlaps a genome-wide
+    model by a few percent. So the primary signal is the variant id format
+    differing between the two sides, which stays true regardless of how much
+    of the genome the GWAS covers. min_pct is kept as a floor for the case
+    formats can't see, notably an hg19/hg38 mismatch where both sides are
+    chr_pos_ref_alt but no position ever lines up.
     """
     total = len(model_snps)
     if total == 0:
@@ -200,28 +228,85 @@ def check_snp_overlap(model_snps, gwas_snps, min_pct=1.0, sample_n=5):
 
     overlap = model_snps & gwas_snps
     pct = 100.0 * len(overlap) / total
-    if pct >= min_pct:
+
+    model_format = SnpOverlapDiagnostics.dominant_id_format(model_snps)
+    gwas_format = SnpOverlapDiagnostics.dominant_id_format(gwas_snps)
+    format_mismatch = SnpOverlapDiagnostics.formats_disagree(model_format, gwas_format)
+
+    if pct >= min_pct and not format_mismatch:
         return pct, None
 
-    model_sample = sorted(model_snps)[:sample_n]
-    gwas_sample = sorted(gwas_snps)[:sample_n]
-    message = (
-        "Only {:.2f}% of the model's SNPs were found in the GWAS data ({} of {}). "
-        "This usually means the model and GWAS use different variant id formats "
-        "or genome builds, and the results file will be mostly empty.\n"
+    model_examples = SnpOverlapDiagnostics.example_ids(model_snps, sample_n, model_format)
+    examples = (
         "Example model SNP ids: {}\n"
         "Example GWAS SNP ids: {}\n"
+    ).format(model_examples, SnpOverlapDiagnostics.example_ids(gwas_snps, sample_n, gwas_format))
+
+    if not gwas_snps:
+        message = (
+            "No GWAS variants at all survived loading, so none of the model's {} "
+            "SNPs could be matched and the results file will be empty.\n"
+            "Example model SNP ids: {}\n"
+            "Things to check:\n"
+        ).format(total, model_examples) + _ID_ADVICE + _BUILD_ADVICE + _WIKI_ADVICE
+    elif format_mismatch:
+        message = (
+            "The model's variant ids and the GWAS's variant ids are in different "
+            "formats (model looks like {}, GWAS looks like {}), so they can't be "
+            "matched: only {:.2f}% of the model's SNPs were found in the GWAS data "
+            "({} of {}) and the results file will be mostly empty.\n"
+        ).format(model_format, gwas_format, pct, len(overlap), total) + examples + \
+            "Things to check:\n" + _ID_ADVICE + _WIKI_ADVICE
+    else:
+        message = (
+            "Only {:.2f}% of the model's SNPs were found in the GWAS data ({} of {}), "
+            "so most genes will have no result. The variant ids are in the same format "
+            "on both sides ({}), so this is not an id format mismatch.\n"
+        ).format(pct, len(overlap), total, model_format) + examples + (
+            "Things to check:\n"
+            "- If your GWAS deliberately covers only part of the genome (a single "
+            "chromosome, say), low overlap is expected and you can ignore this.\n"
+        ) + _BUILD_ADVICE + _WIKI_ADVICE
+    return pct, message
+
+def check_covariance_overlap(model_snps, covariance_snps, min_pct=1.0, sample_n=5):
+    """Compares the model's SNP set against the covariance matrices' SNP set.
+
+    Same failure shape as check_snp_overlap, one layer over: when these two
+    disagree every gene is computed from zero SNPs and the results file is all
+    NAs, with nothing in the log to say why. Notably, PredictDB's MASHR
+    covariances are keyed by varID, so loading a MASHR model by rsid matches
+    the GWAS fine and then silently fails here.
+    """
+    total = len(model_snps)
+    if total == 0 or covariance_snps is None:
+        return None, None
+
+    overlap = model_snps & covariance_snps
+    pct = 100.0 * len(overlap) / total
+
+    model_format = SnpOverlapDiagnostics.dominant_id_format(model_snps)
+    covariance_format = SnpOverlapDiagnostics.dominant_id_format(covariance_snps)
+    format_mismatch = SnpOverlapDiagnostics.formats_disagree(model_format, covariance_format)
+
+    if pct >= min_pct and not format_mismatch:
+        return pct, None
+
+    message = (
+        "Only {:.2f}% of the model's SNPs were found in the covariance data ({} of {}); "
+        "the model's ids look like {} and the covariance's look like {}. Every gene will "
+        "be computed from zero SNPs and the results will be all NA.\n"
+        "Example model SNP ids: {}\n"
+        "Example covariance SNP ids: {}\n"
         "Things to check:\n"
-        "- If your model uses MASHR (varID-keyed) variants, pass "
-        "--model_db_snp_key varID and make sure --snp_column points at a "
-        "matching chr_pos_ref_alt(_build) column, or provide --snp_map_file.\n"
-        "- If your GWAS uses non-rsID variant ids, pass --keep_non_rsid.\n"
-        "- Check that your GWAS and model use the same genome build "
-        "(GTEx v8 models are hg38; liftover otherwise).\n"
-        "- As a rule of thumb, overlap below ~80% is suspect; single digits "
-        "to teens usually means a mismatch. See "
-        "https://github.com/hakyimlab/MetaXcan/wiki for guidance."
-    ).format(pct, len(overlap), total, model_sample, gwas_sample)
+        "- The covariance must be keyed the same way as the model: PredictDB's "
+        "MASHR covariances are keyed by varID, so those models must be loaded "
+        "with --model_db_snp_key varID.\n"
+        "- Check that the covariance file distributed with your model is the one "
+        "you passed to --covariance."
+    ).format(pct, len(overlap), total, model_format, covariance_format,
+             SnpOverlapDiagnostics.example_ids(model_snps, sample_n, model_format),
+             SnpOverlapDiagnostics.example_ids(covariance_snps, sample_n, covariance_format))
     return pct, message
 
 def _sanitized_gwas(gwas):

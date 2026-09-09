@@ -1,3 +1,56 @@
+import itertools
+import re
+
+RSID = "rsid"
+VARID = "chr_pos_ref_alt"
+CHR_POS = "chr:pos"
+UNRECOGNIZED = "unrecognized"
+
+_FORMATS = (
+    (RSID, re.compile(r"^rs\d+$", re.IGNORECASE)),
+    (VARID, re.compile(r"^(chr)?[0-9XYM]+(T)?_\d+_[ACGTN]+_[ACGTN]+(_b\d+)?$", re.IGNORECASE)),
+    (CHR_POS, re.compile(r"^(chr)?[0-9XYM]+(T)?[:_]\d+([:_][ACGTN]+[:_][ACGTN]+)?$", re.IGNORECASE)),
+)
+
+def classify_snp_id(snp_id):
+    for name, pattern in _FORMATS:
+        if pattern.match(str(snp_id)):
+            return name
+    return UNRECOGNIZED
+
+def dominant_id_format(snps, sample_n=1000):
+    """The most common variant id format among an arbitrary sample of snps."""
+    counts = {}
+    for snp in itertools.islice(iter(snps), sample_n):
+        k = classify_snp_id(snp)
+        counts[k] = counts.get(k, 0) + 1
+    if not counts:
+        return UNRECOGNIZED
+    return max(sorted(counts), key=lambda k: counts[k])
+
+def example_ids(snps, n=5, prefer_format=None):
+    """A few ids to show the user, favoring ones in the format we claim is dominant.
+
+    Without the preference a plain sort leads with whichever minority format
+    sorts first, which undercuts a message about the ids looking like something
+    else.
+    """
+    ids = sorted(snps)
+    if prefer_format is None:
+        return ids[:n]
+    preferred = list(itertools.islice((x for x in ids if classify_snp_id(x) == prefer_format), n))
+    return preferred or ids[:n]
+
+def formats_disagree(format_1, format_2):
+    """Whether two id formats are recognized and different.
+
+    Two unrecognized formats are not called a mismatch: they may well be the
+    same in-house scheme, and a false alarm here is worse than a missed one.
+    """
+    if UNRECOGNIZED in (format_1, format_2):
+        return False
+    return format_1 != format_2
+
 def check_snp_overlap_from_counts(model_snps, matched_count, min_pct=1.0, sample_n=5):
     """Compares a model's SNP set against a count of matched variants.
 
@@ -29,6 +82,9 @@ def check_snp_overlap_from_counts(model_snps, matched_count, min_pct=1.0, sample
         "ambiguous variants), check your allele coding.\n"
         "- Check that your genotype data and model use the same genome "
         "build (GTEx v8 models are hg38); use --liftover otherwise.\n"
+        "- If your genotype data deliberately covers only part of the genome "
+        "(a single chromosome, say), low overlap is expected and you can "
+        "ignore this.\n"
         "- As a rule of thumb, overlap below ~80% is suspect; single digits "
         "to teens usually means a mismatch. See "
         "https://github.com/hakyimlab/MetaXcan/wiki for guidance."

@@ -37,6 +37,7 @@ class MatrixManagerBase(object):
     def get_2(self, key, snps_1, snps_2): raise  Exceptions.NotImplemented("MatrixManager: get_2")
     def model_labels(self): raise  Exceptions.NotImplemented("MatrixManager: model_labels")
     def n_ids(self, gene): raise  Exceptions.NotImplemented("MatrixManager: n_ids")
+    def snps(self): raise  Exceptions.NotImplemented("MatrixManager: snps")
 
 class MatrixManager(MatrixManagerBase):
     """
@@ -58,6 +59,9 @@ class MatrixManager(MatrixManagerBase):
 
     def n_ids(self, gene):
         return _n_ids(gene, self.data)
+
+    def snps(self):
+        return {t[CDTF.ID1] for entries in self.data.values() for t in entries}
 
 class StreamedMatrixManager(MatrixManagerBase):
     """
@@ -95,6 +99,10 @@ class StreamedMatrixManager(MatrixManagerBase):
 
     def n_ids(self, gene):
         return _n_ids(gene, self._data)
+
+    def snps(self):
+        # only whatever gene is currently streamed in is known, never the whole set
+        return None
 
 def _n_ids(gene, data):
     if not gene in data:

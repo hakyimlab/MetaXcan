@@ -11,6 +11,7 @@ import copy
 from metax import Exceptions
 from metax import Logging
 from metax.gwas import Utilities as GWASUtilities
+from metax.misc import SnpKeyResolution
 
 import M03_betas
 import M04_zscores
@@ -23,6 +24,13 @@ def run(args):
     if not args.model_db_path:
         logging.info("Need to provide a model database file path")
         return
+    # before anything is loaded: the model db, the GWAS and the covariance have
+    # to be keyed the same way, and which column that is can be read off the data.
+    # On a copy, because MetaMany drives this in a loop over model dbs with one
+    # args, and the key that fits one db need not exist in the next.
+    args = copy.copy(args)
+    SnpKeyResolution.resolve_snp_key_arguments(args)
+
     M03_args = copy.copy(args)
     M03_args.output_folder = None
     M03_args.output = None

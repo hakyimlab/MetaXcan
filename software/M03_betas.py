@@ -23,6 +23,7 @@ __version__ = metax.__version__
 
 from metax import Constants
 from metax.misc import GWASAndModels
+from metax.misc import SnpKeyResolution
 from metax.gwas import GWAS
 from metax.gwas import Utilities as GWASUtilities
 from metax import PredictionModel
@@ -35,9 +36,29 @@ def build_betas(args, model, gwas_format, name, model_snp_map):
 
     load_from = os.path.join(args.gwas_folder, name) if args.gwas_folder else name
 
-    snps = model.snps() if model else None
+    # the GWAS may name its variants by a db column other than the matching key
+    # (an rsID gwas against a varID-keyed covariance, say); translate through the
+    # db's own weights table, which carries both
+    translation = None
+    gwas_snp_key = getattr(args, "gwas_snp_key", None)
+    if model is not None and gwas_snp_key:
+        translation = SnpKeyResolution.model_id_translation(
+            args.model_db_path, gwas_snp_key, args.model_db_snp_key or SnpKeyResolution.DEFAULT_SNP_KEY)
+
+    snps = set(translation.keys()) if translation else (model.snps() if model else None)
     b = GWAS.load_gwas(load_from, gwas_format, snps=snps, separator=args.separator,
             skip_until_header=args.skip_until_header, handle_empty_columns=args.handle_empty_columns, input_pvalue_fix=args.input_pvalue_fix, keep_non_rsid=args.keep_non_rsid)
+
+    if translation:
+        logging.info("Translating GWAS variant ids from the model db's -%s- column to -%s-",
+                     gwas_snp_key, args.model_db_snp_key or SnpKeyResolution.DEFAULT_SNP_KEY)
+        before = b.shape[0]
+        b = b.assign(**{Constants.SNP: b[Constants.SNP].map(translation)})
+        b = b[b[Constants.SNP].notnull()]
+        if b.shape[0] < before:
+            # the db has no id of its own for these, so they can't be carried over
+            logging.info("Dropped %d of %d GWAS variants the model db's -%s- column doesn't name",
+                         before - b.shape[0], before, gwas_snp_key)
 
     if model_snp_map:
         logging.info("Loading mapping")
@@ -147,6 +168,10 @@ if __name__ == "__main__":
                              "If not supplied, will convert the input GWAS as found, one line at a atime, until finishing or encountering an error.")
 
     parser.add_argument("--model_db_snp_key", help="Specify a key to use as snp_id")
+
+    parser.add_argument("--gwas_snp_key", help="Model db column the GWAS's own variant ids are in, when that is not "
+                                               "--model_db_snp_key. The GWAS's ids are translated to the key through "
+                                               "the db's own weights table.")
 
     parser.add_argument("--gwas_file", help="Load a single GWAS file. (Alternative to providing a gwas_folder and gwas_file_pattern)")
 

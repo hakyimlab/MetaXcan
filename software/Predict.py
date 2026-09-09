@@ -14,7 +14,7 @@ from metax import Logging
 from metax import Exceptions
 from metax import PredictionModel
 from metax.genotype import Genotype
-from metax.misc import GWASAndModels, Genomics, KeyedDataSource
+from metax.misc import GWASAndModels, Genomics, KeyedDataSource, SnpOverlapDiagnostics
 
 GF = Genotype.GF
 
@@ -169,8 +169,10 @@ def run(args):
 
     logging.info("Processing genotypes")
     dcapture = []
-    reporter = Utilities.PercentReporter(logging.INFO, len(set(weights.rsid.values)))
+    model_rsids = set(weights.rsid.values)
+    reporter = Utilities.PercentReporter(logging.INFO, len(model_rsids))
     snps_found = set()
+    id_matches = set()
     with prepare_prediction(args, extra, samples) as results:
 
         for i,e in enumerate(dosage_source):
@@ -182,6 +184,7 @@ def run(args):
 
             logging.log(8, "variant %i:%s", i, var_id)
             if var_id in model:
+                id_matches.add(var_id)
                 s = model[var_id]
                 ref_allele, alt_allele = e[GF.REF_ALLELE], e[GF.ALT_ALLELE]
 
@@ -204,7 +207,11 @@ def run(args):
                 reporter.update(len(snps_found), "%d %% of models' snps used")
 
     reporter.update(len(snps_found), "%d %% of models' snps used", force=True)
-     
+
+    _, overlap_message = SnpOverlapDiagnostics.check_snp_overlap_from_counts(model_rsids, len(id_matches))
+    if overlap_message:
+        logging.warning(overlap_message)
+
     if args.capture:
         logging.info("Saving data capture")
         Utilities.ensure_requisite_folders(args.capture)

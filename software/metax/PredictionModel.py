@@ -136,17 +136,19 @@ def dataframe_from_extra_data(e):
     extra = extra[[key for key, order in WDBEQF.ORDER]]
     return extra
 
+def patch_variant_names(s):
+    #UGLY patch. UGLY. UGLY.
+    if len(s) and "_b38" in s[0] and not "chr" in s[0]:
+        logging.info("Patching variant names with -chr- prefix")
+        s = ["chr"+x for x in s]
+    return s
+
 def load_model(path, snp_key=None):
     db = ModelDB(path, snp_key=snp_key)
     weights, extra = db.load_weights(), db.load_extra()
 
-    #UGLY patch. UGLY. UGLY.
     if snp_key:
-        s = weights[WDBQF.RSID]
-        if "_b38" in s[0] and not "chr" in s[0]:
-            logging.info("Patching variant names with -chr- prefix")
-            s = ["chr"+x for x in s]
-            weights[WDBQF.RSID] = s
+        weights[WDBQF.RSID] = patch_variant_names(weights[WDBQF.RSID])
 
     weights = dataframe_from_weight_data(weights)
     extra = dataframe_from_extra_data(extra)
